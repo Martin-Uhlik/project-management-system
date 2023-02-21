@@ -1,0 +1,43 @@
+version: "3.7"
+services:
+  frontend:
+    build: ./frontend
+    restart: always
+    ports:
+      - 80:80
+    env_file:
+      - ./frontend/.env
+    depends_on:
+      - backend
+  
+  backend:
+    build: ./backend
+    restart: always
+    ports:
+      - 4000:4000
+    env_file:
+      - ./backend/.env
+    volumes:
+      - type: bind
+        source: ./backend/data
+        target: /app/data
+    depends_on:
+      - database
+
+  database:
+    image: postgres:15.1-alpine3.17
+    restart: always
+    # ports:
+    #   - 5432:5432
+    env_file:
+      - ./database/.env
+    volumes:
+      - type: bind
+        source: ./database/data
+        target: /app/database_data
+
+  # adminer:
+  #   image: adminer
+  #   restart: always
+  #   ports:
+  #     - 8080:8080

@@ -1,0 +1,197 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model UserSession {
+  ID                Int                   @id @default(autoincrement())
+  Token             String                @unique
+  Expires           DateTime
+  User              User                  @relation(name: "UserSessions", fields: [UserID], references: [ID])
+  UserID            Int
+}
+
+model User {
+  ID                Int                   @id @default(autoincrement())
+  UserName          String                @unique
+  FirstName         String
+  LastName          String
+  PasswordHash      String                @unique
+  PasswordSalt      String
+  Enabled           Boolean
+  Position          String
+  WorkStartTime     DateTime?
+  UserType          UserType
+  Deleted           Boolean               @default(false)
+  CurrentTask       Task?                 @relation(name: "CurrentTask", fields: [CurrentTaskID], references: [ID])
+  CurrentTaskID     Int?
+  Requests          MaterialRequest[]     @relation(name: "Creator")
+  AcceptedRequests  MaterialRequest[]     @relation(name: "Acceptor")
+  Sessions          UserSession[]         @relation(name: "UserSessions")
+  OwnedProjects     Project[]             @relation(name: "ProjectOwner")
+  OwnedTasks        Task[]                @relation(name: "TaskOwner")
+  Memeber           User_Project[]        @relation(name: "UserMember")
+  MaterialEvent     MaterialEvent[]       @relation(name: "Evenet_User")
+  UserTaskTime      UserTaskTime[]        @relation(name: "TaskTime_User")
+  User_Task         User_Task[]           @relation(name: "UserTask_User")
+  WorkTime          WorkTime[]            @relation(name: "HasTime")
+  PrivateTask       PrivateTask[]         @relation(name: "HasPrivateTask")
+}
+
+enum UserType {
+  ADMIN
+  MANAGER
+  USER
+}
+
+model PrivateTask {
+  ID                Int                   @id @default(autoincrement())
+  Name              String
+  Description       String
+  FinifhDate        DateTime
+  Finished          Boolean
+  User              User                  @relation(name: "HasPrivateTask", fields: [UserID], references: [ID])
+  UserID            Int
+}
+
+model WorkTime {
+  ID                Int                   @id @default(autoincrement())
+  StartTime         DateTime
+  StopTime          DateTime?
+  User              User                  @relation(name: "HasTime", fields: [UserID], references: [ID])
+  UserID            Int
+}
+
+model UserTaskTime {
+  ID                Int                   @id @default(autoincrement())
+  StartTime         DateTime
+  StopTime          DateTime?
+  User              User                  @relation(name: "TaskTime_User", fields: [UserID], references: [ID])
+  UserID            Int
+  Task              Task                  @relation(name: "TaskTime_Task", fields: [TaskID], references: [ID])
+  TaskID            Int
+}
+
+model User_Task {
+  ID                Int                   @id @default(autoincrement())
+  User              User                  @relation(name: "UserTask_User", fields: [UserID], references: [ID])
+  UserID            Int
+  Task              Task                  @relation(name: "UserTask_Task", fields: [TaskID], references: [ID])
+  TaskID            Int
+}
+
+model Task {
+  ID                Int                   @id @default(autoincrement())
+  Name              String
+  Description       String?
+  FinishDate        DateTime
+  Finished          Boolean
+  DurationHours     Int                   @default(0)
+  DurationMinutes   Int                   @default(0)
+  XPosition         Float
+  YPosition         Float
+  Size              Int
+  Owner             User                  @relation(name: "TaskOwner", fields: [OwnerID], references: [ID])
+  OwnerID           Int
+  Project           Project               @relation(name: "Tasks", fields: [ProjectID], references: [ID])
+  ProjectID         Int
+  Machine           Machine?              @relation(name: "AssignedMachines", fields: [MachineID], references: [ID])
+  MachineID         Int?
+  Predecessors      TaskDependency[]      @relation(name: "Predecessor")
+  Successors        TaskDependency[]      @relation(name: "Successor")
+  WorkingUsers      User[]                @relation(name: "CurrentTask")
+  MaterialEvent     MaterialEvent[]       @relation(name: "Evenet_Task")
+  MaterialRequest   MaterialRequest[]     @relation(name: "Request_Task")
+  UserTaskTime      UserTaskTime[]        @relation(name: "TaskTime_Task")
+  User_Task         User_Task[]           @relation(name: "UserTask_Task")
+}
+
+model TaskDependency {
+  ID                Int                   @id @default(autoincrement())
+  Project           Project               @relation(name: "Dependencies", fields: [ProjectID], references: [ID])
+  ProjectID         Int
+  Predecessor       Task                  @relation(name: "Predecessor", fields: [PredecessorID], references: [ID])
+  PredecessorID     Int
+  Successor         Task                  @relation(name: "Successor", fields: [SuccessorID], references: [ID])
+  SuccessorID       Int
+}
+
+model Machine {
+  ID                Int                   @id @default(autoincrement())
+  Name              String
+  Description       String?
+  Deleted           Boolean               @default(false)
+  Task              Task[]                @relation(name: "AssignedMachines")
+}
+
+model MaterialRequest {
+  ID                Int                   @id @default(autoincrement())
+  Name              String
+  Description       String?
+  Count             Int
+  Price             Int
+  AddedDate         DateTime
+  NeededDate        DateTime?
+  AcceptedDate      DateTime?
+  AcceptedBy        User?                 @relation(name: "Acceptor", fields: [AcceptedByID], references: [ID])
+  AcceptedByID      Int?
+  TargetTask        Task?                 @relation(name: "Request_Task", fields: [TargetTaskID], references: [ID])
+  TargetTaskID      Int?
+  TargetUser        User                  @relation(name: "Creator", fields: [TargetUserID], references: [ID])
+  TargetUserID      Int
+}
+
+model MaterialEvent {
+  ID                Int                   @id @default(autoincrement())
+  Count             Int
+  TargetTask        Task?                 @relation(name: "Evenet_Task", fields: [TargetTaskID], references: [ID])
+  TargetTaskID      Int?
+  TargetUser        User?                 @relation(name: "Evenet_User", fields: [TargetUserID], references: [ID])
+  TargetUserID      Int?
+  Material          Material              @relation(name: "Event_Material", fields: [MaterialID], references: [ID])
+  MaterialID        Int
+  EventType         EventType
+}
+
+enum EventType {
+  ADD
+  REMOVE
+  RESERVATION
+}
+
+model Material {
+  ID                Int                   @id @default(autoincrement())
+  Name              String
+  Description       String?
+  MaterialEvent     MaterialEvent[]       @relation(name: "Event_Material")
+}
+
+model Project {
+  ID                Int                   @id @default(autoincrement())
+  Name              String
+  Description       String?
+  Customer          String?
+  FinishDate        DateTime?
+  Finished          Boolean
+  Deleted           Boolean               @default(false)
+  Owner             User                  @relation(name: "ProjectOwner", fields: [OwnerID], references: [ID])
+  OwnerID           Int
+  Memeber           User_Project[]        @relation(name: "ProjectMemeber")
+  Task              Task[]                @relation(name: "Tasks")
+  TaskDependency    TaskDependency[]      @relation(name: "Dependencies")
+}
+
+model User_Project {
+  ID                Int                   @id @default(autoincrement())
+  User              User                  @relation(name: "UserMember", fields: [UserID], references: [ID])
+  UserID            Int
+  Project           Project               @relation(name: "ProjectMemeber", fields: [ProjectID], references: [ID])
+  ProjectID         Int
+}
