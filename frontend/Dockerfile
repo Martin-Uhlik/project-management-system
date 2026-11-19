@@ -5,7 +5,9 @@ WORKDIR /app
 COPY package*.json ./
 RUN --mount=type=cache,target=/root/.npm npm ci
 COPY . .
-# VITE_BACKEND (the API address) is read from .env and baked into the build
+# the API address the browser uses, baked into the build (docker-compose.yml passes it from .env)
+ARG VITE_BACKEND
+ENV VITE_BACKEND=${VITE_BACKEND}
 RUN npm run build
 
 

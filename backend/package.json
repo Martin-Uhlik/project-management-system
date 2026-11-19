@@ -17,7 +17,8 @@
         "format": "prettier --write .",
         "format:check": "prettier --check .",
         "postinstall": "prisma generate",
-        "db:push": "prisma db push"
+        "db:push": "prisma db push",
+        "db:seed": "prisma db seed"
     },
     "dependencies": {
         "@prisma/adapter-pg": "^7.10.1",

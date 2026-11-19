@@ -1,7 +1,8 @@
-# Keep the build context small; .env stays in: it holds VITE_BACKEND for the build
+# Keep the build context small and never copy local state into the image
 node_modules
 build
 coverage
+.env*
 .DS_Store
 .idea
 .vscode

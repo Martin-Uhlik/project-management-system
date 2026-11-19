@@ -1,11 +1,17 @@
+# The whole system, built from this folder:  docker compose up -d --build
+# Only the database (for npm run dev on this machine):  docker compose up -d database
+# Working on the code with live reload, all in Docker: docker-compose.dev.yml
+# Settings come from .env next to this file (cp .env.example .env); each service gets only what it needs.
 services:
     frontend:
-        build: ./frontend
+        build:
+            context: ./frontend
+            args:
+                # the API address the browser uses, baked into the build
+                VITE_BACKEND: ${VITE_BACKEND}
         restart: always
         ports:
             - 80:80
-        env_file:
-            - ./frontend/.env
         depends_on:
             - backend
 
@@ -13,10 +19,12 @@ services:
         build: ./backend
         restart: always
         ports:
-            - 4000:4000
-        env_file:
-            - ./backend/.env
+            - ${BACKEND_PORT:-4000}:4000
+        environment:
+            BACKEND_PORT: 4000
+            DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@database:5432/${POSTGRES_DB}
         volumes:
+            # uploaded task files; the container runs as uid 1000 (node), so the folder must be writable for it
             - type: bind
               source: ./backend/data
               target: /app/data
@@ -27,12 +35,16 @@ services:
     database:
         image: postgres:18-alpine
         restart: always
-        # ports:
-        #   - 5432:5432
-        env_file:
-            - ./database/.env
+        environment:
+            POSTGRES_DB: ${POSTGRES_DB}
+            POSTGRES_USER: ${POSTGRES_USER}
+            POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+            PGDATA: /app/database_data/pgdata
+        ports:
+            # for npm run dev and database tools on this machine only; never open it to the network
+            - '127.0.0.1:${DB_PORT:-5432}:5432'
         healthcheck:
-            test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER}']
+            test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
             interval: 5s
             timeout: 5s
             retries: 10
@@ -40,9 +52,3 @@ services:
             - type: bind
               source: ./database/data
               target: /app/database_data
-
-    # adminer:
-    #   image: adminer
-    #   restart: always
-    #   ports:
-    #     - 8080:8080

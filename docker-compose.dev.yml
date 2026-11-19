@@ -1,0 +1,88 @@
+# The app for development: the Vite dev server and the API with live reload, plus a database. Nothing needs Node on this machine.
+#   docker compose -f docker-compose.dev.yml up
+# frontend/ and backend/ are mounted into the containers, so a saved file shows up at once (frontend in the browser,
+# backend by restarting the API). The packages are installed inside (Linux builds), in volumes, never into
+# frontend/node_modules or backend/node_modules on this machine.
+# docker-compose.yml stays for the production build.
+#
+#   frontend  http://localhost:3000   (sign in with admin / admin, made by the seed on the first start)
+#   API       http://localhost:4000
+#   database  localhost:5432           (for database tools; user/password/db as in .env, default pms / pms / pms)
+#
+# Settings come from .env next to this file (cp .env.example .env); without it the defaults below are used.
+
+# own project name, so the dev database and volumes are separate from a "docker compose up" of the production build
+name: project-management-system-dev
+
+x-node: &node
+    image: node:26-alpine3.24
+
+services:
+    # Vite dev server with hot reload on http://localhost:3000
+    frontend:
+        <<: *node
+        working_dir: /app
+        # installs the packages when package-lock.json changed, then starts Vite
+        command: sh -c "([ node_modules/.package-lock.json -nt package-lock.json ] || npm ci --no-audit --no-fund) && npx vite --host 0.0.0.0 --port 3000"
+        ports:
+            - '127.0.0.1:${FRONTEND_PORT:-3000}:3000'
+        volumes:
+            - ./frontend:/app
+            # packages live in a volume, so this machine's frontend/node_modules (if any) is never used
+            - frontend-node-modules:/app/node_modules
+        environment:
+            # the browser on this machine calls the API on its published port (wins over VITE_BACKEND in .env)
+            VITE_BACKEND: http://localhost:${BACKEND_PORT:-4000}
+            # if saved files don't reload (rare with Docker Desktop), uncomment: watch by polling instead of file events
+            # VITE_WATCH_POLLING: 'true'
+        depends_on:
+            - backend
+
+    # The API with live reload (tsx watch) on http://localhost:4000. On every start it installs the packages when
+    # package-lock.json changed, applies prisma/schema.prisma to the database and fills an empty database
+    # (the first admin account, prisma/seed.ts).
+    backend:
+        <<: *node
+        working_dir: /app
+        command: sh -c "([ node_modules/.package-lock.json -nt package-lock.json ] || npm ci --no-audit --no-fund) && npx prisma generate && npm run db:push && npm run db:seed && npm run dev"
+        ports:
+            - '127.0.0.1:${BACKEND_PORT:-4000}:4000'
+        volumes:
+            - ./backend:/app
+            # packages live in a volume, so this machine's backend/node_modules (if any) is never used
+            - backend-node-modules:/app/node_modules
+        environment:
+            BACKEND_PORT: 4000
+            # the database container, not the localhost one from DATABASE_URL in .env (that is for npm run dev here)
+            DATABASE_URL: postgres://${POSTGRES_USER:-pms}:${POSTGRES_PASSWORD:-pms}@db:5432/${POSTGRES_DB:-pms}
+            # the first admin account, created only when there are no users yet
+            ADMIN_LOGIN: ${ADMIN_LOGIN:-admin}
+            ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin}
+        depends_on:
+            db:
+                condition: service_healthy
+
+    # a database for development only, with its own volume (production data in database/data is never touched)
+    db:
+        image: postgres:18-alpine
+        environment:
+            POSTGRES_DB: ${POSTGRES_DB:-pms}
+            POSTGRES_USER: ${POSTGRES_USER:-pms}
+            POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pms}
+        ports:
+            # for database tools on this machine only; never open it to the network
+            - '127.0.0.1:${DB_PORT:-5432}:5432'
+        volumes:
+            # Postgres 18 keeps its data under /var/lib/postgresql/18/docker; the named volume survives
+            # restarts, only "docker compose -f docker-compose.dev.yml down -v" deletes it
+            - db-data:/var/lib/postgresql
+        healthcheck:
+            test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
+            interval: 5s
+            timeout: 5s
+            retries: 10
+
+volumes:
+    db-data:
+    frontend-node-modules:
+    backend-node-modules:

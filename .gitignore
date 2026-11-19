@@ -22,3 +22,6 @@ npm-debug.log*
 .idea
 .vscode
 .DS_Store
+
+# Settings; .env.example is the template
+.env
