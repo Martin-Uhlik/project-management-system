@@ -1,8 +1,7 @@
-import {Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow} from "@mui/material";
-import {UserRow} from "./rows/UserRow";
-import React from "react";
+import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
+import { UserRow } from './rows/UserRow';
 
-export const UserTable = ({users: users, setSelectedUser: setSelectedUser}) => {
+export const UserTable = ({ users: users, setSelectedUser: setSelectedUser }) => {
     return (
         <TableContainer component={Paper}>
             <Table>
@@ -15,9 +14,9 @@ export const UserTable = ({users: users, setSelectedUser: setSelectedUser}) => {
                     </TableRow>
                 </TableHead>
                 <TableBody>
-                    {users.map( (user) =>
-                        <UserRow key={user.ID} user={user} setSelectedUser={setSelectedUser}/>
-                    )}
+                    {users.map((user) => (
+                        <UserRow key={user.ID} user={user} setSelectedUser={setSelectedUser} />
+                    ))}
                 </TableBody>
             </Table>
         </TableContainer>

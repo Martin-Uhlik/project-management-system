@@ -1,12 +1,38 @@
-FROM node:19-alpine3.15
+FROM node:26-alpine3.24 AS base
 
-ENV NODE_ENV=production
+# ------------------------
+# Phase 1) download dependencies
+FROM base AS deps
 WORKDIR /app
-COPY package.json /app/
-COPY package-lock.json /app/
-RUN npm i
-COPY ./src /app/src
-COPY ./prisma /app/prisma
-COPY ./tsconfig.json /app/tsconfig.json
+# (npm ci runs "prisma generate", which needs the Prisma schema and config)
+COPY package*.json prisma.config.ts ./
+COPY prisma ./prisma
+RUN --mount=type=cache,target=/root/.npm npm ci
+
+
+# ------------------------
+# Phase 2) build the app
+FROM base AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+# Prisma database client (src/generated/prisma, not in git), then TypeScript -> dist
 RUN npx prisma generate
-CMD [ "npm", "run", "start" ]
+RUN npm run build
+RUN npm prune --omit=dev
+
+
+# ------------------------
+# Phase 3) execute the app
+FROM base AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+COPY --from=builder /app/package.json ./
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/dist ./dist
+# uploaded task files live here (bind-mounted from the host in docker-compose.yml)
+RUN mkdir -p data && chown node:node data
+
+USER node
+EXPOSE 4000
+CMD ["node", "dist/index.js"]

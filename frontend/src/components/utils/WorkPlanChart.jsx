@@ -1,20 +1,13 @@
-import {Bar} from "react-chartjs-2";
-import React, {useRef} from "react";
-import {BarElement, CategoryScale, Chart as ChartJS, LinearScale, Tooltip} from "chart.js";
-import moment from "moment";
+import { Bar } from 'react-chartjs-2';
+import { useRef } from 'react';
+import { BarElement, CategoryScale, Chart as ChartJS, LinearScale, Tooltip } from 'chart.js';
+import moment from 'moment';
 
 export const WorkPlanChart = (props) => {
-    const borderColor = getComputedStyle(document.documentElement)
-    .getPropertyValue("--work-plan-chart-border");
-    const backgroundColor = getComputedStyle(document.documentElement)
-    .getPropertyValue("--work-plan-chart-backround");
+    const borderColor = getComputedStyle(document.documentElement).getPropertyValue('--work-plan-chart-border');
+    const backgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--work-plan-chart-backround');
 
-    ChartJS.register(
-        CategoryScale,
-        LinearScale,
-        BarElement,
-        Tooltip
-    );
+    ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip);
 
     const chartRef = useRef();
 
@@ -23,51 +16,48 @@ export const WorkPlanChart = (props) => {
         scales: {
             x: {
                 grid: {
-                    display: false
+                    display: false,
                 },
                 stacked: false,
                 min: 0,
-                max: 24
+                max: 24,
             },
             y: {
-                stacked: true
-            }
+                stacked: true,
+            },
         },
-        indexAxis: "y",
+        indexAxis: 'y',
         elements: {
             bar: {
-                borderWidth: 2
-            }
+                borderWidth: 2,
+            },
         },
         responsive: true,
         animation: {
-            duration: 0
+            duration: 0,
         },
         borderSkipped: false,
         borderColor: borderColor,
         backgroundColor: backgroundColor,
-        events: []
+        events: [],
     };
 
-    const currentWeekTasks = props.tasks?.filter(task =>
-        moment(task.FinishDate) > moment().startOf("isoWeek") &&
-        moment(task.FinishDate) < moment().endOf("isoWeek")
+    const currentWeekTasks = props.tasks?.filter(
+        (task) => moment(task.FinishDate) > moment().startOf('isoWeek') && moment(task.FinishDate) < moment().endOf('isoWeek'),
     );
-    const dataset = currentWeekTasks?.map(task => {
+    const dataset = currentWeekTasks?.map((task) => {
         const data = [null, null, null, null, null, null, null];
         const finishDate = moment(task.FinishDate);
-        const startDay = moment(finishDate.format("YYYY-MM-DDT00:00:00"));
-        const hour = finishDate.diff(startDay, "hour", true);
-        data[finishDate.isoWeekday() - 1] = [hour - task.DurationHours - (task.DurationMinutes / 60), hour];
-        return {data: data};
+        const startDay = moment(finishDate.format('YYYY-MM-DDT00:00:00'));
+        const hour = finishDate.diff(startDay, 'hour', true);
+        data[finishDate.isoWeekday() - 1] = [hour - task.DurationHours - task.DurationMinutes / 60, hour];
+        return { data: data };
     });
 
     const data = {
-        labels: ["Pondělí", "Úterý", "Středa", "Čtvrtek", "Pátek", "Sobota", "Neděle"],
-        datasets: dataset || []
+        labels: ['Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek', 'Sobota', 'Neděle'],
+        datasets: dataset || [],
     };
 
-    return (
-        <Bar ref={chartRef} options={options} data={data}/>
-    );
+    return <Bar ref={chartRef} options={options} data={data} />;
 };

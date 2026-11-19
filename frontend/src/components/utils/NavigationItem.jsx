@@ -1,18 +1,19 @@
-import {useNavigate} from "react-router-dom";
-import {useRecoilValue, useSetRecoilState} from "recoil";
-import {selectedTabAtom, showNavAtom} from "../../state/atoms";
+import { Link } from 'react-router';
+import { useAtomValue, useSetAtom } from 'jotai';
+import { selectedTabAtom, showNavAtom } from '../../state/atoms';
 
 export const NavigationItem = (props) => {
-    const setShowNav = useSetRecoilState(showNavAtom)
-    const navigate = useNavigate();
-    const handleClick = () => {
-        setShowNav(false)
-        navigate(props.to)
-    }
-    const selectedTab = useRecoilValue(selectedTabAtom)
-    return(
-        <button className={"nav_button" + ((props.text === selectedTab) ? " nav_button__active" : "")} onClick={handleClick}>
-            <img className="menu-icon" src={props.icon} alt={props.text} />
-        </button>
-    )
-}
+    const setShowNav = useSetAtom(showNavAtom);
+    const selectedTab = useAtomValue(selectedTabAtom);
+    const isActive = props.text === selectedTab;
+    return (
+        <Link
+            to={props.to}
+            className={'nav_button' + (isActive ? ' nav_button__active' : '')}
+            aria-current={isActive ? 'page' : undefined}
+            onClick={() => setShowNav(false)}
+        >
+            <img className='menu-icon' src={props.icon} alt={props.text} />
+        </Link>
+    );
+};

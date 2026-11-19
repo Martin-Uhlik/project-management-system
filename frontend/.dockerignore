@@ -1,0 +1,8 @@
+# Keep the build context small; .env stays in: it holds VITE_BACKEND for the build
+node_modules
+build
+coverage
+.DS_Store
+.idea
+.vscode
+npm-debug.log*

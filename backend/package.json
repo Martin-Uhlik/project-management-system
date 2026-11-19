@@ -1,30 +1,47 @@
 {
-  "name": "ad-is-backend",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node --loader ts-node/esm ./src/index.ts",
-    "dev": "nodemon ./src/index.ts"
-  },
-  "author": "Martin Uhlik",
-  "license": "MIT",
-  "dependencies": {
-    "@prisma/client": "^4.7.1",
-    "@types/express": "^4.17.14",
-    "@types/express-fileupload": "^1.4.1",
-    "@types/node": "^18.11.10",
-    "@types/uuid": "^9.0.0",
-    "body-parser": "^1.20.1",
-    "cors": "^2.8.5",
-    "dotenv": "^16.0.3",
-    "express": "^4.18.2",
-    "express-fileupload": "^1.4.0",
-    "moment": "^2.29.4",
-    "prisma": "^4.7.1",
-    "ts-node": "^10.9.1",
-    "typescript": "^4.9.3",
-    "uuid": "^9.0.0"
-  }
+    "name": "ad-is-backend",
+    "version": "1.0.0",
+    "private": true,
+    "type": "module",
+    "engines": {
+        "node": ">=22.18"
+    },
+    "author": "Martin Uhlik",
+    "license": "MIT",
+    "scripts": {
+        "build": "tsc",
+        "start": "node dist/index.js",
+        "dev": "tsx watch src/index.ts",
+        "typecheck": "tsc --noEmit",
+        "lint": "eslint .",
+        "format": "prettier --write .",
+        "format:check": "prettier --check .",
+        "postinstall": "prisma generate",
+        "db:push": "prisma db push"
+    },
+    "dependencies": {
+        "@prisma/adapter-pg": "^7.10.1",
+        "@prisma/client": "^7.10.1",
+        "cors": "^2.8.6",
+        "express": "^5.3.0",
+        "express-fileupload": "^1.6.0",
+        "moment": "^2.31.0",
+        "pg": "^8.23.1"
+    },
+    "devDependencies": {
+        "@eslint/js": "^10.0.1",
+        "@types/cors": "^2.8.19",
+        "@types/express": "^5.0.6",
+        "@types/express-fileupload": "^1.5.1",
+        "@types/node": "^26.6.6",
+        "@types/pg": "^8.23.1",
+        "eslint": "^10.15.0",
+        "eslint-config-prettier": "^10.1.8",
+        "globals": "^17.14.0",
+        "prettier": "^3.10.1",
+        "prisma": "^7.10.1",
+        "tsx": "^4.23.15",
+        "typescript": "~6.0.3",
+        "typescript-eslint": "^8.73.0"
+    }
 }

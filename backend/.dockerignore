@@ -1,0 +1,12 @@
+# Keep the build context small and never copy local state into the image
+node_modules
+dist
+data
+.env*
+.DS_Store
+.idea
+.vscode
+npm-debug.log*
+*.tsbuildinfo
+# made by "prisma generate" inside the image
+src/generated

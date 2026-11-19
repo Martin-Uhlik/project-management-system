@@ -1,73 +1,77 @@
-import {useRegisterEvents, useSigma} from "@react-sigma/core";
-import React from "react";
-import {useNavigate, useParams} from "react-router-dom";
-import {useRecoilState, useSetRecoilState} from "recoil";
-import {dialogAtom, notificationsAtom, tickAtom} from "../../../state/atoms";
-import axios from "axios";
-import {getAuthHeader, getUserID} from "../../../Auth";
-import {getBackendAddress} from "../../../index";
-import moment from "moment/moment";
-import {handleAxiosError} from "../../../errorHandler";
+import { useRegisterEvents, useSigma } from '@react-sigma/core';
+import React from 'react';
+import { useNavigate, useParams } from 'react-router';
+import { useAtom, useSetAtom } from 'jotai';
+import { dialogAtom, notificationsAtom, tickAtom } from '../../../state/atoms';
+import axios from 'axios';
+import { getAuthHeader, getUserID } from '../../../Auth';
+import { getBackendAddress } from '../../../config';
+import moment from 'moment/moment';
+import { handleAxiosError } from '../../../errorHandler';
 
 export const GraphEvents = (props) => {
     const registerEvents = useRegisterEvents();
     const sigma = useSigma();
     const [draggedNode, setDraggedNode] = React.useState(null);
     const navigate = useNavigate();
-    const setDialog = useSetRecoilState(dialogAtom);
+    const setDialog = useSetAtom(dialogAtom);
 
-    const [notifications, setNotifications] = useRecoilState(notificationsAtom);
-    const setTick = useSetRecoilState(tickAtom);
+    const [notifications, setNotifications] = useAtom(notificationsAtom);
+    const setTick = useSetAtom(tickAtom);
 
     const project = useParams().project;
 
     const addTask = (e, name, size, description, finishDate) => {
-        const pos = sigma.viewportToGraph({x: e.event.x, y: e.event.y});
-        axios.post(getBackendAddress(`/auth/projects/${project}/tasks`),
-            {
-                Name: name,
-                Description: description,
-                FinishDate: finishDate,
-                XPosition: pos.x,
-                YPosition: pos.y,
-                Size: size,
-                OwnerID: +getUserID(),
-                ProjectID: +project,
-                Finished: false
-            },
-            getAuthHeader())
-        .then((response) => {
-            setTick(moment());
-        })
-        .catch((error) => {
-            handleAxiosError(error, [notifications, setNotifications]);
-        });
+        const pos = sigma.viewportToGraph({ x: e.event.x, y: e.event.y });
+        axios
+            .post(
+                getBackendAddress(`/auth/projects/${project}/tasks`),
+                {
+                    Name: name,
+                    Description: description,
+                    FinishDate: finishDate,
+                    XPosition: pos.x,
+                    YPosition: pos.y,
+                    Size: size,
+                    OwnerID: +getUserID(),
+                    ProjectID: +project,
+                    Finished: false,
+                },
+                getAuthHeader(),
+            )
+            .then(() => {
+                setTick(moment());
+            })
+            .catch((error) => {
+                handleAxiosError(error, [notifications, setNotifications]);
+            });
     };
 
     const updateTask = (e) => {
         const pos = sigma.viewportToGraph(e);
-        axios.patch(getBackendAddress(`/auth/projects/${project}/tasks/${draggedNode}`),
-            {
-                XPosition: pos.x,
-                YPosition: pos.y
-            },
-            getAuthHeader())
-        .then((response) => {
-        })
-        .catch((error) => {
-            handleAxiosError(error, [notifications, setNotifications]);
-        });
+        axios
+            .patch(
+                getBackendAddress(`/auth/projects/${project}/tasks/${draggedNode}`),
+                {
+                    XPosition: pos.x,
+                    YPosition: pos.y,
+                },
+                getAuthHeader(),
+            )
+            .then(() => {})
+            .catch((error) => {
+                handleAxiosError(error, [notifications, setNotifications]);
+            });
     };
 
     const handleAddTask = (e) => {
         setDialog({
-            type: "AddTask",
+            type: 'AddTask',
             data: {
                 event: e,
                 handleSubmit: addTask,
-                handleCancel: () => {
-                }
-            }
+                handleCancel: () => {},
+            },
         });
     };
 
@@ -76,16 +80,16 @@ export const GraphEvents = (props) => {
             downNode: (e) => {
                 setDraggedNode(e.node);
                 props.selectNode(e.node);
-                sigma.getGraph().setNodeAttribute(e.node, "highlighted", true);
+                sigma.getGraph().setNodeAttribute(e.node, 'highlighted', true);
             },
             mouseup: (e) => {
                 if (draggedNode) {
                     updateTask(e);
                     setDraggedNode(null);
-                    sigma.getGraph().removeNodeAttribute(draggedNode, "highlighted");
+                    sigma.getGraph().removeNodeAttribute(draggedNode, 'highlighted');
                 }
             },
-            mousedown: (e) => {
+            mousedown: () => {
                 if (!sigma.getCustomBBox()) sigma.setCustomBBox(sigma.getBBox());
             },
             mousemove: (e) => {
@@ -94,8 +98,8 @@ export const GraphEvents = (props) => {
                     e.original.preventDefault();
                     e.original.stopPropagation();
                     const pos = sigma.viewportToGraph(e);
-                    sigma.getGraph().setNodeAttribute(draggedNode, "x", pos.x);
-                    sigma.getGraph().setNodeAttribute(draggedNode, "y", pos.y);
+                    sigma.getGraph().setNodeAttribute(draggedNode, 'x', pos.x);
+                    sigma.getGraph().setNodeAttribute(draggedNode, 'y', pos.y);
                 }
             },
             clickStage: (e) => {
@@ -111,7 +115,7 @@ export const GraphEvents = (props) => {
             doubleClickStage: (e) => {
                 e.preventSigmaDefault();
                 handleAddTask(e);
-            }
+            },
         });
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [draggedNode, registerEvents, props.selectNode, sigma]);

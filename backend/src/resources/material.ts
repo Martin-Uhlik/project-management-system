@@ -1,25 +1,25 @@
-import {Request, Response} from "express";
-import {getToken} from "./utilities";
-import prisma from "../client";
-import {verifyUser} from "../auth";
-import {exceptionHandler} from "../exceptionHandler";
+import type { Request, Response } from 'express';
+import { getToken } from './utilities.ts';
+import prisma from '../client.ts';
+import { verifyUser } from '../auth.ts';
+import { exceptionHandler } from '../exceptionHandler.ts';
 
 export const createMaterial = exceptionHandler(async (req: Request, res: Response) => {
     await verifyUser(getToken(req));
     const material = await prisma.material.create({
         data: {
             Name: req.body.Name,
-        }
-    })
+        },
+    });
 
     await prisma.materialEvent.create({
         data: {
             Count: req.body.Count,
             TargetUserID: req.body.TargetUserID,
             MaterialID: material.ID,
-            EventType: "ADD"
-        }
-    })
+            EventType: 'ADD',
+        },
+    });
     return res.status(200).send();
 });
 
@@ -27,28 +27,27 @@ export const getMaterials = exceptionHandler(async (req: Request, res: Response)
     await verifyUser(getToken(req));
     const materials = await prisma.material.findMany({
         include: {
-            MaterialEvent: true
+            MaterialEvent: true,
         },
         orderBy: {
-            Name: "asc"
-        }
-    })
-    return res.status(200).send(materials)
+            Name: 'asc',
+        },
+    });
+    return res.status(200).send(materials);
 });
 
 export const updateMaterial = exceptionHandler(async (req: Request, res: Response) => {
     await verifyUser(getToken(req));
     await prisma.material.update({
         where: {
-            ID: +req.params.materialID
+            ID: +req.params.materialID,
         },
         data: {
             Name: req.body.Name,
-        }
-    })
-    return res.status(200).send()
+        },
+    });
+    return res.status(200).send();
 });
-
 
 export const eventMaterial = exceptionHandler(async (req: Request, res: Response) => {
     await verifyUser(getToken(req));
@@ -56,8 +55,8 @@ export const eventMaterial = exceptionHandler(async (req: Request, res: Response
         data: {
             ...req.body,
             MaterialID: +req.params.materialID,
-        }
-    })
+        },
+    });
     return res.status(200).send();
 });
 
@@ -65,11 +64,11 @@ export const getTaskMaterial = exceptionHandler(async (req: Request, res: Respon
     await verifyUser(getToken(req));
     const materials = await prisma.materialEvent.findMany({
         where: {
-            TargetTaskID: +req.params.taskID
+            TargetTaskID: +req.params.taskID,
         },
         include: {
-            Material: true
-        }
-    })
-    return res.status(200).send(materials)
+            Material: true,
+        },
+    });
+    return res.status(200).send(materials);
 });

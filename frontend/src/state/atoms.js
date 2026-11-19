@@ -1,33 +1,14 @@
-import {atom} from "recoil";
-import moment from "moment";
+import { atom } from 'jotai';
+import moment from 'moment';
 
+export const selectedTabAtom = atom(null);
 
-export const selectedTabAtom = atom({
-    key: 'selectedTabAtom',
-    default: null
-});
+export const notificationsAtom = atom([]);
 
-export const notificationsAtom = atom({
-    key: 'notificationsAtom',
-    default: []
-});
+export const dialogAtom = atom(null);
 
-export const dialogAtom = atom({
-    key: 'dialogAtom',
-    default: null
-});
+export const userAtom = atom(null);
 
-export const userAtom = atom({
-    key: 'userAtom',
-    default: null
-});
+export const showNavAtom = atom(false);
 
-export const showNavAtom = atom({
-    key: 'showNavAtom',
-    default: false
-});
-
-export const tickAtom = atom({
-    key: 'tick',
-    default: moment()
-});
+export const tickAtom = atom(moment());

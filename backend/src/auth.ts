@@ -1,30 +1,26 @@
-import {v4 as uuidv4} from 'uuid';
-import prisma from "./client";
-
-var crypto = require('crypto')
-
+import crypto from 'node:crypto';
+import prisma from './client.ts';
 
 export const calculateSalt = () => {
-    return uuidv4();
-}
+    return crypto.randomUUID();
+};
 
 export const calculateHash = (password: string, salt: string) => {
-    return crypto.createHash('sha256').update(password + salt).digest('hex')
-}
+    return crypto
+        .createHash('sha256')
+        .update(password + salt)
+        .digest('hex');
+};
 
-export class AuthError extends Error {
-    constructor(message: string) {
-        super(message)
-    }
-}
+export class AuthError extends Error {}
 
 export const verifyUser = async (token: string) => {
     const match = await prisma.userSession.findFirst({
         where: {
-            Token: token
-        }
-    })
+            Token: token,
+        },
+    });
     if (!match) {
-        throw new AuthError("403")
+        throw new AuthError('403');
     }
-}
+};

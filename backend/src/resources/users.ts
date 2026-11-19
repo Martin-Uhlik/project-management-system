@@ -1,17 +1,16 @@
-import {Request, Response} from "express";
-import prisma from "../client";
-import {getToken} from "./utilities";
-import {calculateHash, calculateSalt, verifyUser} from "../auth";
-import moment from "moment";
-import {exceptionHandler} from "../exceptionHandler";
-
+import type { Request, Response } from 'express';
+import prisma from '../client.ts';
+import { getToken } from './utilities.ts';
+import { calculateHash, calculateSalt, verifyUser } from '../auth.ts';
+import moment from 'moment';
+import { exceptionHandler } from '../exceptionHandler.ts';
 
 export const createUser = exceptionHandler(async (req: Request, res: Response) => {
     await verifyUser(getToken(req));
 
-    const user = req.body.user
-    const salt = calculateSalt()
-    const hash = calculateHash(user.Password, salt)
+    const user = req.body.user;
+    const salt = calculateSalt();
+    const hash = calculateHash(user.Password, salt);
     await prisma.user.create({
         data: {
             UserName: user.UserName,
@@ -21,19 +20,19 @@ export const createUser = exceptionHandler(async (req: Request, res: Response) =
             PasswordSalt: salt,
             Enabled: true,
             Position: user.Position,
-            UserType: user.UserType
-        }
-    })
+            UserType: user.UserType,
+        },
+    });
     return res.status(200).send();
-})
+});
 
 export const getUser = exceptionHandler(async (req: Request, res: Response) => {
     await verifyUser(getToken(req));
-    const start = moment().startOf("isoWeek")
-    const stop = moment().endOf("isoWeek")
+    const start = moment().startOf('isoWeek');
+    const stop = moment().endOf('isoWeek');
     const user = await prisma.user.findUniqueOrThrow({
         where: {
-            ID: +req.params.userID
+            ID: +req.params.userID,
         },
         select: {
             ID: true,
@@ -49,21 +48,20 @@ export const getUser = exceptionHandler(async (req: Request, res: Response) => {
                 where: {
                     StartTime: {
                         gte: new Date(start.toString()),
-                        lt: new Date(stop.toString())
-                    }
-                }
+                        lt: new Date(stop.toString()),
+                    },
+                },
             },
             User_Task: {
                 include: {
-                    Task: true
-                }
-            }
-        }
-    })
+                    Task: true,
+                },
+            },
+        },
+    });
 
     return res.status(200).send(user);
-})
-
+});
 
 export const getUsers = exceptionHandler(async (req: Request, res: Response) => {
     await verifyUser(getToken(req));
@@ -77,42 +75,42 @@ export const getUsers = exceptionHandler(async (req: Request, res: Response) => 
             Position: true,
             WorkStartTime: true,
             UserType: true,
-            CurrentTaskID: true
-        }
-    })
-    return res.status(200).send(users)
-})
+            CurrentTaskID: true,
+        },
+    });
+    return res.status(200).send(users);
+});
 
 export const updateUser = exceptionHandler(async (req: Request, res: Response) => {
     await verifyUser(getToken(req));
     await prisma.user.update({
         where: {
-            ID: +req.params.userID
+            ID: +req.params.userID,
         },
         data: {
-            ...req.body
-        }
-    })
-    return res.status(200).send()
-})
+            ...req.body,
+        },
+    });
+    return res.status(200).send();
+});
 
 export const logTime = exceptionHandler(async (req: Request, res: Response) => {
     await verifyUser(getToken(req));
     const user = await prisma.user.update({
         where: {
-            ID: +req.params.userID
+            ID: +req.params.userID,
         },
         data: {
-            WorkStartTime: null
-        }
-    })
+            WorkStartTime: null,
+        },
+    });
 
     await prisma.workTime.create({
         data: {
             StartTime: req.body.WorkStartTime,
             StopTime: req.body.WorkStopTime,
-            UserID: user.ID
-        }
-    })
-    return res.status(200).send()
-})
+            UserID: user.ID,
+        },
+    });
+    return res.status(200).send();
+});

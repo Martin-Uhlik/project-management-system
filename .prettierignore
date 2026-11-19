@@ -1,0 +1,9 @@
+# Ignore artifacts:
+build
+dist
+coverage
+node_modules
+package-lock.json
+backend/src/generated
+backend/data
+database/data

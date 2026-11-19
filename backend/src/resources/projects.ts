@@ -1,8 +1,8 @@
-import {Request, Response} from "express";
-import {getToken} from "./utilities";
-import prisma from "../client";
-import {verifyUser} from "../auth";
-import {exceptionHandler} from "../exceptionHandler";
+import type { Request, Response } from 'express';
+import { getToken } from './utilities.ts';
+import prisma from '../client.ts';
+import { verifyUser } from '../auth.ts';
+import { exceptionHandler } from '../exceptionHandler.ts';
 
 export const createProject = exceptionHandler(async (req: Request, res: Response) => {
     await verifyUser(getToken(req));
@@ -10,53 +10,53 @@ export const createProject = exceptionHandler(async (req: Request, res: Response
         data: {
             ...req.body,
             Finished: false,
-        }
-    })
+        },
+    });
     return res.status(200).send();
-})
+});
 
 export const getProjects = exceptionHandler(async (req: Request, res: Response) => {
     await verifyUser(getToken(req));
     const projects = await prisma.project.findMany({
         where: {
-            Deleted: false
+            Deleted: false,
         },
         select: {
             ID: true,
             Name: true,
             Customer: true,
             FinishDate: true,
-            Finished: true
+            Finished: true,
         },
         orderBy: {
-            Name: "asc"
-        }
-    })
-    return res.status(200).send(projects)
-})
+            Name: 'asc',
+        },
+    });
+    return res.status(200).send(projects);
+});
 
 export const getProject = exceptionHandler(async (req: Request, res: Response) => {
     await verifyUser(getToken(req));
     const project = await prisma.project.findUnique({
         where: {
-            ID: +req.params.projectID
+            ID: +req.params.projectID,
         },
         include: {
             Memeber: {
                 select: {
-                    User: true
-                }
-            }
-        }
-    })
-    return res.status(200).send(project)
-})
+                    User: true,
+                },
+            },
+        },
+    });
+    return res.status(200).send(project);
+});
 
 export const updateProject = exceptionHandler(async (req: Request, res: Response) => {
     await verifyUser(getToken(req));
     await prisma.project.update({
         where: {
-            ID: +req.params.projectID
+            ID: +req.params.projectID,
         },
         data: {
             Name: req.body.Name,
@@ -67,26 +67,26 @@ export const updateProject = exceptionHandler(async (req: Request, res: Response
             OwnerID: req.body.OwnerID,
             Memeber: {
                 deleteMany: {
-                    ProjectID: +req.params.projectID
+                    ProjectID: +req.params.projectID,
                 },
                 createMany: {
-                    data: req.body.Members
-                }
-            }
-        }
-    })
-    return res.status(200).send()
-})
+                    data: req.body.Members,
+                },
+            },
+        },
+    });
+    return res.status(200).send();
+});
 
 export const removeProject = exceptionHandler(async (req: Request, res: Response) => {
     await verifyUser(getToken(req));
     await prisma.project.update({
         where: {
-            ID: +req.params.projectID
+            ID: +req.params.projectID,
         },
         data: {
-            Deleted: true
-        }
-    })
-    return res.status(200).send()
-})
+            Deleted: true,
+        },
+    });
+    return res.status(200).send();
+});

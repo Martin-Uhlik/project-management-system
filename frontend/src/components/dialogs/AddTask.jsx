@@ -1,13 +1,13 @@
-import React, {useState} from "react";
-import {useRecoilState} from "recoil";
-import {dialogAtom} from "../../state/atoms";
-import moment from "moment/moment";
-import {CustomizedDateTimePicker} from "../utils/CustomizedDateTimePicker";
+import React, { useState } from 'react';
+import { useModalDialog } from '../utils/useModalDialog';
+import { useAtom } from 'jotai';
+import { dialogAtom } from '../../state/atoms';
+import moment from 'moment/moment';
+import { CustomizedDateTimePicker } from '../utils/CustomizedDateTimePicker';
 
-
-export const AddTask = (e) => {
-    const [dialog, setDialog] = useRecoilState(dialogAtom);
-    const [name, setName] = React.useState("");
+export const AddTask = () => {
+    const [dialog, setDialog] = useAtom(dialogAtom);
+    const [name, setName] = React.useState('');
     const [role, setRole] = React.useState(30);
 
     const handleCancel = (event) => {
@@ -24,51 +24,59 @@ export const AddTask = (e) => {
 
     const [finishDate, setFinishDate] = useState(moment());
 
+    const dialogRef = useModalDialog(handleCancel);
     return (
-        <div className="dialog-background">
-            <div className="dialog">
-                <h1 className="dialog-h1">Přidat úkol</h1>
-                <hr className="hline"/>
-                <form className="login-form" onSubmit={handleSubmit}>
-                    <div className="form-group">
-                        <label htmlFor="name">Název úkolu:</label>
-                        <input className="form-control"
-                               type="text"
-                               id="name"
-                               name="name"
-                               value={name}
-                               onChange={(event) => {
-                                   setName(event.target.value);
-                               }}
-                               autoFocus/>
+        <div className='dialog-background'>
+            <div className='dialog' role='dialog' aria-modal='true' aria-labelledby='dialog-title' ref={dialogRef}>
+                <h1 id='dialog-title' className='dialog-h1'>
+                    Přidat úkol
+                </h1>
+                <hr className='hline' />
+                <form className='login-form' onSubmit={handleSubmit}>
+                    <div className='form-group'>
+                        <label htmlFor='name'>Název úkolu:</label>
+                        <input
+                            className='form-control'
+                            type='text'
+                            id='name'
+                            name='name'
+                            value={name}
+                            onChange={(event) => {
+                                setName(event.target.value);
+                            }}
+                        />
                     </div>
-                    <CustomizedDateTimePicker finishDate={finishDate} setFinishDate={setFinishDate}/>
+                    <CustomizedDateTimePicker finishDate={finishDate} setFinishDate={setFinishDate} />
 
-                    <div className="form-group">
-                        <label htmlFor="role">Velikost:</label>
+                    <div className='form-group'>
+                        <label htmlFor='role'>Velikost:</label>
                         <select
-                            id="size"
-                            name="size"
-                            className="form-select"
+                            id='size'
+                            name='size'
+                            className='form-select'
                             onChange={(event) => {
                                 setRole(+event.target.value);
                             }}
-                            defaultValue={"30"}
+                            defaultValue={'30'}
                         >
-                            <option value="10">XS</option>
-                            <option value="20">S</option>
-                            <option value="30">M</option>
-                            <option value="40">L</option>
-                            <option value="50">XL</option>
+                            <option value='10'>XS</option>
+                            <option value='20'>S</option>
+                            <option value='30'>M</option>
+                            <option value='40'>L</option>
+                            <option value='50'>XL</option>
                         </select>
                     </div>
-                    <div className="form-group">
-                        <label htmlFor="description">Popis:</label>
-                        <textarea className="form-control" id="description" name="description" rows="3"></textarea>
+                    <div className='form-group'>
+                        <label htmlFor='description'>Popis:</label>
+                        <textarea className='form-control' id='description' name='description' rows='3'></textarea>
                     </div>
-                    <div className="d-flex gap-3 justify-content-end">
-                        <button className="btn btn-danger" type="reset" onClick={handleCancel}>Zrušit</button>
-                        <button className="btn btn-success" type="submit">Ok</button>
+                    <div className='d-flex gap-3 justify-content-end'>
+                        <button className='btn btn-danger' type='reset' onClick={handleCancel}>
+                            Zrušit
+                        </button>
+                        <button className='btn btn-success' type='submit'>
+                            Ok
+                        </button>
                     </div>
                 </form>
             </div>

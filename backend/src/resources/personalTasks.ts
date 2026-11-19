@@ -1,8 +1,8 @@
-import {Request, Response} from "express";
-import {getToken} from "./utilities";
-import prisma from "../client";
-import {verifyUser} from "../auth";
-import {exceptionHandler} from "../exceptionHandler";
+import type { Request, Response } from 'express';
+import { getToken } from './utilities.ts';
+import prisma from '../client.ts';
+import { verifyUser } from '../auth.ts';
+import { exceptionHandler } from '../exceptionHandler.ts';
 
 export const createTask = exceptionHandler(async (req: Request, res: Response) => {
     await verifyUser(getToken(req));
@@ -10,9 +10,9 @@ export const createTask = exceptionHandler(async (req: Request, res: Response) =
         data: {
             ...req.body.task,
             Finished: false,
-            UserID: +req.params.userID
-        }
-    })
+            UserID: +req.params.userID,
+        },
+    });
     return res.status(200).send();
 });
 
@@ -20,23 +20,22 @@ export const getTasks = exceptionHandler(async (req: Request, res: Response) => 
     await verifyUser(getToken(req));
     const tasks = await prisma.privateTask.findMany({
         where: {
-            UserID: +req.params.userID
-        }
-    })
+            UserID: +req.params.userID,
+        },
+    });
     return res.status(200).send(tasks);
 });
-
 
 export const updateTask = exceptionHandler(async (req: Request, res: Response) => {
     await verifyUser(getToken(req));
     const tasks = await prisma.privateTask.update({
         where: {
-            ID: +req.params.taskID
+            ID: +req.params.taskID,
         },
         data: {
-            ...req.body.task
-        }
-    })
+            ...req.body.task,
+        },
+    });
     return res.status(200).send(tasks);
 });
 
@@ -45,8 +44,8 @@ export const removeFinished = exceptionHandler(async (req: Request, res: Respons
     const tasks = await prisma.privateTask.deleteMany({
         where: {
             ID: req.body.ID,
-            Finished: true
-        }
-    })
+            Finished: true,
+        },
+    });
     return res.status(200).send(tasks);
 });

@@ -1,8 +1,7 @@
-import {Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow} from "@mui/material";
-import {ProjectRow} from "./rows/ProjectRow";
-import React from "react";
+import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
+import { ProjectRow } from './rows/ProjectRow';
 
-export const ProjectTable = ({projects, setSelectedProject}) => {
+export const ProjectTable = ({ projects, setSelectedProject }) => {
     return (
         <TableContainer component={Paper}>
             <Table>
@@ -15,9 +14,9 @@ export const ProjectTable = ({projects, setSelectedProject}) => {
                     </TableRow>
                 </TableHead>
                 <TableBody>
-                    {projects.map((project) =>
+                    {projects.map((project) => (
                         <ProjectRow key={project.ID} project={project} setSelectedProject={setSelectedProject} />
-                    )}
+                    ))}
                 </TableBody>
             </Table>
         </TableContainer>

@@ -1,50 +1,39 @@
-import {Bar} from "react-chartjs-2";
-import React from "react";
-import {BarElement, CategoryScale, Chart as ChartJS, LinearScale, Tooltip} from "chart.js";
+import { Bar } from 'react-chartjs-2';
+import { BarElement, CategoryScale, Chart as ChartJS, LinearScale, Tooltip } from 'chart.js';
 
 export const WorkTimeChart = (props) => {
-    const borderColor = getComputedStyle(document.documentElement)
-    .getPropertyValue("--work-time-chart-border");
-    const backgroundColor = getComputedStyle(document.documentElement)
-    .getPropertyValue("--work-time-chart-backround");
+    const borderColor = getComputedStyle(document.documentElement).getPropertyValue('--work-time-chart-border');
+    const backgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--work-time-chart-backround');
 
-    ChartJS.register(
-        CategoryScale,
-        LinearScale,
-        BarElement,
-        Tooltip
-    );
+    ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip);
 
     const options = {
         maintainAspectRatio: false,
         scales: {
             x: {
                 grid: {
-                    display: false
-                }
-            }
+                    display: false,
+                },
+            },
         },
-        indexAxis: "x",
+        indexAxis: 'x',
         elements: {
             bar: {
-                borderWidth: 2
-            }
+                borderWidth: 2,
+            },
         },
-        responsive: true
-
+        responsive: true,
     };
     const data = {
-        labels: ["Pondělí", "Úterý", "Středa", "Čtvrtek", "Pátek", "Sobota", "Neděle"],
+        labels: ['Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek', 'Sobota', 'Neděle'],
         datasets: [
             {
                 data: props.dataset,
                 borderColor: borderColor,
-                backgroundColor: backgroundColor
-            }
-        ]
+                backgroundColor: backgroundColor,
+            },
+        ],
     };
 
-    return (
-        <Bar options={options} data={data}/>
-    );
+    return <Bar options={options} data={data} />;
 };

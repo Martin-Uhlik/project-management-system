@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+
+# Build output
+backend/dist/
+frontend/build/
+coverage/
+
+# Prisma client, made by "prisma generate" (npm install runs it)
+backend/src/generated/
+
+# Runtime data (uploaded files, database files)
+backend/data/
+database/data/
+
+# Logs and caches
+npm-debug.log*
+*.tsbuildinfo
+.eslintcache
+
+# Editors and OS
+.idea
+.vscode
+.DS_Store
