@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { AssignedTasks } from './overview/AssignedTasks';
 import { MyTasks } from './overview/MyTasks';
-import { useAtom, useAtomValue, useSetAtom } from 'jotai';
-import { notificationsAtom, selectedTabAtom, tickAtom } from '../../state/atoms';
+import { useAtom, useSetAtom } from 'jotai';
+import { notificationsAtom, selectedTabAtom } from '../../state/atoms';
+import { useLive } from '../../state/live';
 import { WorkTimeChart } from '../utils/WorkTimeChart';
 import { WorkPlanChart } from '../utils/WorkPlanChart';
 import { getAuthHeader, getUserID } from '../../Auth';
@@ -20,7 +21,8 @@ export const Overview = () => {
         setTab('Přehled');
     });
 
-    const tick = useAtomValue(tickAtom);
+    // reloaded when someone changes this data (live updates) or after a change made here
+    const tick = useLive(`user:${getUserID()}`, `personal-tasks:${getUserID()}`);
     const [notifications, setNotifications] = useAtom(notificationsAtom);
     const [user, setUser] = useState(null);
 

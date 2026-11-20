@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { useAtom, useSetAtom } from 'jotai';
 import { dialogAtom, notificationsAtom, tickAtom } from '../../../state/atoms';
+import { useLive } from '../../../state/live';
 import { MyTask } from '../../utils/MyTask';
 import axios from 'axios';
 import { handleAxiosError } from '../../../errorHandler';
@@ -13,7 +14,9 @@ export const MyTasks = () => {
     const setDialog = useSetAtom(dialogAtom);
     const [notifications, setNotifications] = useAtom(notificationsAtom);
     const [tasks, setTasks] = React.useState([]);
-    const [tick, setTick] = useAtom(tickAtom);
+    // reloaded when someone changes this data (live updates) or after a change made here
+    const tick = useLive(`personal-tasks:${getUserID()}`);
+    const setTick = useSetAtom(tickAtom);
 
     useEffect(() => {
         axios

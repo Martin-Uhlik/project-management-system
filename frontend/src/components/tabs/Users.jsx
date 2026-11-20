@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { Navigate } from 'react-router';
 import { dialogAtom, notificationsAtom, selectedTabAtom, tickAtom, userAtom } from '../../state/atoms';
+import { useLive } from '../../state/live';
 import { UserSettings } from './users/UserSettings';
 import axios from 'axios';
 import { getBackendAddress } from '../../config';
@@ -20,7 +21,9 @@ export const Users = () => {
     React.useEffect(() => {
         setTab('Pracovníci');
     });
-    const [tick, setTick] = useAtom(tickAtom);
+    // reloaded when someone changes this data (live updates) or after a change made here
+    const tick = useLive('users');
+    const setTick = useSetAtom(tickAtom);
     const [notifications, setNotifications] = useAtom(notificationsAtom);
     const [users, setUsers] = React.useState([]);
     const [selectedUser, setSelectedUser] = React.useState(null);

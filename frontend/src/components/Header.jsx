@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router';
 import { useEffect } from 'react';
 import { useAtom, useSetAtom } from 'jotai';
 import { dialogAtom, notificationsAtom, showNavAtom, userAtom } from '../state/atoms';
+import { useLive } from '../state/live';
 import { Timer } from './Timer';
 import axios from 'axios';
 import { getAuthHeader, getUserID } from '../Auth';
@@ -16,6 +17,8 @@ export const Header = () => {
     const navigate = useNavigate();
     const setDialog = useSetAtom(dialogAtom);
     const [notifications, setNotifications] = useAtom(notificationsAtom);
+    // reloaded when the user's account or timer changes elsewhere (another tab or device, an admin)
+    const live = useLive(`user:${getUserID()}`);
 
     useEffect(() => {
         axios
@@ -27,7 +30,7 @@ export const Header = () => {
                 handleAxiosError(error, [notifications, setNotifications]);
             });
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [live]);
 
     const logout = () => {
         axios.post(getBackendAddress('/auth/logout'), {}, getAuthHeader()).then(() => {

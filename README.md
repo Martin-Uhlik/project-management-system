@@ -20,6 +20,12 @@ A project management system that enables efficient workforce planning. It allows
 
 ![ERD](https://github.com/user-attachments/assets/b028dfa5-0bf7-495a-bfae-91312e2656e3)
 
+## Live updates
+
+The app is multi-user and live: data is read and changed over REST, and the API also runs a Socket.IO server (path `/live`, same port) that tells each open browser when data it shows was changed by someone else, as a topic such as `projects`, `project:12` or `user:5`. The screens showing that data load it again over REST; nothing is polled. A browser is only told about data its user may see (a project's tasks go to its owner, members, assignees, managers and admins; a worker's time to the worker, their managers and admins; personal tasks to their owner). The connection signs in with the session cookie and is closed when the session ends. See `backend/src/live.ts` and `frontend/src/state/live.js`.
+
+If a reverse proxy is put in front of the API, it must pass WebSocket upgrades on `/live/` (in nginx: `proxy_http_version 1.1`, `proxy_set_header Upgrade $http_upgrade` and `proxy_set_header Connection "upgrade"`); without them the connection falls back to long polling, which still works.
+
 # User manual
 
 [Here](https://github.com/Martin-Uhlik/project-management-system/blob/main/manual/user_manual.pdf)
@@ -90,7 +96,7 @@ cd backend && npm run db:baseline && npm run db:deploy
 - Sign-in sets an httpOnly session cookie (scripts can't read it) that expires after 20 hours; signing out, a password change or blocking the account ends the session. Sign-in attempts are limited per user name and per IP.
 - Passwords are hashed with scrypt; older accounts are upgraded the next time they sign in.
 - The API checks roles itself: admins manage users, machines and deleting projects; admins and managers manage projects, tasks, stock and material requests; users see the projects they own or belong to and the tasks assigned to them, change their own timer, password and personal tasks, and finish their assigned tasks. Every endpoint accepts only the fields it expects.
-- Only `FRONTEND_ORIGIN` may call the API from a browser (CORS), and requests that change data from other origins are refused.
+- Only `FRONTEND_ORIGIN` may call the API from a browser (CORS), and requests that change data from other origins are refused. The same goes for the live updates connection.
 
 ## The whole system, like in production
 

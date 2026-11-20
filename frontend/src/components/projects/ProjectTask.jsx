@@ -1,5 +1,6 @@
 import { useAtom, useSetAtom } from 'jotai';
-import { notificationsAtom, selectedTabAtom, tickAtom } from '../../state/atoms';
+import { notificationsAtom, selectedTabAtom } from '../../state/atoms';
+import { useLive } from '../../state/live';
 import React, { useEffect, useState } from 'react';
 import { Outlet, useParams } from 'react-router';
 import axios from 'axios';
@@ -28,7 +29,8 @@ export const ProjectTask = () => {
     const { project: projectID, task: taskID } = useParams();
     const [project, setProject] = useState(null);
     const [task, setTask] = useState(null);
-    const [tick] = useAtom(tickAtom);
+    // reloaded when someone changes this data (live updates) or after a change made here
+    const tick = useLive(`project:${projectID}`);
     const [notifications, setNotifications] = useAtom(notificationsAtom);
 
     useEffect(() => {

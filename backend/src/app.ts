@@ -13,6 +13,7 @@ import * as material from './resources/material.ts';
 import * as materialRequirements from './resources/materialRequirements.ts';
 import * as personalTasks from './resources/personalTasks.ts';
 import * as stats from './resources/stats.ts';
+import { live, personalTaskTopics, projectTopics, resync, topic, userTopics } from './live.ts';
 
 // The addresses the frontend is opened from (FRONTEND_ORIGIN, comma separated). Only they may call the API from a
 // browser: CORS answers them alone, and requests that change data from any other origin are refused.
@@ -47,23 +48,33 @@ export const createApp = (options: AppOptions = {}) => {
     const ADMIN = requireRole('ADMIN');
     const MANAGER = requireRole('ADMIN', 'MANAGER');
 
+    // live(...): after a change, the browsers that show the changed data are told to load it again (see live.ts)
+    const USERS = live(topic('users'));
+    const USER = live(userTopics());
+    const PROJECTS = live(topic('projects'));
+    const PROJECT = live(projectTopics());
+    const PROJECT_AND_MACHINES = live(projectTopics(), topic('machines'));
+    const PERSONAL_TASKS = live(personalTaskTopics());
+    const MATERIAL = live(topic('material'));
+    const MACHINES = live(topic('machines'));
+
     // sign-in; everything under /auth needs a valid session
     app.post('/login', utilities.login(loginLimiter));
     app.use('/auth', requireSession);
 
     // the signed-in user
     app.get('/auth/me', utilities.me);
-    app.post('/auth/logout', utilities.logout);
+    app.post('/auth/logout', resync(), utilities.logout);
     app.get('/auth/:userID/tasks', tasks.getUserTasks);
 
-    app.post('/auth/users/timer/:userID', users.logTime);
-    app.patch('/auth/users/password/:userID', utilities.setPassword);
+    app.post('/auth/users/timer/:userID', USER, users.logTime);
+    app.patch('/auth/users/password/:userID', resync('userID'), utilities.setPassword);
 
     // user management
     app.get('/auth/users', users.getUsers);
-    app.post('/auth/users', ADMIN, users.createUser);
+    app.post('/auth/users', ADMIN, USERS, users.createUser);
     app.get('/auth/users/:userID', users.getUser);
-    app.patch('/auth/users/:userID', users.updateUser);
+    app.patch('/auth/users/:userID', USER, resync('userID'), users.updateUser);
 
     // worker statistics (whose: see stats.ts)
     app.get('/auth/stats/people', stats.getStatsPeople);
@@ -71,58 +82,58 @@ export const createApp = (options: AppOptions = {}) => {
 
     // project management
     app.get('/auth/projects', projects.getProjects);
-    app.post('/auth/projects', MANAGER, projects.createProject);
+    app.post('/auth/projects', MANAGER, PROJECTS, projects.createProject);
     app.get('/auth/projects/:projectID', projects.getProject);
     app.get('/auth/projects/:projectID/stats', projects.getProjectStats);
-    app.patch('/auth/projects/:projectID', MANAGER, projects.updateProject);
-    app.delete('/auth/projects/:projectID', ADMIN, projects.removeProject);
+    app.patch('/auth/projects/:projectID', MANAGER, PROJECT, projects.updateProject);
+    app.delete('/auth/projects/:projectID', ADMIN, PROJECT, projects.removeProject);
 
     // task management
     app.get('/auth/projects/:projectID/tasks', tasks.getProjectTasks);
-    app.post('/auth/projects/:projectID/tasks', MANAGER, tasks.createTask);
+    app.post('/auth/projects/:projectID/tasks', MANAGER, PROJECT, tasks.createTask);
     app.get('/auth/projects/:projectID/tasks/:taskID', tasks.getTask);
-    app.patch('/auth/projects/:projectID/tasks/:taskID', tasks.updateTask);
-    app.delete('/auth/projects/:projectID/tasks/:taskID', MANAGER, tasks.removeTask);
+    app.patch('/auth/projects/:projectID/tasks/:taskID', PROJECT_AND_MACHINES, tasks.updateTask);
+    app.delete('/auth/projects/:projectID/tasks/:taskID', MANAGER, PROJECT_AND_MACHINES, USERS, tasks.removeTask);
 
-    app.post('/auth/projects/:projectID/tasks/:taskID/predecessor', MANAGER, tasks.addPredecessor);
-    app.post('/auth/projects/:projectID/tasks/:taskID/successor', MANAGER, tasks.addSuccessor);
-    app.delete('/auth/projects/:projectID/tasks/:taskID/predecessor', MANAGER, tasks.removePredecessor);
-    app.delete('/auth/projects/:projectID/tasks/:taskID/successor', MANAGER, tasks.removeSuccessor);
+    app.post('/auth/projects/:projectID/tasks/:taskID/predecessor', MANAGER, PROJECT, tasks.addPredecessor);
+    app.post('/auth/projects/:projectID/tasks/:taskID/successor', MANAGER, PROJECT, tasks.addSuccessor);
+    app.delete('/auth/projects/:projectID/tasks/:taskID/predecessor', MANAGER, PROJECT, tasks.removePredecessor);
+    app.delete('/auth/projects/:projectID/tasks/:taskID/successor', MANAGER, PROJECT, tasks.removeSuccessor);
 
     app.get('/auth/projects/:projectID/tasks/:taskID/input-files', tasks.getInputFiles);
     app.get('/auth/projects/:projectID/tasks/:taskID/output-files', tasks.getOutputFiles);
-    app.post('/auth/projects/:projectID/tasks/:taskID/input-files', tasks.uploadInputFile);
-    app.post('/auth/projects/:projectID/tasks/:taskID/output-files', tasks.uploadOutputFile);
+    app.post('/auth/projects/:projectID/tasks/:taskID/input-files', PROJECT, tasks.uploadInputFile);
+    app.post('/auth/projects/:projectID/tasks/:taskID/output-files', PROJECT, tasks.uploadOutputFile);
     app.get('/auth/projects/:projectID/tasks/:taskID/input-files/:fileName', tasks.downloadInputFile);
     app.get('/auth/projects/:projectID/tasks/:taskID/output-files/:fileName', tasks.downloadOutputFile);
 
     // personal tasks management
     app.get('/auth/:userID/personal-tasks', personalTasks.getTasks);
-    app.post('/auth/:userID/personal-tasks', personalTasks.createTask);
-    app.patch('/auth/:userID/personal-tasks/:taskID', personalTasks.updateTask);
-    app.delete('/auth/:userID/personal-tasks', personalTasks.removeFinished);
-    app.delete('/auth/:userID/personal-tasks/:taskID', personalTasks.removeTask);
+    app.post('/auth/:userID/personal-tasks', PERSONAL_TASKS, personalTasks.createTask);
+    app.patch('/auth/:userID/personal-tasks/:taskID', PERSONAL_TASKS, personalTasks.updateTask);
+    app.delete('/auth/:userID/personal-tasks', PERSONAL_TASKS, personalTasks.removeFinished);
+    app.delete('/auth/:userID/personal-tasks/:taskID', PERSONAL_TASKS, personalTasks.removeTask);
 
     // material management
     app.get('/auth/material', material.getMaterials);
-    app.post('/auth/material', MANAGER, material.createMaterial);
-    app.patch('/auth/material/:materialID', MANAGER, material.updateMaterial);
-    app.post('/auth/material/:materialID/event', material.eventMaterial);
+    app.post('/auth/material', MANAGER, MATERIAL, material.createMaterial);
+    app.patch('/auth/material/:materialID', MANAGER, MATERIAL, material.updateMaterial);
+    app.post('/auth/material/:materialID/event', MATERIAL, material.eventMaterial);
 
     app.get('/auth/tasks/:taskID/material', material.getTaskMaterial);
 
     // material request management
     app.get('/auth/materialRequirements', materialRequirements.getMaterialRequirements);
-    app.post('/auth/materialRequirements', MANAGER, materialRequirements.createMaterialRequirement);
-    app.patch('/auth/materialRequirements/:materialRequirementID', materialRequirements.updateMaterialRequirement);
-    app.delete('/auth/materialRequirements/:materialRequirementID', materialRequirements.removeMaterialRequirement);
+    app.post('/auth/materialRequirements', MANAGER, MATERIAL, materialRequirements.createMaterialRequirement);
+    app.patch('/auth/materialRequirements/:materialRequirementID', MATERIAL, materialRequirements.updateMaterialRequirement);
+    app.delete('/auth/materialRequirements/:materialRequirementID', MATERIAL, materialRequirements.removeMaterialRequirement);
 
     // machines management
     app.get('/auth/machines', machines.getMachines);
-    app.post('/auth/machines', ADMIN, machines.createMachine);
+    app.post('/auth/machines', ADMIN, MACHINES, machines.createMachine);
     app.get('/auth/machines/:machineID', machines.getMachine);
-    app.patch('/auth/machines/:machineID', MANAGER, machines.updateMachine);
-    app.delete('/auth/machines/:machineID', ADMIN, machines.removeMachine);
+    app.patch('/auth/machines/:machineID', MANAGER, MACHINES, machines.updateMachine);
+    app.delete('/auth/machines/:machineID', ADMIN, MACHINES, machines.removeMachine);
 
     app.all('/{*splat}', (req: Request, res: Response) => {
         res.status(404).send({ errorMessage: 'Chybná adresa zdroje.' });

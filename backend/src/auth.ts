@@ -1,4 +1,5 @@
 import crypto from 'node:crypto';
+import type { IncomingHttpHeaders } from 'node:http';
 import { promisify } from 'node:util';
 import type { NextFunction, Request, Response } from 'express';
 import prisma from './client.ts';
@@ -97,8 +98,8 @@ export const clearSessionCookies = (res: Response) => {
     res.clearCookie(USER_ID_COOKIE, cookieOptions());
 };
 
-const readCookie = (req: Request, name: string) => {
-    const header = req.headers.cookie;
+const readCookie = (headers: IncomingHttpHeaders, name: string) => {
+    const header = headers.cookie;
     if (!header) return undefined;
     for (const part of header.split(';')) {
         const index = part.indexOf('=');
@@ -114,34 +115,44 @@ const readCookie = (req: Request, name: string) => {
 };
 
 // The session token: the httpOnly cookie (the frontend), or "Authorization: Bearer <token>" (scripts and tests)
-export const getToken = (req: Request) => {
-    const header = req.headers.authorization;
+// (also the live updates connection, see live.ts, which only has the headers)
+export const getTokenFromHeaders = (headers: IncomingHttpHeaders) => {
+    const header = headers.authorization;
     if (header?.startsWith('Bearer ')) {
         return header.slice('Bearer '.length).trim();
     }
-    return readCookie(req, AUTH_COOKIE) ?? '';
+    return readCookie(headers, AUTH_COOKIE) ?? '';
 };
+
+export const getToken = (req: Request) => getTokenFromHeaders(req.headers);
 
 // ---------------------------------------------------------------------------------------------------------------------
 // Request guards
 
 export type SessionUser = { ID: number; UserType: UserType };
 
-// Middleware for everything under /auth: a valid, unexpired session of an enabled user, or 401
-export const requireSession = async (req: Request, res: Response, next: NextFunction) => {
-    const token = getToken(req);
-    if (!token) throw unauthorized();
+// The user of a valid, unexpired session of an enabled user, with when the session ends; null otherwise
+export const findSessionUser = async (token: string): Promise<{ user: SessionUser; expires: Date } | null> => {
+    if (!token) return null;
     const session = await prisma.userSession.findUnique({
         where: { Token: hashToken(token) },
         include: { User: { select: { ID: true, UserType: true, Enabled: true, Deleted: true } } },
     });
-    if (!session) throw unauthorized();
+    if (!session) return null;
     if (session.Expires.getTime() <= Date.now()) {
         await prisma.userSession.deleteMany({ where: { ID: session.ID } });
-        throw unauthorized();
+        return null;
     }
-    if (!session.User.Enabled || session.User.Deleted) throw unauthorized();
-    res.locals.user = { ID: session.User.ID, UserType: session.User.UserType } satisfies SessionUser;
+    if (!session.User.Enabled || session.User.Deleted) return null;
+    return { user: { ID: session.User.ID, UserType: session.User.UserType }, expires: session.Expires };
+};
+
+// Middleware for everything under /auth: a valid, unexpired session of an enabled user, or 401
+export const requireSession = async (req: Request, res: Response, next: NextFunction) => {
+    const token = getToken(req);
+    const session = await findSessionUser(token);
+    if (!session) throw unauthorized();
+    res.locals.user = session.user;
     res.locals.token = token;
     next();
 };

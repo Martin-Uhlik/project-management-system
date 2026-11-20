@@ -4,7 +4,8 @@ import { useAtom } from 'jotai';
 import axios from 'axios';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import { notificationsAtom, tickAtom } from '../../../state/atoms';
+import { notificationsAtom } from '../../../state/atoms';
+import { useLive } from '../../../state/live';
 import { getBackendAddress } from '../../../config';
 import { getAuthHeader } from '../../../Auth';
 import { handleAxiosError } from '../../../errorHandler';
@@ -30,7 +31,8 @@ import {
 export const useProjectStats = () => {
     const projectID = useParams().project;
     const [stats, setStats] = useState(null);
-    const [tick] = useAtom(tickAtom);
+    // reloaded when someone changes this data (live updates) or after a change made here
+    const tick = useLive(`project:${projectID}`);
     const [notifications, setNotifications] = useAtom(notificationsAtom);
 
     useEffect(() => {

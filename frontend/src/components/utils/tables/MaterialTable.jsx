@@ -5,11 +5,13 @@ import axios from 'axios';
 import { getBackendAddress } from '../../../config';
 import { getAuthHeader } from '../../../Auth';
 import { handleAxiosError } from '../../../errorHandler';
-import { useAtom, useAtomValue } from 'jotai';
-import { notificationsAtom, tickAtom } from '../../../state/atoms';
+import { useAtom } from 'jotai';
+import { notificationsAtom } from '../../../state/atoms';
+import { useLive } from '../../../state/live';
 
 export const MaterialTable = (props) => {
-    const tick = useAtomValue(tickAtom);
+    // reloaded when someone changes this data (live updates) or after a change made here
+    const tick = useLive('material');
     const [notifications, setNotifications] = useAtom(notificationsAtom);
 
     const [materials, setMaterials] = useState(null);

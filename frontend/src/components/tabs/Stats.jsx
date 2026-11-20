@@ -5,7 +5,8 @@ import axios from 'axios';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import { notificationsAtom, selectedTabAtom, tickAtom, userAtom } from '../../state/atoms';
+import { notificationsAtom, selectedTabAtom, userAtom } from '../../state/atoms';
+import { useLive } from '../../state/live';
 import { getBackendAddress } from '../../config';
 import { getAuthHeader, getUserID } from '../../Auth';
 import { handleAxiosError } from '../../errorHandler';
@@ -61,7 +62,8 @@ export const Stats = () => {
 
     const navigate = useNavigate();
     const me = useAtomValue(userAtom);
-    const tick = useAtomValue(tickAtom);
+    // reloaded when someone changes this data (live updates) or after a change made here
+    const tick = useLive('users', 'user:*');
     const [notifications, setNotifications] = useAtom(notificationsAtom);
     const chartColors = useChartColors();
     const statusColors = useStatusColors();

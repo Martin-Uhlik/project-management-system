@@ -4,14 +4,16 @@ import axios from 'axios';
 import { getBackendAddress } from '../../../config';
 import { getAuthHeader } from '../../../Auth';
 import { handleAxiosError } from '../../../errorHandler';
-import { useAtom, useAtomValue } from 'jotai';
-import { notificationsAtom, tickAtom } from '../../../state/atoms';
+import { useAtom } from 'jotai';
+import { notificationsAtom } from '../../../state/atoms';
+import { useLive } from '../../../state/live';
 import { FormStack, StyledTable, useSearch } from '../../ui';
 import dayjs from '../../../dayjs';
 
 // searchable: false hides the search field, for short lists such as a task's dependencies
 export const AssignedTasks = ({ showHeader, userID, machineTasks = [], searchable = true }) => {
-    const tick = useAtomValue(tickAtom);
+    // reloaded when someone changes this data (live updates) or after a change made here
+    const tick = useLive(`user:${userID}`);
     const [notifications, setNotifications] = useAtom(notificationsAtom);
 
     const [tasks, setTasks] = useState([]);

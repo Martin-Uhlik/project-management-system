@@ -8,6 +8,7 @@ import { getAuthHeader } from '../../../Auth';
 import { handleAxiosError } from '../../../errorHandler';
 import { useAtom, useSetAtom } from 'jotai';
 import { dialogAtom, notificationsAtom, tickAtom } from '../../../state/atoms';
+import { useLive } from '../../../state/live';
 import { UserMultiSelect } from '../../utils/UserMultiSelect';
 import { UserSingleSelect } from '../../utils/UserSingleSelect';
 import dayjs from '../../../dayjs';
@@ -25,11 +26,13 @@ export const TaskOverview = () => {
         props(subTab);
     });
     const [disabled, setDisabled] = useState(true);
-    const [tick, setTick] = useAtom(tickAtom);
+    const setTick = useSetAtom(tickAtom);
     const [notifications, setNotifications] = useAtom(notificationsAtom);
 
     const projectID = useParams().project;
     const taskID = useParams().task;
+    // reloaded when someone changes this data (live updates) or after a change made here
+    const tick = useLive(`project:${projectID}`, 'users');
     const [task, setTask] = useState(null);
     const [users, setUsers] = React.useState([]);
     const [finishDate, setFinishDate] = useState(null);

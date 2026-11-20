@@ -1,5 +1,6 @@
 import { useAtom, useSetAtom } from 'jotai';
 import { dialogAtom, notificationsAtom, selectedTabAtom, tickAtom } from '../../state/atoms';
+import { useLive } from '../../state/live';
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { RemoveButton } from '../utils/RemoveButton';
@@ -26,7 +27,9 @@ export const Projects = () => {
 
     const [disabled, setDisabled] = useState(true);
     const [notifications, setNotifications] = useAtom(notificationsAtom);
-    const [tick, setTick] = useAtom(tickAtom);
+    // reloaded when someone changes this data (live updates) or after a change made here
+    const tick = useLive('projects', 'users');
+    const setTick = useSetAtom(tickAtom);
     const [projects, setProjects] = useState([]);
     const [selectedProject, setSelectedProject] = useState(null);
     const [project, setProject] = useState(null);

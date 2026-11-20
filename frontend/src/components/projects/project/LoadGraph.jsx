@@ -1,8 +1,9 @@
 import { useLoadGraph } from '@react-sigma/core';
 import { useEffect } from 'react';
 import Graph from 'graphology';
-import { useAtom, useAtomValue } from 'jotai';
-import { notificationsAtom, tickAtom } from '../../../state/atoms';
+import { useAtom } from 'jotai';
+import { notificationsAtom } from '../../../state/atoms';
+import { useLive } from '../../../state/live';
 import axios from 'axios';
 import { getBackendAddress } from '../../../config';
 import { getAuthHeader } from '../../../Auth';
@@ -15,7 +16,8 @@ export const LoadGraph = () => {
 
     const project = useParams().project;
     const [notifications, setNotifications] = useAtom(notificationsAtom);
-    const tick = useAtomValue(tickAtom);
+    // reloaded when someone changes this data (live updates) or after a change made here
+    const tick = useLive(`project:${project}`);
 
     // node colours: finished green, in progress orange, todo blue, blocked red (taskStatus), in the light or dark look
     const colors = useGraphColors();

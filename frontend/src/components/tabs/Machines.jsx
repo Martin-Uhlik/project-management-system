@@ -1,5 +1,6 @@
 import { useAtom, useSetAtom } from 'jotai';
 import { dialogAtom, notificationsAtom, selectedTabAtom, tickAtom } from '../../state/atoms';
+import { useLive } from '../../state/live';
 import React, { useEffect } from 'react';
 import { Link, Outlet, useNavigate } from 'react-router';
 import axios from 'axios';
@@ -16,7 +17,9 @@ export const Machines = () => {
     const setTab = useSetAtom(selectedTabAtom);
     const [selectedMachine, setSelectedMachine] = React.useState(null);
     const [machines, setMachines] = React.useState([]);
-    const [tick, setTick] = useAtom(tickAtom);
+    // reloaded when someone changes this data (live updates) or after a change made here
+    const tick = useLive('machines');
+    const setTick = useSetAtom(tickAtom);
     const [notifications, setNotifications] = useAtom(notificationsAtom);
     React.useEffect(() => {
         setTab('Stroje');

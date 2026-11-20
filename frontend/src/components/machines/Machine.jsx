@@ -5,8 +5,9 @@ import axios from 'axios';
 import { getBackendAddress } from '../../config';
 import { getAuthHeader } from '../../Auth';
 import { handleAxiosError } from '../../errorHandler';
-import { useAtom } from 'jotai';
+import { useAtom, useSetAtom } from 'jotai';
 import { notificationsAtom, tickAtom } from '../../state/atoms';
+import { useLive } from '../../state/live';
 import { pushNotification } from '../Notifications';
 import dayjs from '../../dayjs';
 import { AssignedTasks } from '../tabs/overview/AssignedTasks';
@@ -25,7 +26,9 @@ export const Machine = () => {
     const [disabled, setDisabled] = useState(true);
 
     const [notifications, setNotifications] = useAtom(notificationsAtom);
-    const [tick, setTick] = useAtom(tickAtom);
+    // reloaded when someone changes this data (live updates) or after a change made here
+    const tick = useLive('machines');
+    const setTick = useSetAtom(tickAtom);
 
     const [currentMachine, setCurrentMachine] = useState(null);
     const [description, setDescription] = useState(null);

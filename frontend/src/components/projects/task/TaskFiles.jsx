@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useOutletContext, useParams, useSearchParams } from 'react-router';
-import { useAtom } from 'jotai';
+import { useAtom, useSetAtom } from 'jotai';
 import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
 import { notificationsAtom, tickAtom } from '../../../state/atoms';
+import { useLive } from '../../../state/live';
 import { FileTable } from '../../utils/tables/FileTable';
 import axios from 'axios';
 import { getBackendAddress } from '../../../config';
@@ -24,9 +25,11 @@ export const TaskFiles = ({ kind, title }) => {
 
     const [notifications, setNotifications] = useAtom(notificationsAtom);
 
-    const [tick, setTick] = useAtom(tickAtom);
+    const setTick = useSetAtom(tickAtom);
     const projectID = useParams().project;
     const taskID = useParams().task;
+    // reloaded when someone changes this data (live updates) or after a change made here
+    const tick = useLive(`project:${projectID}`);
     const filesAddress = getBackendAddress(`/auth/projects/${projectID}/tasks/${taskID}/${kind}`);
 
     const [files, setFiles] = useState([]);

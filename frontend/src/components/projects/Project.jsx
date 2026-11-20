@@ -1,7 +1,8 @@
 import { useNavigate, useParams, useSearchParams } from 'react-router';
-import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { useAtom, useSetAtom } from 'jotai';
 import axios from 'axios';
-import { notificationsAtom, selectedTabAtom, tickAtom } from '../../state/atoms';
+import { notificationsAtom, selectedTabAtom } from '../../state/atoms';
+import { useLive } from '../../state/live';
 import { getBackendAddress } from '../../config';
 import { getAuthHeader } from '../../Auth';
 import { handleAxiosError } from '../../errorHandler';
@@ -59,7 +60,8 @@ export const Project = () => {
     const selectTab = (value) => setSearchParams(value === 'graph' ? {} : { tab: value }, { replace: true });
     const [notifications, setNotifications] = useAtom(notificationsAtom);
     // reloaded on tick too, so the status follows timers started and stopped in this browser
-    const tick = useAtomValue(tickAtom);
+    // reloaded when someone changes this data (live updates) or after a change made here
+    const tick = useLive('projects', `project:${projectID}`);
     React.useEffect(() => {
         axios
             .get(getBackendAddress(`/auth/projects/${projectID}`), getAuthHeader())
