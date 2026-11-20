@@ -7,6 +7,7 @@ import { Notifications } from './components/Notifications';
 import { Dialogs } from './components/Dialogs';
 import Cookies from 'js-cookie';
 import { tickAtom } from './state/atoms';
+import { SettleFields } from './components/ui';
 import dayjs from './dayjs';
 
 // The session lives in an httpOnly cookie that the backend sets on sign-in and the browser sends with every request
@@ -54,6 +55,7 @@ export const Auth = () => {
             </div>
             <Dialogs />
             <AuthUtils />
+            <SettleFields />
         </Provider>
     );
 };

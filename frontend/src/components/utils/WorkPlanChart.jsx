@@ -2,10 +2,10 @@ import { Bar } from 'react-chartjs-2';
 import { useRef } from 'react';
 import { BarElement, CategoryScale, Chart as ChartJS, LinearScale, Tooltip } from 'chart.js';
 import dayjs from '../../dayjs';
+import { useChartColors } from '../ui';
 
 export const WorkPlanChart = (props) => {
-    const borderColor = getComputedStyle(document.documentElement).getPropertyValue('--work-plan-chart-border');
-    const backgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--work-plan-chart-backround');
+    const colors = useChartColors();
 
     ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip);
 
@@ -18,12 +18,15 @@ export const WorkPlanChart = (props) => {
                 grid: {
                     display: false,
                 },
+                ticks: { color: colors.text },
                 stacked: false,
                 min: 0,
                 max: 24,
             },
             y: {
                 stacked: true,
+                ticks: { color: colors.text },
+                grid: { color: colors.grid },
             },
         },
         indexAxis: 'y',
@@ -37,8 +40,8 @@ export const WorkPlanChart = (props) => {
             duration: 0,
         },
         borderSkipped: false,
-        borderColor: borderColor,
-        backgroundColor: backgroundColor,
+        borderColor: colors.workPlan.border,
+        backgroundColor: colors.workPlan.background,
         events: [],
     };
 

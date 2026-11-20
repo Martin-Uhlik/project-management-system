@@ -7,6 +7,7 @@ import axios from 'axios';
 import { getAuthHeader, getUserID } from '../Auth';
 import { getBackendAddress } from '../config';
 import { handleAxiosError } from '../errorHandler';
+import { StyledThemeButton } from './ui';
 
 export const Header = () => {
     const [user, setUser] = useAtom(userAtom);
@@ -69,6 +70,7 @@ export const Header = () => {
             <Timer />
             <div className='logout'>
                 <span className='menu-text menu-text-md'>{`${user?.FirstName} ${user?.LastName}`}</span>
+                <StyledThemeButton />
                 <button type='button' onClick={handleLogout}>
                     <img className='menu-icon' src='/icons/logout.svg' alt='Odhlásit se' />
                 </button>

@@ -20,11 +20,13 @@
     --success-color: rgba(46, 204, 113, 0.9);
     --danger-color: rgba(231, 76, 60, 0.9);
 
-    /* Charts */
-    --work-time-chart-backround: rgba(255, 99, 132, 0.5);
-    --work-time-chart-border: rgb(255, 99, 132);
-    --work-plan-chart-border: rgb(53, 162, 235);
-    --work-plan-chart-backround: rgba(53, 162, 235, 0.5);
+    /* Page surfaces */
+    --page-background: #ecf0f1;
+    --task-finished-background: #e9ecef;
+    --scrollbar-track: #e9ecef;
+    --subtab-active-hover: #e0e0e0;
+
+    /* (chart and task graph colours: chartColors and graphColors in components/ui/theme.js) */
 
     /* Shadows */
     --shadow-normal: 0 0.25rem 1rem #00000040;
@@ -35,24 +37,95 @@
     --dialog-background: rgba(0, 0, 0, 0.5);
 }
 
+/* The dark look: MUI sets <html data-theme='dark'> (see components/ui/theme.js). Only the colours change.
+   :root[...] so it also wins over the libraries' own :root variables (sigma) loaded later. */
+:root[data-theme='dark'] {
+    --active-primary-hover: #e4606d;
+
+    --background-primary: #0b0d0f;
+    --background-secondary: #1a1d21;
+    --foreground-primary: #2b3035;
+
+    --unactive-primary: #0b0d0f;
+    --unactive-primary-hover: #2b3035;
+    --unactive-primary-border: #0b0d0f;
+
+    --content-box-background: #1e2125;
+
+    --page-background: #121417;
+    --task-finished-background: #343a40;
+    --scrollbar-track: #2b3035;
+    --subtab-active-hover: #2b3035;
+
+    --shadow-normal: 0 0.25rem 1rem #000000a0;
+    --shadow-small: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.4), 0 0.125rem 0.5rem rgba(0, 0, 0, 0.5);
+    --shadow-small-inset: inset 0 0.5rem 1.5rem rgba(0, 0, 0, 0.4), inset 0 0.125rem 0.5rem rgba(0, 0, 0, 0.5);
+
+    --dialog-background: rgba(0, 0, 0, 0.7);
+
+    /* the task graph (react-sigma) */
+    --sigma-background-color: var(--content-box-background);
+    --sigma-controls-background-color: #2b3035;
+    --sigma-controls-background-color-hover: rgba(255, 255, 255, 0.15);
+    --sigma-controls-border-color: rgba(255, 255, 255, 0.2);
+    --sigma-controls-color: #f1f3f5;
+    --sigma-grey-color: #495057;
+}
+
+/* the task search over the graph (react-select inside @react-sigma/graph-search) */
+:root[data-theme='dark'] .react-sigma .react-select__control,
+:root[data-theme='dark'] .react-sigma .react-select__menu {
+    background-color: var(--sigma-controls-background-color);
+    border-color: var(--sigma-controls-border-color);
+}
+
+:root[data-theme='dark'] .react-sigma .react-select__single-value,
+:root[data-theme='dark'] .react-sigma .react-select__input-container,
+:root[data-theme='dark'] .react-sigma .react-select__menu {
+    color: var(--sigma-controls-color);
+}
+
+/* the highlighted result: graph-search paints it light blue in an inline style, hence !important */
+:root[data-theme='dark'] .react-sigma .graph-search .option.selected {
+    background-color: var(--sigma-controls-background-color-hover) !important;
+}
+
+:root[data-theme='dark'] .react-sigma .react-select__placeholder {
+    color: #adb5bd;
+}
+
+:root[data-theme='dark'] .react-sigma .graph-search .dropdown-indicator,
+:root[data-theme='dark'] .react-sigma .graph-search .dropdown-indicator svg {
+    color: var(--sigma-controls-color);
+    fill: currentColor;
+}
+
+/* right after a page change the field labels don't animate into place (see components/ui/SettleFields.jsx) */
+:root[data-fields-settling] .MuiInputLabel-root,
+:root[data-fields-settling] .MuiOutlinedInput-notchedOutline legend,
+:root[data-fields-settling] .MuiPickersOutlinedInput-notchedOutline legend,
+:root[data-fields-settling] .MuiPickersOutlinedInput-notchedOutline legend > span {
+    transition: none !important;
+}
+
 .content-box_content::-webkit-scrollbar {
     width: 1rem;
 }
 
 .content-box_content::-webkit-scrollbar-track {
-    background-color: #e9ecef;
+    background-color: var(--scrollbar-track);
 }
 
 .content-box_content::-webkit-scrollbar-thumb {
     background-color: gray;
     border-radius: 0.5rem;
-    border: 0.2rem solid #e9ecef;
+    border: 0.2rem solid var(--scrollbar-track);
 
     --doc-height: 100vh;
 }
 
 body {
-    background-color: #ecf0f1;
+    background-color: var(--page-background);
     font-family: Arial, Helvetica, sans-serif;
     padding: 0;
     margin: 0;
@@ -357,7 +430,7 @@ button {
 }
 
 .task__finished {
-    background-color: #e9ecef;
+    background-color: var(--task-finished-background);
     text-decoration: line-through;
 }
 
@@ -380,13 +453,18 @@ th {
     padding: 0 1rem;
 }
 
-.task button {
+/* extra buttons in a task row show on hover; the task name (task_toggle) is a button too and always shows */
+.task button:not(.task_toggle) {
     visibility: hidden;
 }
 
 .task:hover button,
 .task:active button {
     visibility: visible;
+}
+
+.task_toggle {
+    cursor: pointer;
 }
 
 /* -Notifications- */

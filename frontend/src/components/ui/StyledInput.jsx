@@ -1,10 +1,10 @@
 import InputAdornment from '@mui/material/InputAdornment';
 import TextField from '@mui/material/TextField';
 
-// A white field that stays readable on a coloured background (the sign-in box)
+// A solid field (white, dark grey in the dark look) that stays readable on a coloured background (the sign-in box)
 const onDarkProps = {
     variant: 'filled',
-    sx: { '& .MuiFilledInput-root, & .MuiFilledInput-root:hover, & .MuiFilledInput-root.Mui-focused': { backgroundColor: '#fff' } },
+    sx: { '& .MuiFilledInput-root, & .MuiFilledInput-root:hover, & .MuiFilledInput-root.Mui-focused': { backgroundColor: 'background.paper' } },
 };
 
 // Every text, number and password field (multiline for longer text). Full width and small by default (see theme.js).

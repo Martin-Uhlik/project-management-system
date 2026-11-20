@@ -10,6 +10,7 @@ import { GraphEvents } from './project/GraphEvents';
 import { ControlsContainer, FullScreenControl, SigmaContainer, ZoomControl } from '@react-sigma/core';
 import '@react-sigma/core/lib/style.css';
 import { LoadGraph } from './project/LoadGraph';
+import { GraphTheme } from './project/GraphTheme';
 import { TaskSearch } from './project/TaskSearch';
 import { RestrictedComponent } from '../utils/RestrictedComponent';
 import { StyledButton } from '../ui';
@@ -71,6 +72,7 @@ export const Project = () => {
                                 <StyledButton onClick={handleNavigate}>Přejít na úkol</StyledButton>
                             </ControlsContainer>
                         ) : null}
+                        <GraphTheme />
                         <LoadGraph />
                         <GraphEvents selectNode={selectNode} addNode={{ addNode, setAddNode }} />
                     </SigmaContainer>

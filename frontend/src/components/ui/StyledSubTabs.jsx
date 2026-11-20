@@ -25,9 +25,10 @@ export const StyledSubTab = ({ active, back, ...props }) => {
                 borderRadius: 0,
                 whiteSpace: 'nowrap',
                 borderRight: '1px solid rgba(255, 255, 255, 0.5)',
-                color: active ? 'black' : 'white',
-                backgroundColor: active ? 'white' : 'transparent',
-                '&:hover': { backgroundColor: active ? '#e0e0e0' : 'rgba(255, 255, 255, 0.15)' },
+                // the open tab takes the colour of the page under it (white, or dark grey in the dark look)
+                color: active ? 'text.primary' : 'white',
+                backgroundColor: active ? 'var(--content-box-background)' : 'transparent',
+                '&:hover': { backgroundColor: active ? 'var(--subtab-active-hover)' : 'rgba(255, 255, 255, 0.15)' },
             }}
             {...props}
         />

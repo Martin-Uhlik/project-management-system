@@ -6,7 +6,7 @@ import axios from 'axios';
 import { getBackendAddress } from '../../config';
 import { getAuthHeader, getUserID } from '../../Auth';
 import { handleAxiosError } from '../../errorHandler';
-import { ButtonRow, FormStack, StyledButton, StyledInput } from '../ui';
+import { ButtonRow, FormStack, StyledButton, StyledInput, StyledThemeToggle } from '../ui';
 
 export const Settings = () => {
     const setTab = useSetAtom(selectedTabAtom);
@@ -46,6 +46,8 @@ export const Settings = () => {
             <div className='content-1-column'>
                 <div className='content-box'>
                     <div className='content-box_content'>
+                        <h1>Vzhled</h1>
+                        <StyledThemeToggle />
                         <h1>Heslo</h1>
                         <FormStack component='form' onSubmit={handlePasswordChange}>
                             <StyledInput

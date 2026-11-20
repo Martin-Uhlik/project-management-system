@@ -1,9 +1,9 @@
 import { Bar } from 'react-chartjs-2';
 import { BarElement, CategoryScale, Chart as ChartJS, LinearScale, Tooltip } from 'chart.js';
+import { useChartColors } from '../ui';
 
 export const WorkTimeChart = (props) => {
-    const borderColor = getComputedStyle(document.documentElement).getPropertyValue('--work-time-chart-border');
-    const backgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--work-time-chart-backround');
+    const colors = useChartColors();
 
     ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip);
 
@@ -14,6 +14,11 @@ export const WorkTimeChart = (props) => {
                 grid: {
                     display: false,
                 },
+                ticks: { color: colors.text },
+            },
+            y: {
+                ticks: { color: colors.text },
+                grid: { color: colors.grid },
             },
         },
         indexAxis: 'x',
@@ -29,8 +34,8 @@ export const WorkTimeChart = (props) => {
         datasets: [
             {
                 data: props.dataset,
-                borderColor: borderColor,
-                backgroundColor: backgroundColor,
+                borderColor: colors.workTime.border,
+                backgroundColor: colors.workTime.background,
             },
         ],
     };
