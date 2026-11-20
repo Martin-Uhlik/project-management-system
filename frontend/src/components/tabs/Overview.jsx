@@ -9,7 +9,8 @@ import { getAuthHeader, getUserID } from '../../Auth';
 import axios from 'axios';
 import { getBackendAddress } from '../../config';
 import { handleAxiosError } from '../../errorHandler';
-import moment from 'moment';
+import dayjs from '../../dayjs';
+import { StyledToggle } from '../ui';
 
 export const Overview = () => {
     const [selectedButton, setSelectedButton] = React.useState(0);
@@ -37,8 +38,8 @@ export const Overview = () => {
 
     const workTimeDataset = [0, 0, 0, 0, 0, 0, 0];
     user?.WorkTime.map((time) => {
-        const startTime = moment(time.StartTime);
-        const endTime = moment(time.StopTime);
+        const startTime = dayjs(time.StartTime);
+        const endTime = dayjs(time.StopTime);
         const hours = endTime.diff(startTime, 'hour', true);
         workTimeDataset[startTime.isoWeekday() - 1] += hours;
         return { hours: hours, day: startTime.isoWeekday() - 1 };
@@ -48,24 +49,7 @@ export const Overview = () => {
         <div className='content-wrap_inner'>
             <div className='content-2-column'>
                 <div className='content-box'>
-                    <div className='d-flex w-100'>
-                        <button
-                            type='button'
-                            aria-pressed={selectedButton === 0}
-                            className={'btn w-50 btn-sharp ' + (selectedButton === 0 ? 'btn-danger' : 'btn-dark')}
-                            onClick={() => setSelectedButton(0)}
-                        >
-                            Přidělené úkoly
-                        </button>
-                        <button
-                            type='button'
-                            aria-pressed={selectedButton === 1}
-                            className={'btn w-50 btn-sharp ' + (selectedButton === 1 ? 'btn-danger' : 'btn-dark')}
-                            onClick={() => setSelectedButton(1)}
-                        >
-                            Vlastní úkoly
-                        </button>
-                    </div>
+                    <StyledToggle options={['Přidělené úkoly', 'Vlastní úkoly']} value={selectedButton} onChange={setSelectedButton} />
                     <div className='content-box_content'>{selectedButton === 0 ? <AssignedTasks showHeader={true} userID={getUserID()} /> : <MyTasks />}</div>
                 </div>
                 <div className='content-2-row'>

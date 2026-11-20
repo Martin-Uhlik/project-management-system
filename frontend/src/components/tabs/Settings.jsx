@@ -6,6 +6,7 @@ import axios from 'axios';
 import { getBackendAddress } from '../../config';
 import { getAuthHeader, getUserID } from '../../Auth';
 import { handleAxiosError } from '../../errorHandler';
+import { ButtonRow, FormStack, StyledButton, StyledInput } from '../ui';
 
 export const Settings = () => {
     const setTab = useSetAtom(selectedTabAtom);
@@ -46,55 +47,37 @@ export const Settings = () => {
                 <div className='content-box'>
                     <div className='content-box_content'>
                         <h1>Heslo</h1>
-                        <form className='login-form' onSubmit={handlePasswordChange}>
-                            <div className='form-group'>
-                                <label htmlFor='password'>Aktuální heslo:</label>
-                                <input
-                                    className='form-control'
-                                    type='password'
-                                    id='password'
-                                    name='password'
-                                    placeholder='Zadejte aktuální heslo'
-                                    value={currentPassword}
-                                    onChange={(event) => {
-                                        setCurrentPassword(event.target.value);
-                                    }}
-                                />
-                            </div>
-                            <div className='form-group'>
-                                <label htmlFor='new-password'>Nové heslo:</label>
-                                <input
-                                    className='form-control'
-                                    type='password'
-                                    id='new-password'
-                                    name='newPassword'
-                                    placeholder='Zadejte nové heslo'
-                                    value={newPassword}
-                                    onChange={(event) => {
-                                        setNewPassword(event.target.value);
-                                    }}
-                                />
-                            </div>
-                            <div className='form-group'>
-                                <label htmlFor='r-new-password'>Potvrzení nového hesla:</label>
-                                <input
-                                    className='form-control'
-                                    type='password'
-                                    id='r-new-password'
-                                    name='rNewPassword'
-                                    placeholder='Zopakujte nové heslo'
-                                    value={rNewPassword}
-                                    onChange={(event) => {
-                                        setRNewPassword(event.target.value);
-                                    }}
-                                />
-                            </div>
-                            <div className='d-flex justify-content-end'>
-                                <button className='btn btn-dark' type='submit'>
-                                    Změnit heslo
-                                </button>
-                            </div>
-                        </form>
+                        <FormStack component='form' onSubmit={handlePasswordChange}>
+                            <StyledInput
+                                id='password'
+                                label='Aktuální heslo'
+                                type='password'
+                                autoComplete='current-password'
+                                value={currentPassword}
+                                onChange={(event) => setCurrentPassword(event.target.value)}
+                            />
+                            <StyledInput
+                                id='new-password'
+                                name='newPassword'
+                                label='Nové heslo'
+                                type='password'
+                                autoComplete='new-password'
+                                value={newPassword}
+                                onChange={(event) => setNewPassword(event.target.value)}
+                            />
+                            <StyledInput
+                                id='r-new-password'
+                                name='rNewPassword'
+                                label='Potvrzení nového hesla'
+                                type='password'
+                                autoComplete='new-password'
+                                value={rNewPassword}
+                                onChange={(event) => setRNewPassword(event.target.value)}
+                            />
+                            <ButtonRow>
+                                <StyledButton type='submit'>Změnit heslo</StyledButton>
+                            </ButtonRow>
+                        </FormStack>
                     </div>
                 </div>
             </div>

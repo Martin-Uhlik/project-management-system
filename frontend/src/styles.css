@@ -88,8 +88,8 @@ button {
     min-height: 25vh;
 }
 
-.MuiTableRow-hover:hover {
-    cursor: pointer;
+.task-list {
+    width: 100%;
 }
 
 .menu-icon {
@@ -122,6 +122,27 @@ button {
     padding: 2rem;
 }
 
+.nav_items {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    flex-grow: 1;
+}
+
+.main {
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+    width: 100%;
+}
+
+.timer {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
 .logo-a {
     height: 100%;
 }
@@ -130,12 +151,6 @@ button {
     width: min(100%, 25rem);
     height: 50%;
     padding: 2rem;
-}
-
-.login-form {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
 }
 
 .nav {
@@ -201,31 +216,6 @@ button {
     padding: 0;
 }
 
-.hline {
-    width: 100%;
-    border-color: black;
-}
-
-.sub-tabs {
-    display: flex;
-    width: 100%;
-    height: 5rem;
-    background-color: black;
-    overflow-x: auto;
-    overflow-y: hidden;
-}
-
-.sub-tabs_button {
-    display: flex;
-    align-items: center;
-    justify-content: space-around;
-    height: 100%;
-    min-width: 9.5rem;
-    border-radius: 0;
-    border-style: none solid none none;
-    white-space: nowrap;
-}
-
 /* -Content- */
 
 .content-wrap {
@@ -277,11 +267,6 @@ button {
     align-items: center;
     gap: 1rem;
     margin-left: auto;
-}
-
-.content-box_textarea {
-    height: calc(100% - 1.5rem);
-    resize: none;
 }
 
 .content-box_content {
@@ -336,6 +321,7 @@ button {
 
 .header {
     display: flex;
+    background-color: var(--background-primary);
     justify-content: space-between;
     height: 4.5rem;
     width: 100%;
@@ -357,32 +343,6 @@ button {
 
 .menu-text {
     color: var(--icons-primary);
-}
-
-.add-button {
-    /*position: absolute;*/
-    /*right: 3rem;*/
-    /*bottom: 3rem;*/
-    display: flex;
-    justify-content: center;
-    vertical-align: center;
-    height: calc(2rem + 1.5vw);
-    width: calc(2rem + 1.5vw);
-    background-color: var(--active-primary);
-    border-radius: calc(2rem + 1.5vw);
-    font-size: calc(2rem + 1.5vw);
-    line-height: calc(2rem + 1.5vw);
-    color: var(--icons-primary);
-    border: none;
-    box-shadow: var(--shadow-small);
-}
-
-.add-button:hover {
-    background-color: var(--active-primary-hover);
-}
-
-.btn-sharp {
-    border-radius: 0;
 }
 
 .task {
@@ -465,45 +425,6 @@ th {
     height: 1rem;
 }
 
-/* -Dialogs- */
-
-.dialog-background {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: var(--doc-height);
-    background: var(--dialog-background);
-    z-index: 300;
-}
-
-.dialog {
-    box-shadow:
-        0 0.5rem 1.5rem rgba(0, 0, 0, 0.1),
-        0 0.125rem 0.5rem rgba(0, 0, 0, 0.15);
-    margin: 1rem;
-    padding: 2rem;
-    position: relative;
-    overflow: auto;
-    background-color: white;
-    width: 40rem;
-}
-
-.time-dialog_picker {
-    width: 100%;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 1rem;
-}
-
-.dialog-h1 {
-    margin: 0;
-}
-
 .login_right {
     z-index: -1;
     display: none;
@@ -520,15 +441,6 @@ th {
         position: absolute;
         width: 100vw;
         height: var(--doc-height);
-    }
-
-    .login_button {
-        background-color: var(--unactive-primary);
-        border-color: var(--unactive-primary-border);
-    }
-
-    .login_button:hover {
-        background-color: var(--unactive-primary-hover);
     }
 
     .login_left {
@@ -607,14 +519,6 @@ th {
         flex-direction: row;
         height: 100%;
         width: 100%;
-    }
-
-    .add-button {
-        height: 3.5rem;
-        width: 3.5rem;
-        border-radius: 3.5rem;
-        font-size: 3.5rem;
-        line-height: 3.5rem;
     }
 
     .content-box_chart-wrapper-outer {

@@ -6,8 +6,9 @@ import axios from 'axios';
 import { getBackendAddress } from '../../config';
 import { getAuthHeader } from '../../Auth';
 import { handleAxiosError } from '../../errorHandler';
-import moment from 'moment';
+import dayjs from '../../dayjs';
 import { RestrictedComponent } from '../utils/RestrictedComponent';
+import { StyledSubTab, StyledSubTabs } from '../ui';
 
 export const Machines = () => {
     const navigate = useNavigate();
@@ -42,7 +43,7 @@ export const Machines = () => {
         axios
             .post(getBackendAddress(`/auth/machines`), { Name: name }, getAuthHeader())
             .then(() => {
-                setTick(moment());
+                setTick(dayjs());
             })
             .catch((error) => {
                 handleAxiosError(error, [notifications, setNotifications]);
@@ -61,24 +62,20 @@ export const Machines = () => {
 
     return (
         <>
-            <div className='sub-tabs'>
+            <StyledSubTabs>
                 {machines.map((machine) => {
                     return (
-                        <Link
-                            key={machine.ID}
-                            className={'btn sub-tabs_button ' + (selectedMachine === machine.ID.toString() ? 'btn-light' : 'btn-outline-light')}
-                            to={machine.ID.toString()}
-                        >
+                        <StyledSubTab key={machine.ID} component={Link} to={machine.ID.toString()} active={selectedMachine === machine.ID.toString()}>
                             {machine.Name}
-                        </Link>
+                        </StyledSubTab>
                     );
                 })}
                 <RestrictedComponent types={['ADMIN']}>
-                    <button type='button' className='btn btn-outline-light sub-tabs_button' aria-label='Přidat stroj' onClick={handleAddMachine}>
+                    <StyledSubTab aria-label='Přidat stroj' onClick={handleAddMachine}>
                         +
-                    </button>
+                    </StyledSubTab>
                 </RestrictedComponent>
-            </div>
+            </StyledSubTabs>
             <div className='content-wrap_inner'>
                 <Outlet context={setSelectedMachine} />
             </div>

@@ -7,7 +7,8 @@ import axios from 'axios';
 import { getBackendAddress } from '../../config';
 import { getAuthHeader } from '../../Auth';
 import { handleAxiosError } from '../../errorHandler';
-import moment from 'moment/moment';
+import dayjs from '../../dayjs';
+import { StyledToggle, StyledAddButton } from '../ui';
 import { UserTable } from '../utils/tables/UserTable';
 import { RestrictedComponent } from '../utils/RestrictedComponent';
 
@@ -42,7 +43,7 @@ export const Users = () => {
         axios
             .post(getBackendAddress(`/auth/users`), { user }, getAuthHeader())
             .then(() => {
-                setTick(moment());
+                setTick(dayjs());
             })
             .catch((error) => {
                 handleAxiosError(error, [notifications, setNotifications]);
@@ -67,9 +68,7 @@ export const Users = () => {
                         <div className='content-box_header'>
                             <h1>Uživatelé</h1>
                             <RestrictedComponent types={['ADMIN']}>
-                                <button type='button' className='add-button' aria-label='Přidat uživatele' onClick={handleAddUser}>
-                                    +
-                                </button>
+                                <StyledAddButton label='Přidat uživatele' onClick={handleAddUser} />
                             </RestrictedComponent>
                         </div>
                         <UserTable users={users} setSelectedUser={setSelectedUser} />
@@ -78,28 +77,7 @@ export const Users = () => {
 
                 <div className='content-box'>
                     <RestrictedComponent types={['ADMIN', 'MANAGER']}>
-                        <div className='d-flex w-100'>
-                            <button
-                                type='button'
-                                aria-pressed={selectedButton === 0}
-                                className={'btn w-50 btn-sharp ' + (selectedButton === 0 ? 'btn-danger' : 'btn-dark')}
-                                onClick={() => {
-                                    setSelectedButton(0);
-                                }}
-                            >
-                                Aktivita uživatele
-                            </button>
-                            <button
-                                type='button'
-                                aria-pressed={selectedButton === 1}
-                                className={'btn w-50 btn-sharp ' + (selectedButton === 1 ? 'btn-danger' : 'btn-dark')}
-                                onClick={() => {
-                                    setSelectedButton(1);
-                                }}
-                            >
-                                Nastavení uživatele
-                            </button>
-                        </div>
+                        <StyledToggle options={['Aktivita uživatele', 'Nastavení uživatele']} value={selectedButton} onChange={setSelectedButton} />
                     </RestrictedComponent>
                     <div className='content-box_content'>
                         {selectedButton === 0 ? <UserActivity user={selectedUser} /> : <UserSettings user={selectedUser} />}

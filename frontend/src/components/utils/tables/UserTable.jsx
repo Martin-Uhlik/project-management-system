@@ -1,24 +1,12 @@
-import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
+import { StyledTable } from '../../ui';
 import { UserRow } from './rows/UserRow';
 
 export const UserTable = ({ users: users, setSelectedUser: setSelectedUser }) => {
     return (
-        <TableContainer component={Paper}>
-            <Table>
-                <TableHead>
-                    <TableRow>
-                        <TableCell>Jméno</TableCell>
-                        <TableCell>Pozice</TableCell>
-                        <TableCell>Pracuje</TableCell>
-                        <TableCell>Povoleno</TableCell>
-                    </TableRow>
-                </TableHead>
-                <TableBody>
-                    {users.map((user) => (
-                        <UserRow key={user.ID} user={user} setSelectedUser={setSelectedUser} />
-                    ))}
-                </TableBody>
-            </Table>
-        </TableContainer>
+        <StyledTable columns={[{ label: 'Jméno' }, { label: 'Pozice' }, { label: 'Pracuje' }, { label: 'Povoleno' }]}>
+            {users.map((user) => (
+                <UserRow key={user.ID} user={user} setSelectedUser={setSelectedUser} />
+            ))}
+        </StyledTable>
     );
 };

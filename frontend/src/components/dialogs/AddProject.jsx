@@ -1,15 +1,13 @@
-import React, { useState } from 'react';
-import { useModalDialog } from '../utils/useModalDialog';
+import { useState } from 'react';
 import { useAtom } from 'jotai';
 import { dialogAtom } from '../../state/atoms';
-import moment from 'moment';
+import dayjs from '../../dayjs';
 import { getUserID } from '../../Auth';
-import { CustomizedDateTimePicker } from '../utils/CustomizedDateTimePicker';
+import { ButtonRow, FormStack, StyledButton, StyledDateTimePicker, StyledDialog, StyledInput } from '../ui';
 
 export const AddProject = () => {
     const [dialog, setDialog] = useAtom(dialogAtom);
-    const [uname, setUname] = React.useState('');
-    const [fname, setFname] = React.useState('');
+    const [finishDate, setFinishDate] = useState(dayjs());
 
     const handleSubmit = (event) => {
         event.preventDefault();
@@ -23,58 +21,22 @@ export const AddProject = () => {
         setDialog(null);
     };
 
-    const [finishDate, setFinishDate] = useState(moment());
-
-    const dialogRef = useModalDialog(() => setDialog(null));
     return (
-        <div className='dialog-background'>
-            <div className='dialog' role='dialog' aria-modal='true' aria-labelledby='dialog-title' ref={dialogRef}>
-                <h1 id='dialog-title' className='dialog-h1'>
-                    Přidat projekt
-                </h1>
-                <hr className='hline' />
-                <form className='login-form' onSubmit={handleSubmit}>
-                    <div className='form-group'>
-                        <label htmlFor='projectName'>Název projektu:</label>
-                        <input
-                            className='form-control'
-                            type='text'
-                            id='projectName'
-                            name='projectName'
-                            value={uname}
-                            onChange={(event) => {
-                                setUname(event.target.value);
-                            }}
-                        />
-                    </div>
-                    <div className='form-group'>
-                        <label htmlFor='customer'>Zákazník:</label>
-                        <input
-                            className='form-control'
-                            type='text'
-                            id='customer'
-                            name='customer'
-                            value={fname}
-                            onChange={(event) => {
-                                setFname(event.target.value);
-                            }}
-                        />
-                    </div>
-                    <CustomizedDateTimePicker finishDate={finishDate} setFinishDate={setFinishDate} />
-                    <div className='form-group'>
-                        <label htmlFor='description'>Popis:</label>
-                        <textarea className='form-control' id='description' name='description' rows='3'></textarea>
-                    </div>
-                    <div className='d-flex gap-3 justify-content-end'>
-                        <button className='btn btn-danger' type='reset' onClick={() => setDialog(null)}>
-                            Zrušit
-                        </button>
-                        <button className='btn btn-success' type='submit'>
-                            Ok
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
+        <StyledDialog title='Přidat projekt' onClose={() => setDialog(null)}>
+            <FormStack component='form' onSubmit={handleSubmit}>
+                <StyledInput id='projectName' label='Název projektu' />
+                <StyledInput id='customer' label='Zákazník' />
+                <StyledDateTimePicker value={finishDate} onChange={setFinishDate} />
+                <StyledInput id='description' label='Popis' multiline rows={3} />
+                <ButtonRow>
+                    <StyledButton color='error' onClick={() => setDialog(null)}>
+                        Zrušit
+                    </StyledButton>
+                    <StyledButton color='success' type='submit'>
+                        Ok
+                    </StyledButton>
+                </ButtonRow>
+            </FormStack>
+        </StyledDialog>
     );
 };

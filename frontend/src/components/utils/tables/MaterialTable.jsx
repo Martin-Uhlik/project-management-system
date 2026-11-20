@@ -1,4 +1,4 @@
-import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
+import { StyledTable } from '../../ui';
 import { useEffect, useState } from 'react';
 import { MaterialRow } from './rows/MaterialRow';
 import axios from 'axios';
@@ -42,22 +42,17 @@ export const MaterialTable = (props) => {
     }, [tick]);
 
     return (
-        <TableContainer component={Paper}>
-            <Table>
-                <TableHead>
-                    <TableRow>
-                        <TableCell>Název</TableCell>
-                        <TableCell align='right'>Počet</TableCell>
-                        <TableCell align='right'>Zarezervované</TableCell>
-                        <TableCell align='right'>Dostupné</TableCell>
-                    </TableRow>
-                </TableHead>
-                <TableBody>
-                    {materials?.map((mat) => (
-                        <MaterialRow key={mat.material.ID} row={mat} taskID={props.taskID} />
-                    ))}
-                </TableBody>
-            </Table>
-        </TableContainer>
+        <StyledTable
+            columns={[
+                { label: 'Název' },
+                { label: 'Počet', align: 'right' },
+                { label: 'Zarezervované', align: 'right' },
+                { label: 'Dostupné', align: 'right' },
+            ]}
+        >
+            {materials?.map((mat) => (
+                <MaterialRow key={mat.material.ID} row={mat} taskID={props.taskID} />
+            ))}
+        </StyledTable>
     );
 };

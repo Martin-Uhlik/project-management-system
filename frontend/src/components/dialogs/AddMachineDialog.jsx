@@ -1,7 +1,7 @@
 import React from 'react';
-import { useModalDialog } from '../utils/useModalDialog';
 import { useAtom } from 'jotai';
 import { dialogAtom } from '../../state/atoms';
+import { ButtonRow, FormStack, StyledButton, StyledDialog, StyledInput } from '../ui';
 
 export const AddMachineDialog = () => {
     const [dialog, setDialog] = useAtom(dialogAtom);
@@ -19,42 +19,19 @@ export const AddMachineDialog = () => {
         setDialog(null);
     };
 
-    const dialogRef = useModalDialog(handleCancel);
     return (
-        <div className='dialog-background' onSubmit={handleSubmit}>
-            <div className='dialog' role='dialog' aria-modal='true' aria-labelledby='dialog-title' ref={dialogRef}>
-                <h1 id='dialog-title' className='dialog-h1'>
-                    Přidat stroj
-                </h1>
-                <hr className='hline' />
-                <form className='d-flex flex-column gap-5'>
-                    <div className='d-flex flex-row align-items-center gap-3'>
-                        <h2>Název:</h2>
-                        <div className='form-group'>
-                            <label htmlFor='name'>Název stroje:</label>
-                            <input
-                                className='form-control'
-                                type='text'
-                                id='name'
-                                name='name'
-                                placeholder='Zadejte jméno'
-                                value={name}
-                                onChange={(event) => {
-                                    setName(event.target.value);
-                                }}
-                            />
-                        </div>
-                    </div>
-                    <div className='d-flex gap-3 justify-content-end'>
-                        <button className='btn btn-danger' type='button' onClick={handleCancel}>
-                            Zrušit
-                        </button>
-                        <button className='btn btn-success' type='submit'>
-                            Ok
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
+        <StyledDialog title='Přidat stroj' onClose={handleCancel}>
+            <FormStack component='form' gap={4} onSubmit={handleSubmit}>
+                <StyledInput id='name' label='Název stroje' value={name} onChange={(event) => setName(event.target.value)} />
+                <ButtonRow>
+                    <StyledButton color='error' onClick={handleCancel}>
+                        Zrušit
+                    </StyledButton>
+                    <StyledButton color='success' type='submit'>
+                        Ok
+                    </StyledButton>
+                </ButtonRow>
+            </FormStack>
+        </StyledDialog>
     );
 };

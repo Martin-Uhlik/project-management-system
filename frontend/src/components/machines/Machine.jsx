@@ -8,10 +8,12 @@ import { handleAxiosError } from '../../errorHandler';
 import { useAtom } from 'jotai';
 import { notificationsAtom, tickAtom } from '../../state/atoms';
 import { pushNotification } from '../Notifications';
-import moment from 'moment/moment';
+import dayjs from '../../dayjs';
 import { AssignedTasks } from '../tabs/overview/AssignedTasks';
 import { RemoveButton } from '../utils/RemoveButton';
 import { RestrictedComponent } from '../utils/RestrictedComponent';
+import { EditButtons } from '../utils/EditButtons';
+import { ButtonRow, FormStack, StyledInput } from '../ui';
 
 export const Machine = () => {
     const navigate = useNavigate();
@@ -60,7 +62,7 @@ export const Machine = () => {
                     setNotifications: setNotifications,
                 });
                 setDisabled(true);
-                setTick(moment());
+                setTick(dayjs());
             })
             .catch((error) => {
                 handleAxiosError(error, [notifications, setNotifications]);
@@ -76,7 +78,7 @@ export const Machine = () => {
                     notifications: notifications,
                     setNotifications: setNotifications,
                 });
-                setTick(moment());
+                setTick(dayjs());
                 navigate('/auth/machines');
             })
             .catch((error) => {
@@ -110,40 +112,25 @@ export const Machine = () => {
                 </div>
                 <div className='content-box'>
                     <div className='content-box_content'>
-                        <form className='login-form h-100' onSubmit={updateMachine}>
+                        <FormStack component='form' sx={{ height: '100%' }} onSubmit={updateMachine}>
                             <div className='content-box_header'>
                                 <h1>Popis</h1>
                                 <RestrictedComponent types={['ADMIN', 'MANAGER']}>
-                                    {disabled ? (
-                                        <button
-                                            className='btn btn-outline-dark'
-                                            onClick={() => {
-                                                setDisabled(false);
-                                            }}
-                                        >
-                                            Upravit
-                                        </button>
-                                    ) : (
-                                        <div className='content-box_header'>
-                                            <button type='reset' className='btn btn-danger' onClick={() => setDisabled(true)}>
-                                                Zrušit
-                                            </button>
-                                            <button type='submit' className='btn btn-success'>
-                                                Použít
-                                            </button>
-                                        </div>
-                                    )}
+                                    <ButtonRow className='content-box_subheader'>
+                                        <EditButtons editing={!disabled} setEditing={(editing) => setDisabled(!editing)} />
+                                    </ButtonRow>
                                 </RestrictedComponent>
                             </div>
-                            <textarea
-                                className='form-control content-box_textarea'
+                            <StyledInput
                                 id='description'
-                                name='description'
+                                label='Popis'
+                                multiline
+                                minRows={8}
                                 value={description || ''}
                                 onChange={(event) => setDescription(event.target.value)}
                                 disabled={disabled}
-                            ></textarea>
-                        </form>
+                            />
+                        </FormStack>
                     </div>
                 </div>
             </div>

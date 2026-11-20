@@ -6,7 +6,8 @@ import { getBackendAddress } from '../config';
 import { getAuthHeader, getUserID } from '../Auth';
 import axios from 'axios';
 import { handleAxiosError } from '../errorHandler';
-import moment from 'moment/moment';
+import dayjs from '../dayjs';
+import { StyledButton } from './ui';
 
 export const Timer = () => {
     const [user, setUser] = useAtom(userAtom);
@@ -49,7 +50,7 @@ export const Timer = () => {
                 });
                 setStartTime(null);
                 setTime(0);
-                setTick(moment());
+                setTick(dayjs());
             })
             .catch((error) => {
                 handleAxiosError(error, [notifications, setNotifications]);
@@ -62,7 +63,7 @@ export const Timer = () => {
             .then(() => {
                 setStartTime(null);
                 setTime(0);
-                setTick(moment());
+                setTick(dayjs());
             })
             .catch((error) => {
                 handleAxiosError(error, [notifications, setNotifications]);
@@ -74,7 +75,7 @@ export const Timer = () => {
             .patch(getBackendAddress(`/auth/users/${getUserID()}`), { WorkStartTime: new Date() }, getAuthHeader())
             .then(() => {
                 setStartTime(Date.now());
-                setTick(moment());
+                setTick(dayjs());
             })
             .catch((error) => {
                 handleAxiosError(error, [notifications, setNotifications]);
@@ -94,19 +95,19 @@ export const Timer = () => {
     };
 
     return (
-        <div className='d-flex flex-row  align-items-center gap-3 timer'>
+        <div className='timer'>
             <img className='menu-icon' src='/icons/timer-outline.svg' alt='Časovač' />
             <span className='menu-text'>
                 {startTime !== null ? new Date(time + new Date().getTimezoneOffset() * 60000).toLocaleTimeString('cs-CZ') : '0:00:00'}
             </span>
             {startTime ? (
-                <button type='button' className='btn btn-danger' onClick={handleTimerStop}>
+                <StyledButton color='error' onClick={handleTimerStop}>
                     Zapsat
-                </button>
+                </StyledButton>
             ) : (
-                <button type='button' className='btn btn-success' onClick={handleTimerStart}>
+                <StyledButton color='success' onClick={handleTimerStart}>
                     Spustit
-                </button>
+                </StyledButton>
             )}
         </div>
     );

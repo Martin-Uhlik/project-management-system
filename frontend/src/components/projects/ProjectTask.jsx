@@ -2,6 +2,7 @@ import { useSetAtom } from 'jotai';
 import { selectedTabAtom } from '../../state/atoms';
 import React from 'react';
 import { Link, Outlet } from 'react-router';
+import { StyledSubTab, StyledSubTabs } from '../ui';
 
 const subTabs = [
     { name: 'Přehled', address: 'overview' },
@@ -20,23 +21,18 @@ export const ProjectTask = () => {
 
     return (
         <>
-            <div className='sub-tabs'>
-                <Link className='btn sub-tabs_button btn-primary' to='../..' relative='path'>
+            <StyledSubTabs>
+                <StyledSubTab back component={Link} to='../..' relative='path'>
                     Zpět
-                </Link>
+                </StyledSubTab>
                 {subTabs.map((machine) => {
                     return (
-                        <Link
-                            key={machine.address}
-                            className={'btn sub-tabs_button ' + (selectedSubTab === machine.address ? 'btn-light' : 'btn-outline-light')}
-                            to={machine.address}
-                            aria-current={selectedSubTab === machine.address ? 'page' : undefined}
-                        >
+                        <StyledSubTab key={machine.address} component={Link} to={machine.address} active={selectedSubTab === machine.address}>
                             {machine.name}
-                        </Link>
+                        </StyledSubTab>
                     );
                 })}
-            </div>
+            </StyledSubTabs>
             <div className='content-wrap_inner'>
                 <Outlet context={setSelectedSubTab} />
             </div>

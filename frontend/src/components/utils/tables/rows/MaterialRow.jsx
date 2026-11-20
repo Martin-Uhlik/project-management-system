@@ -1,4 +1,4 @@
-import { TableCell, TableRow } from '@mui/material';
+import { StyledTableCell, StyledTableRow } from '../../../ui';
 import { useSetAtom } from 'jotai';
 import { dialogAtom } from '../../../../state/atoms';
 
@@ -19,11 +19,11 @@ export const MaterialRow = (props) => {
     };
 
     return (
-        <TableRow hover onClick={handleEditMaterial}>
-            <TableCell>{row.material.Name}</TableCell>
-            <TableCell align='right'>{row.count}</TableCell>
-            <TableCell align='right'>{row.reserved}</TableCell>
-            <TableCell align='right'>{row.count - row.reserved}</TableCell>
-        </TableRow>
+        <StyledTableRow onClick={handleEditMaterial}>
+            <StyledTableCell>{row.material.Name}</StyledTableCell>
+            <StyledTableCell align='right'>{row.count}</StyledTableCell>
+            <StyledTableCell align='right'>{row.reserved}</StyledTableCell>
+            <StyledTableCell align='right'>{row.count - row.reserved}</StyledTableCell>
+        </StyledTableRow>
     );
 };

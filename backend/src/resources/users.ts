@@ -1,11 +1,14 @@
 import type { Request, Response } from 'express';
 import { z } from 'zod';
-import moment from 'moment';
+import dayjs from 'dayjs';
+import isoWeek from 'dayjs/plugin/isoWeek.js';
 import prisma from '../client.ts';
 import { currentUser, deleteUserSessions, hashPassword, hasRole, MIN_PASSWORD_LENGTH, requireSelf } from '../auth.ts';
 import { publicUserSelect } from '../access.ts';
 import { badRequest, forbidden } from '../errors.ts';
 import { date, idParam, parseBody, requiredText, sentKeys } from '../validation.ts';
+
+dayjs.extend(isoWeek);
 
 const userType = z.enum(['ADMIN', 'MANAGER', 'USER']);
 
@@ -38,8 +41,8 @@ export const createUser = async (req: Request, res: Response) => {
 };
 
 export const getUser = async (req: Request, res: Response) => {
-    const start = moment().startOf('isoWeek');
-    const stop = moment().endOf('isoWeek');
+    const start = dayjs().startOf('isoWeek');
+    const stop = dayjs().endOf('isoWeek');
     const user = await prisma.user.findUniqueOrThrow({
         where: {
             ID: idParam(req, 'userID'),

@@ -1,4 +1,4 @@
-import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
+import { StyledTable } from '../../ui';
 import { useEffect, useState } from 'react';
 import { MaterialRequirementRow } from './rows/MaterialRequirementRow';
 import { useAtom, useAtomValue } from 'jotai';
@@ -31,23 +31,18 @@ export const MaterialRequirementTable = ({ taskID }) => {
     }, [tick]);
 
     return (
-        <TableContainer component={Paper}>
-            <Table>
-                <TableHead>
-                    <TableRow>
-                        <TableCell>Název</TableCell>
-                        <TableCell align='right'>Cena celkem</TableCell>
-                        <TableCell align='right'>Datum potřeby</TableCell>
-                        <TableCell align='right'>Autor</TableCell>
-                        <TableCell align='right'>Schválil</TableCell>
-                    </TableRow>
-                </TableHead>
-                <TableBody>
-                    {materialRequests?.map((row) => (
-                        <MaterialRequirementRow key={row.ID} row={row} />
-                    ))}
-                </TableBody>
-            </Table>
-        </TableContainer>
+        <StyledTable
+            columns={[
+                { label: 'Název' },
+                { label: 'Cena celkem', align: 'right' },
+                { label: 'Datum potřeby', align: 'right' },
+                { label: 'Autor', align: 'right' },
+                { label: 'Schválil', align: 'right' },
+            ]}
+        >
+            {materialRequests?.map((row) => (
+                <MaterialRequirementRow key={row.ID} row={row} />
+            ))}
+        </StyledTable>
     );
 };

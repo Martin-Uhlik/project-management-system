@@ -1,29 +1,21 @@
-import { Checkbox, TableCell, TableRow } from '@mui/material';
-import { blue } from '@mui/material/colors';
-import moment from 'moment';
+import { StyledCheckbox, StyledTableCell, StyledTableRow } from '../../../ui';
+import dayjs from '../../../../dayjs';
 
 export const ProjectRow = (props) => {
     const project = props.project;
 
-    const checkerColor = {
-        '&.Mui-checked': {
-            color: blue[600],
-        },
-    };
-
     return (
-        <TableRow
-            hover
+        <StyledTableRow
             onClick={() => {
                 props.setSelectedProject(project.ID);
             }}
         >
-            <TableCell>{project.Name}</TableCell>
-            <TableCell>{project.Customer}</TableCell>
-            <TableCell>{moment(project.FinishDate).format('L')}</TableCell>
-            <TableCell>
-                <Checkbox disabled checked={project.Finished} sx={checkerColor} slotProps={{ input: { 'aria-label': 'Dokončeno' } }} />
-            </TableCell>
-        </TableRow>
+            <StyledTableCell>{project.Name}</StyledTableCell>
+            <StyledTableCell>{project.Customer}</StyledTableCell>
+            <StyledTableCell>{dayjs(project.FinishDate).format('L')}</StyledTableCell>
+            <StyledTableCell>
+                <StyledCheckbox disabled checked={project.Finished} aria-label='Dokončeno' />
+            </StyledTableCell>
+        </StyledTableRow>
     );
 };

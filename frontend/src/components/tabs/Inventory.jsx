@@ -6,9 +6,10 @@ import { MaterialRequirementTable } from '../utils/tables/MaterialRequirementTab
 import axios from 'axios';
 import { getBackendAddress } from '../../config';
 import { getAuthHeader } from '../../Auth';
-import moment from 'moment/moment';
+import dayjs from '../../dayjs';
 import { handleAxiosError } from '../../errorHandler';
 import { RestrictedComponent } from '../utils/RestrictedComponent';
+import { StyledAddButton } from '../ui';
 
 export const Inventory = () => {
     const setTab = useSetAtom(selectedTabAtom);
@@ -31,7 +32,7 @@ export const Inventory = () => {
                 getAuthHeader(),
             )
             .then(() => {
-                setTick(moment());
+                setTick(dayjs());
             })
             .catch((error) => {
                 handleAxiosError(error, [notifications, setNotifications]);
@@ -52,7 +53,7 @@ export const Inventory = () => {
                 getAuthHeader(),
             )
             .then(() => {
-                setTick(moment());
+                setTick(dayjs());
             })
             .catch((error) => {
                 handleAxiosError(error, [notifications, setNotifications]);
@@ -87,9 +88,7 @@ export const Inventory = () => {
                         <div className='content-box_header'>
                             <h1>Dostupný materiál</h1>
                             <RestrictedComponent types={['ADMIN', 'MANAGER']}>
-                                <button type='button' className='add-button' aria-label='Přidat materiál' onClick={handleAddMaterial}>
-                                    +
-                                </button>
+                                <StyledAddButton label='Přidat materiál' onClick={handleAddMaterial} />
                             </RestrictedComponent>
                         </div>
                         <MaterialTable />
@@ -99,9 +98,7 @@ export const Inventory = () => {
                     <div className='content-box_content'>
                         <div className='content-box_header'>
                             <h1>Požadavky na materiál</h1>
-                            <button type='button' className='add-button' aria-label='Přidat požadavek na materiál' onClick={handleAddMaterialRequirement}>
-                                +
-                            </button>
+                            <StyledAddButton label='Přidat požadavek na materiál' onClick={handleAddMaterialRequirement} />
                         </div>
                         <MaterialRequirementTable />
                     </div>

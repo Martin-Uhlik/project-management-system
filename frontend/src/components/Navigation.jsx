@@ -46,7 +46,7 @@ function Navigation() {
                 ></button>
             )}
             <nav id='main-navigation' aria-label='Hlavní menu' className={'nav' + (showNav ? ' nav__visible' : '')}>
-                <div className='d-flex flex-column justify-content-center align-items-center flex-grow-1'>
+                <div className='nav_items'>
                     <NavigationItem key={menuItems[0].key} to={menuItems[0].to} icon={menuItems[0].icon} text={menuItems[0].text} />
                     {menuItems.slice(1, -1).map(createItem)}
                 </div>

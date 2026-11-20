@@ -55,7 +55,7 @@ export const Header = () => {
     };
 
     return (
-        <div className='bg-dark header'>
+        <div className='header'>
             <button
                 type='button'
                 className='header_show-menu'

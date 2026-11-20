@@ -1,4 +1,4 @@
-import moment from 'moment';
+import dayjs from '../../dayjs';
 import axios from 'axios';
 import { getBackendAddress } from '../../config';
 import { getAuthHeader, getUserID } from '../../Auth';
@@ -21,7 +21,7 @@ export const MyTask = (props) => {
                 getAuthHeader(),
             )
             .then(() => {
-                setTick(moment());
+                setTick(dayjs());
             })
             .catch((error) => {
                 handleAxiosError(error, [notifications, setNotifications]);
@@ -29,7 +29,7 @@ export const MyTask = (props) => {
     };
 
     return (
-        <tr className={'task p-3 ' + (props.task.Finished ? 'task__finished' : null)} onClick={finishTask}>
+        <tr className={'task ' + (props.task.Finished ? 'task__finished' : null)} onClick={finishTask}>
             <td>
                 {/* the whole row toggles the task with a mouse; this button makes it reachable by keyboard too */}
                 <button
@@ -44,7 +44,7 @@ export const MyTask = (props) => {
                     {props.task.Name}
                 </button>
             </td>
-            <td>{moment(props.task.FinishDate).format('L')}</td>
+            <td>{dayjs(props.task.FinishDate).format('L')}</td>
             <td>{props.task.Description}</td>
         </tr>
     );

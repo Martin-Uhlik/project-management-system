@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react';
 import { AssignedTasks } from '../overview/AssignedTasks';
 import { WorkPlanChart } from '../../utils/WorkPlanChart';
-import moment from 'moment';
+import dayjs from '../../../dayjs';
 import { getAuthHeader } from '../../../Auth';
 import { useAtom, useAtomValue } from 'jotai';
 import { notificationsAtom, tickAtom } from '../../../state/atoms';
 import axios from 'axios';
 import { getBackendAddress } from '../../../config';
 import { handleAxiosError } from '../../../errorHandler';
+import Divider from '@mui/material/Divider';
+import { FormStack, StyledInput } from '../../ui';
 
 export const UserActivity = (props) => {
     const selectedUser = props.user;
@@ -34,24 +36,11 @@ export const UserActivity = (props) => {
         <>
             <h1>{`${user?.FirstName} ${user?.LastName}`}</h1>
             <h2>Aktuální práce:</h2>
-            <form className='login-form'>
-                <div className='form-group'>
-                    <label htmlFor='uname'>Začátek práce:</label>
-                    <input
-                        className='form-control'
-                        type='text'
-                        id='uname'
-                        name='uname'
-                        value={user?.WorkStartTime ? moment(user.WorkStartTime).format('LLL') : ''}
-                        disabled
-                    />
-                </div>
-                <div className='form-group'>
-                    <label htmlFor='fname'>Aktuální úkol:</label>
-                    <input className='form-control' type='text' id='fname' name='fname' value={user?.CurrentTaskID?.toString()} disabled />
-                </div>
-            </form>
-            <hr />
+            <FormStack>
+                <StyledInput id='workStart' label='Začátek práce' value={user?.WorkStartTime ? dayjs(user.WorkStartTime).format('LLL') : ''} disabled />
+                <StyledInput id='currentTask' label='Aktuální úkol' value={user?.CurrentTaskID?.toString() ?? ''} disabled />
+            </FormStack>
+            <Divider />
             <h2>Plán práce:</h2>
             <div className='min-vh-25'>
                 <div className='content-box_chart-wrapper-outer'>
@@ -60,7 +49,7 @@ export const UserActivity = (props) => {
                     </div>
                 </div>
             </div>
-            <hr />
+            <Divider />
             <h2>Přířazené úkoly:</h2>
             <AssignedTasks showHeader={false} userID={user?.ID} />
         </>

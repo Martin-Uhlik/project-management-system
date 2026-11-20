@@ -5,12 +5,13 @@ import { dialogAtom, notificationsAtom, tickAtom } from '../../../state/atoms';
 import axios from 'axios';
 import { getBackendAddress } from '../../../config';
 import { getAuthHeader } from '../../../Auth';
-import moment from 'moment';
+import dayjs from '../../../dayjs';
 import { handleAxiosError } from '../../../errorHandler';
 import { MaterialTable } from '../../utils/tables/MaterialTable';
 import { MaterialRequirementTable } from '../../utils/tables/MaterialRequirementTable';
 import { TaskMaterialTable } from '../../utils/tables/TaskMaterialTable';
 import { RestrictedComponent } from '../../utils/RestrictedComponent';
+import { StyledAddButton } from '../../ui';
 
 export const TaskMaterial = () => {
     const props = useOutletContext();
@@ -40,7 +41,7 @@ export const TaskMaterial = () => {
                 getAuthHeader(),
             )
             .then(() => {
-                setTick(moment());
+                setTick(dayjs());
             })
             .catch((error) => {
                 handleAxiosError(error, [notifications, setNotifications]);
@@ -79,9 +80,7 @@ export const TaskMaterial = () => {
                     <div className='content-box_header'>
                         <h1>Požadavky na materiál</h1>
                         <RestrictedComponent types={['ADMIN', 'MANAGER']}>
-                            <button type='button' className='add-button' aria-label='Přidat požadavek na materiál' onClick={handleAddMaterialRequirement}>
-                                +
-                            </button>
+                            <StyledAddButton label='Přidat požadavek na materiál' onClick={handleAddMaterialRequirement} />
                         </RestrictedComponent>
                     </div>
                     <MaterialRequirementTable taskID={taskID} />

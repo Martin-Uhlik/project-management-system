@@ -10,8 +10,10 @@ import { useAtom, useSetAtom } from 'jotai';
 import { dialogAtom, notificationsAtom, tickAtom } from '../../../state/atoms';
 import { UserMultiSelect } from '../../utils/UserMultiSelect';
 import { UserSingleSelect } from '../../utils/UserSingleSelect';
-import moment from 'moment';
-import { CustomizedDateTimePicker } from '../../utils/CustomizedDateTimePicker';
+import dayjs from '../../../dayjs';
+import Divider from '@mui/material/Divider';
+import { ButtonRow, FormStack, StyledCheckbox, StyledDateTimePicker, StyledInput, StyledAddButton } from '../../ui';
+import { EditButtons } from '../../utils/EditButtons';
 import { RestrictedComponent } from '../../utils/RestrictedComponent';
 
 export const TaskOverview = () => {
@@ -81,7 +83,7 @@ export const TaskOverview = () => {
             )
             .then(() => {
                 setDisabled(true);
-                setTick(moment());
+                setTick(dayjs());
             })
             .catch((error) => {
                 handleAxiosError(error, [notifications, setNotifications]);
@@ -100,7 +102,7 @@ export const TaskOverview = () => {
             )
             .then(() => {
                 setDisabled(true);
-                setTick(moment());
+                setTick(dayjs());
             })
             .catch((error) => {
                 handleAxiosError(error, [notifications, setNotifications]);
@@ -122,7 +124,7 @@ export const TaskOverview = () => {
         axios
             .post(getBackendAddress(`/auth/projects/${projectID}/tasks/${taskID}/${dependencyType}`), { id: +id }, getAuthHeader())
             .then(() => {
-                setTick(moment());
+                setTick(dayjs());
             })
             .catch((error) => {
                 handleAxiosError(error, [notifications, setNotifications]);
@@ -143,7 +145,7 @@ export const TaskOverview = () => {
         axios
             .delete(getBackendAddress(`/auth/projects/${projectID}/tasks/${taskID}/${dependencyType}`), { ...getAuthHeader(), data: { id: +id } })
             .then(() => {
-                setTick(moment());
+                setTick(dayjs());
             })
             .catch((error) => {
                 handleAxiosError(error, [notifications, setNotifications]);
@@ -166,84 +168,40 @@ export const TaskOverview = () => {
         <div className='content-2-column'>
             <div className='content-box'>
                 <div className='content-box_content'>
-                    <form className='login-form h-100' onSubmit={handleSubmit}>
+                    <FormStack component='form' sx={{ height: '100%' }} onSubmit={handleSubmit}>
                         <div className='content-box_header'>
                             <h1>{task?.Name}</h1>
                             <RestrictedComponent types={['ADMIN', 'MANAGER']}>
-                                <div className='content-box_subheader'>
-                                    {disabled ? (
-                                        <>
-                                            <RemoveButton handleSuccess={removeTask} />
-                                            <button
-                                                className='btn btn-outline-dark'
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    setDisabled(false);
-                                                }}
-                                            >
-                                                Upravit
-                                            </button>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <button className='btn btn-danger' type='reset' onClick={() => setDisabled(true)}>
-                                                Zrušit
-                                            </button>
-                                            <button className='btn btn-success' type='submit'>
-                                                Použít
-                                            </button>
-                                        </>
-                                    )}
-                                </div>
+                                <ButtonRow className='content-box_subheader'>
+                                    {disabled ? <RemoveButton handleSuccess={removeTask} /> : null}
+                                    <EditButtons editing={!disabled} setEditing={(editing) => setDisabled(!editing)} />
+                                </ButtonRow>
                             </RestrictedComponent>
                         </div>
-                        <hr />
-                        <div className='form-group'>
-                            <label htmlFor='name'>Název úkolu:</label>
-                            <input className='form-control' type='text' id='name' name='name' defaultValue={task?.Name} disabled={disabled} />
-                        </div>
-                        <div className='form-group d-flex flex-column'>
-                            <CustomizedDateTimePicker finishDate={finishDate} setFinishDate={setFinishDate} disabled={disabled} />
-                        </div>
-                        <div className='row'>
-                            <label htmlFor='sname'>Předpokládaný čas:</label>
-                            <div className='col'>
-                                <div className='input-group'>
-                                    <input type='text' className='form-control' id='hod' name='hod' defaultValue={task?.DurationHours} disabled={disabled} />
-                                    <span className='input-group-text'>hod</span>
-                                </div>
-                            </div>
-                            <div className='col'>
-                                <div className='input-group'>
-                                    <input type='text' className='form-control' id='min' name='min' defaultValue={task?.DurationMinutes} disabled={disabled} />
-                                    <span className='input-group-text'>min</span>
-                                </div>
-                            </div>
-                        </div>
+                        <Divider />
+                        <StyledInput id='name' label='Název úkolu' defaultValue={task?.Name} disabled={disabled} />
+                        <StyledDateTimePicker value={finishDate} onChange={setFinishDate} disabled={disabled} />
+                        <ButtonRow justify='stretch'>
+                            <StyledInput id='hod' label='Odhad – hodiny' unit='hod' type='number' defaultValue={task?.DurationHours} disabled={disabled} />
+                            <StyledInput id='min' label='Odhad – minuty' unit='min' type='number' defaultValue={task?.DurationMinutes} disabled={disabled} />
+                        </ButtonRow>
                         <RestrictedComponent types={['ADMIN', 'MANAGER']} ids={selectedUsers}>
-                            <div className='form-check'>
-                                <label className='form-check-label' htmlFor='finished'>
-                                    Úkol dokončen
-                                </label>
-                                <input className='form-check-input' type='checkbox' checked={finished} onChange={handleFinish} id='finished' name='finished' />
-                            </div>
+                            <StyledCheckbox id='finished' label='Úkol dokončen' checked={finished} onChange={handleFinish} />
                         </RestrictedComponent>
-                        <hr />
+                        <Divider />
                         <UserSingleSelect disabled={disabled} users={users} owner={task?.OwnerID} />
                         <UserMultiSelect disabled={disabled} users={users} task={task} selectedUsers={selectedUsers} setSelectedUsers={setSelectedUsers} />
-                        <hr />
-                        <div className='form-group h-100 min-vh-25'>
-                            <label htmlFor='description'>Popis:</label>
-                            <textarea
-                                className='form-control content-box_textarea'
-                                id='description'
-                                name='description'
-                                value={descriptionValue ?? ''}
-                                onChange={(event) => setDescriptionValue(event.target.value)}
-                                disabled={disabled}
-                            ></textarea>
-                        </div>
-                    </form>
+                        <Divider />
+                        <StyledInput
+                            id='description'
+                            label='Popis'
+                            multiline
+                            minRows={8}
+                            value={descriptionValue ?? ''}
+                            onChange={(event) => setDescriptionValue(event.target.value)}
+                            disabled={disabled}
+                        />
+                    </FormStack>
                 </div>
             </div>
             <div className='content-2-row'>
@@ -253,10 +211,8 @@ export const TaskOverview = () => {
                             <h1>Předchozí úkoly</h1>
                             <RestrictedComponent types={['ADMIN', 'MANAGER']}>
                                 <div className='content-box_header'>
-                                    <button
-                                        type='button'
-                                        className='add-button'
-                                        aria-label='Odebrat předchozí úkol'
+                                    <StyledAddButton
+                                        label='Odebrat předchozí úkol'
                                         onClick={() =>
                                             handleRemoveDependency(
                                                 'predecessor',
@@ -265,15 +221,8 @@ export const TaskOverview = () => {
                                         }
                                     >
                                         -
-                                    </button>
-                                    <button
-                                        type='button'
-                                        className='add-button'
-                                        aria-label='Přidat předchozí úkol'
-                                        onClick={() => handleAddDependency('predecessor')}
-                                    >
-                                        +
-                                    </button>
+                                    </StyledAddButton>
+                                    <StyledAddButton label='Přidat předchozí úkol' onClick={() => handleAddDependency('predecessor')} />
                                 </div>
                             </RestrictedComponent>
                         </div>
@@ -290,10 +239,8 @@ export const TaskOverview = () => {
                             <h1>Následující úkoly</h1>
                             <RestrictedComponent types={['ADMIN', 'MANAGER']}>
                                 <div className='content-box_header'>
-                                    <button
-                                        type='button'
-                                        className='add-button'
-                                        aria-label='Odebrat navazující úkol'
+                                    <StyledAddButton
+                                        label='Odebrat navazující úkol'
                                         onClick={() =>
                                             handleRemoveDependency(
                                                 'successor',
@@ -302,15 +249,8 @@ export const TaskOverview = () => {
                                         }
                                     >
                                         -
-                                    </button>
-                                    <button
-                                        type='button'
-                                        className='add-button'
-                                        aria-label='Přidat navazující úkol'
-                                        onClick={() => handleAddDependency('successor')}
-                                    >
-                                        +
-                                    </button>
+                                    </StyledAddButton>
+                                    <StyledAddButton label='Přidat navazující úkol' onClick={() => handleAddDependency('successor')} />
                                 </div>
                             </RestrictedComponent>
                         </div>

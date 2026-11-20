@@ -1,13 +1,14 @@
 import React from 'react';
-import { useModalDialog } from '../utils/useModalDialog';
+import Divider from '@mui/material/Divider';
 import { useAtom, useSetAtom } from 'jotai';
 import { dialogAtom, notificationsAtom, tickAtom } from '../../state/atoms';
 import axios from 'axios';
 import { getBackendAddress } from '../../config';
 import { getAuthHeader } from '../../Auth';
 import { RestrictedComponent } from '../utils/RestrictedComponent';
-import moment from 'moment';
+import dayjs from '../../dayjs';
 import { handleAxiosError } from '../../errorHandler';
+import { ButtonRow, FormStack, StyledButton, StyledDialog, StyledInput } from '../ui';
 
 export const EditMaterial = () => {
     const [dialog, setDialog] = useAtom(dialogAtom);
@@ -35,7 +36,7 @@ export const EditMaterial = () => {
             )
             .then(() => {
                 setDialog(null);
-                setTick(moment());
+                setTick(dayjs());
             })
             .catch((error) => {
                 handleAxiosError(error, [notifications, setNotifications]);
@@ -57,76 +58,41 @@ export const EditMaterial = () => {
             )
             .then(() => {
                 setDialog(null);
-                setTick(moment());
+                setTick(dayjs());
             })
             .catch((error) => {
                 handleAxiosError(error, [notifications, setNotifications]);
             });
     };
 
-    const dialogRef = useModalDialog(handleCancel);
     return (
-        <div className='dialog-background'>
-            <div className='dialog d-flex flex-column gap-3' role='dialog' aria-modal='true' aria-labelledby='dialog-title' ref={dialogRef}>
-                <h1 id='dialog-title' className='dialog-h1'>
-                    Upravit materiál
-                </h1>
-                <hr />
-                <form className='d-flex flex-column gap-3'>
-                    <div className='form-group'>
-                        <label htmlFor='amount'>Počet:</label>
-                        <input
-                            className='form-control'
-                            type='text'
-                            id='amount'
-                            name='amount'
-                            placeholder='Zadejte počet kusů'
-                            value={amount}
-                            onChange={(event) => {
-                                setAmount(event.target.value);
-                            }}
-                        />
-                    </div>
-                    <div className='d-flex gap-3 justify-content-center'>
-                        <button className='btn btn-danger w-100' onClick={(event) => handleCreateMaterialEvent(event, 'REMOVE')}>
+        <StyledDialog title='Upravit materiál' onClose={handleCancel}>
+            <FormStack gap={3}>
+                <FormStack component='form' onSubmit={(event) => event.preventDefault()}>
+                    <StyledInput id='amount' label='Počet kusů' type='number' value={amount} onChange={(event) => setAmount(event.target.value)} />
+                    <ButtonRow justify='stretch'>
+                        <StyledButton color='error' onClick={(event) => handleCreateMaterialEvent(event, 'REMOVE')}>
                             Odebrat
-                        </button>
-                        <button className='btn btn-dark w-100' onClick={(event) => handleCreateMaterialEvent(event, 'RESERVATION')}>
-                            Zarezervovat
-                        </button>
-                        <button className='btn btn-success w-100' onClick={(event) => handleCreateMaterialEvent(event, 'ADD')}>
+                        </StyledButton>
+                        <StyledButton onClick={(event) => handleCreateMaterialEvent(event, 'RESERVATION')}>Zarezervovat</StyledButton>
+                        <StyledButton color='success' onClick={(event) => handleCreateMaterialEvent(event, 'ADD')}>
                             Přidat
-                        </button>
-                    </div>
-                </form>
+                        </StyledButton>
+                    </ButtonRow>
+                </FormStack>
                 <RestrictedComponent types={['ADMIN', 'MANAGER']}>
-                    <hr className='hline' />
-                    <form className='d-flex flex-column gap-3'>
-                        <div className='form-group'>
-                            <label htmlFor='name'>Název:</label>
-                            <input
-                                className='form-control'
-                                type='text'
-                                id='name'
-                                name='name'
-                                placeholder='Zadejte název'
-                                value={name}
-                                onChange={(event) => {
-                                    setName(event.target.value);
-                                }}
-                            />
-                        </div>
-                        <div className='d-flex gap-3 justify-content-end'>
-                            <button className='btn btn-danger' onClick={handleCancel}>
+                    <Divider />
+                    <FormStack component='form' onSubmit={handleSubmit}>
+                        <StyledInput id='name' label='Název' value={name} onChange={(event) => setName(event.target.value)} />
+                        <ButtonRow>
+                            <StyledButton color='error' onClick={handleCancel}>
                                 Zrušit
-                            </button>
-                            <button className='btn btn-dark' onClick={handleSubmit}>
-                                Změnit
-                            </button>
-                        </div>
-                    </form>
+                            </StyledButton>
+                            <StyledButton type='submit'>Změnit</StyledButton>
+                        </ButtonRow>
+                    </FormStack>
                 </RestrictedComponent>
-            </div>
-        </div>
+            </FormStack>
+        </StyledDialog>
     );
 };

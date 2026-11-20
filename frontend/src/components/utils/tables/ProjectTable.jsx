@@ -1,24 +1,12 @@
-import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
+import { StyledTable } from '../../ui';
 import { ProjectRow } from './rows/ProjectRow';
 
 export const ProjectTable = ({ projects, setSelectedProject }) => {
     return (
-        <TableContainer component={Paper}>
-            <Table>
-                <TableHead>
-                    <TableRow>
-                        <TableCell>Název</TableCell>
-                        <TableCell>Zákazník</TableCell>
-                        <TableCell>Dokončení</TableCell>
-                        <TableCell>Dokončeno</TableCell>
-                    </TableRow>
-                </TableHead>
-                <TableBody>
-                    {projects.map((project) => (
-                        <ProjectRow key={project.ID} project={project} setSelectedProject={setSelectedProject} />
-                    ))}
-                </TableBody>
-            </Table>
-        </TableContainer>
+        <StyledTable columns={[{ label: 'Název' }, { label: 'Zákazník' }, { label: 'Dokončení' }, { label: 'Dokončeno' }]}>
+            {projects.map((project) => (
+                <ProjectRow key={project.ID} project={project} setSelectedProject={setSelectedProject} />
+            ))}
+        </StyledTable>
     );
 };

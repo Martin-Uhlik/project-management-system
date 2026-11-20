@@ -6,8 +6,9 @@ import { getAuthHeader } from '../../../Auth';
 import { handleAxiosError } from '../../../errorHandler';
 import { useAtom } from 'jotai';
 import { notificationsAtom, tickAtom } from '../../../state/atoms';
-import moment from 'moment';
+import dayjs from '../../../dayjs';
 import { RestrictedComponent } from '../../utils/RestrictedComponent';
+import { ButtonRow, FormStack, StyledButton, StyledSelect } from '../../ui';
 
 export const TaskMachines = () => {
     const props = useOutletContext();
@@ -55,7 +56,7 @@ export const TaskMachines = () => {
                 getAuthHeader(),
             )
             .then(() => {
-                setTick(moment());
+                setTick(dayjs());
             })
             .catch((error) => {
                 handleAxiosError(error, [notifications, setNotifications]);
@@ -63,40 +64,26 @@ export const TaskMachines = () => {
     };
 
     return (
-        <div className='content-1-column '>
+        <div className='content-1-column'>
             <div className='content-box'>
                 <div className='content-box_content'>
                     <div className='content-box_header'>
                         <h1>Stroje</h1>
                     </div>
-                    <form className='login-form' onSubmit={setMachine}>
-                        <div className='form-group'>
-                            <label htmlFor='machine'>Přiřazený stroj:</label>
-                            <select
-                                className='form-select'
-                                id='machine'
-                                name='machine'
-                                value={selectedMachine || 'UNDEFINED'}
-                                onChange={(e) => setSelectedMachine(e.target.value)}
-                            >
-                                <option value='UNDEFINED' disabled hidden></option>
-                                {machines.map((machine) => {
-                                    return (
-                                        <option key={machine.ID} value={machine.ID}>
-                                            {machine.Name}
-                                        </option>
-                                    );
-                                })}
-                            </select>
-                        </div>
+                    <FormStack component='form' onSubmit={setMachine}>
+                        <StyledSelect
+                            id='machine'
+                            label='Přiřazený stroj'
+                            value={machines.some((machine) => machine.ID === +selectedMachine) ? +selectedMachine : ''}
+                            onChange={(event) => setSelectedMachine(event.target.value)}
+                            options={machines.map((machine) => ({ value: machine.ID, label: machine.Name }))}
+                        />
                         <RestrictedComponent types={['ADMIN', 'MANAGER']}>
-                            <div className='d-flex justify-content-end'>
-                                <button className='btn btn-dark' type='submit'>
-                                    Použít
-                                </button>
-                            </div>
+                            <ButtonRow>
+                                <StyledButton type='submit'>Použít</StyledButton>
+                            </ButtonRow>
                         </RestrictedComponent>
-                    </form>
+                    </FormStack>
                 </div>
             </div>
         </div>

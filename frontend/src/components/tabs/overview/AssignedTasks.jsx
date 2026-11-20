@@ -30,7 +30,7 @@ export const AssignedTasks = ({ showHeader, userID, machineTasks = [] }) => {
     return (
         <>
             {showHeader && <h1>Moje úkoly</h1>}
-            <table className='w-100'>
+            <table className='task-list'>
                 <thead>
                     <tr>
                         <th>Název</th>
@@ -39,7 +39,7 @@ export const AssignedTasks = ({ showHeader, userID, machineTasks = [] }) => {
                         <th>Dokončení</th>
                     </tr>
                 </thead>
-                <tbody className='w-100 '>
+                <tbody>
                     {userID
                         ? tasks.map((task) => <AssignedTask key={task.ID} task={task} />)
                         : machineTasks.map((task) => <AssignedTask key={task.ID} task={task} />)}

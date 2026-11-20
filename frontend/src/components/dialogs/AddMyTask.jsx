@@ -1,9 +1,8 @@
 import React from 'react';
-import { useModalDialog } from '../utils/useModalDialog';
 import { useAtom } from 'jotai';
 import { dialogAtom } from '../../state/atoms';
-import dayjs from 'dayjs';
-import { CustomizedDateTimePicker } from '../utils/CustomizedDateTimePicker';
+import dayjs from '../../dayjs';
+import { ButtonRow, FormStack, StyledButton, StyledDateTimePicker, StyledDialog, StyledInput } from '../ui';
 
 export const AddMyTask = () => {
     const [dialog, setDialog] = useAtom(dialogAtom);
@@ -23,54 +22,21 @@ export const AddMyTask = () => {
         setDialog(null);
     };
 
-    const dialogRef = useModalDialog(handleCancel);
     return (
-        <div className='dialog-background'>
-            <div className='dialog' role='dialog' aria-modal='true' aria-labelledby='dialog-title' ref={dialogRef}>
-                <h1 id='dialog-title' className='dialog-h1'>
-                    Přidat úkol
-                </h1>
-                <hr className='hline' />
-                <form className='d-flex flex-column gap-3'>
-                    <div className='form-group w-100'>
-                        <label htmlFor='name'>Název:</label>
-                        <input
-                            className='form-control'
-                            type='text'
-                            id='name'
-                            name='name'
-                            placeholder='Zadejte název'
-                            value={name}
-                            onChange={(event) => {
-                                setName(event.target.value);
-                            }}
-                        />
-                    </div>
-                    <div className='form-group'>
-                        <label htmlFor='description'>Popis:</label>
-                        <textarea
-                            className='form-control'
-                            id='description'
-                            rows='3'
-                            value={description}
-                            onChange={(event) => {
-                                setDescription(event.target.value);
-                            }}
-                        ></textarea>
-                    </div>
-                    <div className='form-group d-flex flex-column'>
-                        <CustomizedDateTimePicker finishDate={stopDateTime} setFinishDate={setStopDateTime} />
-                    </div>
-                    <div className='d-flex gap-3 justify-content-end'>
-                        <button className='btn btn-danger' type='reset' onClick={handleCancel}>
-                            Zrušit
-                        </button>
-                        <button className='btn btn-success' type='submit' onClick={handleSubmit}>
-                            Ok
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
+        <StyledDialog title='Přidat úkol' onClose={handleCancel}>
+            <FormStack component='form' onSubmit={handleSubmit}>
+                <StyledInput id='name' label='Název' value={name} onChange={(event) => setName(event.target.value)} />
+                <StyledInput id='description' label='Popis' multiline rows={3} value={description} onChange={(event) => setDescription(event.target.value)} />
+                <StyledDateTimePicker value={stopDateTime} onChange={setStopDateTime} />
+                <ButtonRow>
+                    <StyledButton color='error' onClick={handleCancel}>
+                        Zrušit
+                    </StyledButton>
+                    <StyledButton color='success' type='submit'>
+                        Ok
+                    </StyledButton>
+                </ButtonRow>
+            </FormStack>
+        </StyledDialog>
     );
 };

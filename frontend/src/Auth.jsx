@@ -7,7 +7,7 @@ import { Notifications } from './components/Notifications';
 import { Dialogs } from './components/Dialogs';
 import Cookies from 'js-cookie';
 import { tickAtom } from './state/atoms';
-import moment from 'moment';
+import dayjs from './dayjs';
 
 // The session lives in an httpOnly cookie that the backend sets on sign-in and the browser sends with every request
 // (axios.defaults.withCredentials, see index.jsx); scripts on the page can't read it.
@@ -28,7 +28,7 @@ const AuthUtils = () => {
 
     React.useEffect(() => {
         setInterval(() => {
-            setTick(moment());
+            setTick(dayjs());
             if (!Cookies.get('user_id')) {
                 navigate('/');
             }
@@ -44,7 +44,7 @@ export const Auth = () => {
         <Provider>
             <div className='wrapper'>
                 <Header />
-                <div className='d-flex flex-row h-100 w-100'>
+                <div className='main'>
                     <Navigation />
                     <div className='content-wrap'>
                         <Outlet />

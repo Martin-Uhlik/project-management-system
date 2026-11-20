@@ -1,4 +1,4 @@
-import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
+import { StyledTable } from '../../ui';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { getBackendAddress } from '../../../config';
@@ -30,20 +30,10 @@ export const TaskMaterialTable = () => {
     }, [tick]);
 
     return (
-        <TableContainer component={Paper}>
-            <Table>
-                <TableHead>
-                    <TableRow>
-                        <TableCell>Název</TableCell>
-                        <TableCell align='right'>Počet</TableCell>
-                    </TableRow>
-                </TableHead>
-                <TableBody>
-                    {materials?.map((mat) => (
-                        <ReservedMaterialRow key={mat.ID} row={mat} />
-                    ))}
-                </TableBody>
-            </Table>
-        </TableContainer>
+        <StyledTable columns={[{ label: 'Název' }, { label: 'Počet', align: 'right' }]}>
+            {materials?.map((mat) => (
+                <ReservedMaterialRow key={mat.ID} row={mat} />
+            ))}
+        </StyledTable>
     );
 };

@@ -1,5 +1,5 @@
-import { TableCell, TableRow } from '@mui/material';
-import moment from 'moment';
+import { StyledTableCell, StyledTableRow } from '../../../ui';
+import dayjs from '../../../../dayjs';
 import { useSetAtom } from 'jotai';
 import { dialogAtom } from '../../../../state/atoms';
 
@@ -19,12 +19,12 @@ export const MaterialRequirementRow = (props) => {
     };
 
     return (
-        <TableRow hover onClick={handleEditMaterial}>
-            <TableCell>{requirement.Name}</TableCell>
-            <TableCell align='right'>{requirement.Price * requirement.Count}</TableCell>
-            <TableCell align='right'>{moment(requirement.NeededDate).format('L')}</TableCell>
-            <TableCell align='right'>{`${requirement.TargetUser.FirstName} ${requirement.TargetUser.LastName}`}</TableCell>
-            <TableCell align='right'>{`${requirement?.AcceptedBy?.FirstName || ''} ${requirement?.AcceptedBy?.LastName || ''}`}</TableCell>
-        </TableRow>
+        <StyledTableRow onClick={handleEditMaterial}>
+            <StyledTableCell>{requirement.Name}</StyledTableCell>
+            <StyledTableCell align='right'>{requirement.Price * requirement.Count}</StyledTableCell>
+            <StyledTableCell align='right'>{dayjs(requirement.NeededDate).format('L')}</StyledTableCell>
+            <StyledTableCell align='right'>{`${requirement.TargetUser.FirstName} ${requirement.TargetUser.LastName}`}</StyledTableCell>
+            <StyledTableCell align='right'>{`${requirement?.AcceptedBy?.FirstName || ''} ${requirement?.AcceptedBy?.LastName || ''}`}</StyledTableCell>
+        </StyledTableRow>
     );
 };

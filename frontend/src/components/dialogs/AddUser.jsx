@@ -1,7 +1,13 @@
 import React from 'react';
-import { useModalDialog } from '../utils/useModalDialog';
 import { useAtom } from 'jotai';
 import { dialogAtom } from '../../state/atoms';
+import { ButtonRow, FormStack, StyledButton, StyledDialog, StyledInput, StyledSelect } from '../ui';
+
+export const userRoleOptions = [
+    { value: 'ADMIN', label: 'Administrátor' },
+    { value: 'MANAGER', label: 'Manažer' },
+    { value: 'USER', label: 'Uživatel' },
+];
 
 export const AddUser = () => {
     const [dialog, setDialog] = useAtom(dialogAtom);
@@ -24,105 +30,24 @@ export const AddUser = () => {
         setDialog(null);
     };
 
-    const dialogRef = useModalDialog(handleCancel);
     return (
-        <div className='dialog-background'>
-            <div className='dialog' role='dialog' aria-modal='true' aria-labelledby='dialog-title' ref={dialogRef}>
-                <h1 id='dialog-title' className='dialog-h1'>
-                    Přidat uživatele
-                </h1>
-                <hr className='hline' />
-                <form className='login-form'>
-                    <div className='form-group'>
-                        <label htmlFor='uname'>Uživatelské jméno:</label>
-                        <input
-                            className='form-control'
-                            type='text'
-                            id='uname'
-                            name='uname'
-                            value={uname}
-                            onChange={(event) => {
-                                setUname(event.target.value);
-                            }}
-                        />
-                    </div>
-                    <div className='form-group'>
-                        <label htmlFor='fname'>Jméno:</label>
-                        <input
-                            className='form-control'
-                            type='text'
-                            id='fname'
-                            name='fname'
-                            value={fname}
-                            onChange={(event) => {
-                                setFname(event.target.value);
-                            }}
-                        />
-                    </div>
-                    <div className='form-group'>
-                        <label htmlFor='lname'>Příjmení:</label>
-                        <input
-                            className='form-control'
-                            type='text'
-                            id='lname'
-                            name='lname'
-                            value={lname}
-                            onChange={(event) => {
-                                setLname(event.target.value);
-                            }}
-                        />
-                    </div>
-                    <div className='form-group'>
-                        <label htmlFor='password'>Heslo:</label>
-                        <input
-                            className='form-control'
-                            type='password'
-                            id='password'
-                            name='password'
-                            value={password}
-                            onChange={(event) => {
-                                setPassword(event.target.value);
-                            }}
-                        />
-                    </div>
-                    <div className='form-group'>
-                        <label htmlFor='position'>Pozice:</label>
-                        <input
-                            className='form-control'
-                            type='text'
-                            id='position'
-                            name='position'
-                            value={position}
-                            onChange={(event) => {
-                                setPosition(event.target.value);
-                            }}
-                        />
-                    </div>
-                    <div className='form-group'>
-                        <label htmlFor='role'>Role uživatele:</label>
-                        <select
-                            id='role'
-                            className='form-select'
-                            defaultValue='USER'
-                            onChange={(event) => {
-                                setRole(event.target.value);
-                            }}
-                        >
-                            <option value='ADMIN'>Administrátor</option>
-                            <option value='MANAGER'>Manažer</option>
-                            <option value='USER'>Uživatel</option>
-                        </select>
-                    </div>
-                    <div className='d-flex gap-3 justify-content-end'>
-                        <button className='btn btn-danger' onClick={handleCancel}>
-                            Zrušit
-                        </button>
-                        <button className='btn btn-success' onClick={handleSubmit}>
-                            Ok
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
+        <StyledDialog title='Přidat uživatele' onClose={handleCancel}>
+            <FormStack component='form' onSubmit={handleSubmit}>
+                <StyledInput id='uname' label='Uživatelské jméno' value={uname} onChange={(event) => setUname(event.target.value)} />
+                <StyledInput id='fname' label='Jméno' value={fname} onChange={(event) => setFname(event.target.value)} />
+                <StyledInput id='lname' label='Příjmení' value={lname} onChange={(event) => setLname(event.target.value)} />
+                <StyledInput id='password' label='Heslo' type='password' value={password} onChange={(event) => setPassword(event.target.value)} />
+                <StyledInput id='position' label='Pozice' value={position} onChange={(event) => setPosition(event.target.value)} />
+                <StyledSelect id='role' label='Role uživatele' value={role} onChange={(event) => setRole(event.target.value)} options={userRoleOptions} />
+                <ButtonRow>
+                    <StyledButton color='error' onClick={handleCancel}>
+                        Zrušit
+                    </StyledButton>
+                    <StyledButton color='success' type='submit'>
+                        Ok
+                    </StyledButton>
+                </ButtonRow>
+            </FormStack>
+        </StyledDialog>
     );
 };

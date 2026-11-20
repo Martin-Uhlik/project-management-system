@@ -1,52 +1,15 @@
-import { Checkbox, ListItemText, MenuItem, Select } from '@mui/material';
+import { StyledMultiSelect } from '../ui';
 
+// Project or task members; selectedUsers holds user IDs
 export const UserMultiSelect = ({ users, disabled, selectedUsers, setSelectedUsers }) => {
-    const handleChange = (event) => {
-        setSelectedUsers(event.target.value);
-    };
-
-    const MenuProps = {
-        slotProps: {
-            paper: {
-                style: {
-                    maxHeight: '10rem',
-                },
-            },
-        },
-    };
-
     return (
-        <div className='form-group'>
-            <label id='users-label' htmlFor='users'>
-                Členové:
-            </label>
-            <Select
-                className='form-control'
-                labelId='users-label'
-                id='users'
-                name='users'
-                multiple
-                value={selectedUsers}
-                onChange={handleChange}
-                size='small'
-                renderValue={(selected) =>
-                    selected
-                        .map((user) => {
-                            const foundUser = users?.find((u) => u.ID === user);
-                            return `${foundUser?.FirstName} ${foundUser?.LastName}`;
-                        })
-                        .join(', ')
-                }
-                MenuProps={MenuProps}
-                disabled={disabled}
-            >
-                {users.map((user) => (
-                    <MenuItem key={user.ID} value={user.ID}>
-                        <Checkbox checked={selectedUsers.includes(user.ID)} />
-                        <ListItemText primary={`${user.FirstName} ${user.LastName}`} />
-                    </MenuItem>
-                ))}
-            </Select>
-        </div>
+        <StyledMultiSelect
+            id='users'
+            label='Členové'
+            options={users.map((user) => ({ value: user.ID, label: `${user.FirstName} ${user.LastName}` }))}
+            value={selectedUsers}
+            onChange={setSelectedUsers}
+            disabled={disabled}
+        />
     );
 };

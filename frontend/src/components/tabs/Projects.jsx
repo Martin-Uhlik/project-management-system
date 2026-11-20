@@ -8,12 +8,14 @@ import axios from 'axios';
 import { getBackendAddress } from '../../config';
 import { getAuthHeader } from '../../Auth';
 import { handleAxiosError } from '../../errorHandler';
-import moment from 'moment';
+import dayjs from '../../dayjs';
 import { pushNotification } from '../Notifications';
 import { UserSingleSelect } from '../utils/UserSingleSelect';
-import { CustomizedDateTimePicker } from '../utils/CustomizedDateTimePicker';
+import Divider from '@mui/material/Divider';
+import { ButtonRow, FormStack, StyledButton, StyledCheckbox, StyledDateTimePicker, StyledInput, StyledAddButton } from '../ui';
 import { ProjectTable } from '../utils/tables/ProjectTable';
 import { RestrictedComponent } from '../utils/RestrictedComponent';
+import { EditButtons } from '../utils/EditButtons';
 
 export const Projects = () => {
     const setTab = useSetAtom(selectedTabAtom);
@@ -96,7 +98,7 @@ export const Projects = () => {
             )
             .then(() => {
                 setDisabled(true);
-                setTick(moment());
+                setTick(dayjs());
             })
             .catch((error) => {
                 handleAxiosError(error, [notifications, setNotifications]);
@@ -112,7 +114,7 @@ export const Projects = () => {
                     notifications: notifications,
                     setNotifications: setNotifications,
                 });
-                setTick(moment());
+                setTick(dayjs());
             })
             .catch((error) => {
                 handleAxiosError(error, [notifications, setNotifications]);
@@ -129,7 +131,7 @@ export const Projects = () => {
                 getAuthHeader(),
             )
             .then(() => {
-                setTick(moment());
+                setTick(dayjs());
             })
             .catch((error) => {
                 handleAxiosError(error, [notifications, setNotifications]);
@@ -154,9 +156,7 @@ export const Projects = () => {
                         <div className='content-box_header'>
                             <h1>Projekty</h1>
                             <RestrictedComponent types={['ADMIN', 'MANAGER']}>
-                                <button type='button' className='add-button' aria-label='Přidat projekt' onClick={handleAddProject}>
-                                    +
-                                </button>
+                                <StyledAddButton label='Přidat projekt' onClick={handleAddProject} />
                             </RestrictedComponent>
                         </div>
                         <ProjectTable projects={projects} setSelectedProject={setSelectedProject} />
@@ -164,99 +164,51 @@ export const Projects = () => {
                 </div>
                 <div className='content-box'>
                     <div className='content-box_content'>
-                        <form className='login-form h-100' onSubmit={handleUpdateProject}>
+                        <FormStack component='form' sx={{ height: '100%' }} onSubmit={handleUpdateProject}>
                             <div className='content-box_header'>
                                 <h1>{project?.Name}</h1>
-                                <div className='content-box_subheader'>
+                                <ButtonRow className='content-box_subheader'>
                                     {disabled ? (
-                                        <>
-                                            <RestrictedComponent types={['ADMIN']}>
-                                                <RemoveButton handleSuccess={handleRemoveProject} />
-                                            </RestrictedComponent>
-                                            <RestrictedComponent types={['ADMIN', 'MANAGER']}>
-                                                <button
-                                                    className='btn btn-outline-dark'
-                                                    onClick={(event) => {
-                                                        event.preventDefault();
-                                                        setDisabled(false);
-                                                    }}
-                                                >
-                                                    Upravit
-                                                </button>
-                                            </RestrictedComponent>
-                                            <RestrictedComponent types={['ADMIN']} ids={selectedUsers}>
-                                                <Link className='btn btn-dark' to={project?.ID.toString() || '#'}>
-                                                    Přejít na projekt
-                                                </Link>
-                                            </RestrictedComponent>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <button
-                                                className='btn btn-danger'
-                                                type='reset'
-                                                onClick={(event) => {
-                                                    event.preventDefault();
-                                                    setDisabled(true);
-                                                }}
-                                            >
-                                                Zrušit
-                                            </button>
-                                            <button className='btn btn-success' type='submit'>
-                                                Použít
-                                            </button>
-                                        </>
-                                    )}
-                                </div>
+                                        <RestrictedComponent types={['ADMIN']}>
+                                            <RemoveButton handleSuccess={handleRemoveProject} />
+                                        </RestrictedComponent>
+                                    ) : null}
+                                    <RestrictedComponent types={['ADMIN', 'MANAGER']}>
+                                        <EditButtons editing={!disabled} setEditing={(editing) => setDisabled(!editing)} />
+                                    </RestrictedComponent>
+                                    {disabled ? (
+                                        <RestrictedComponent types={['ADMIN']} ids={selectedUsers}>
+                                            <StyledButton component={Link} to={project?.ID.toString() || '#'}>
+                                                Přejít na projekt
+                                            </StyledButton>
+                                        </RestrictedComponent>
+                                    ) : null}
+                                </ButtonRow>
                             </div>
-
-                            <div className='form-group'>
-                                <label htmlFor='name'>Název projektu:</label>
-                                <input className='form-control' type='text' id='name' name='name' defaultValue={project?.Name} disabled={disabled} />
-                            </div>
-                            <div className='form-group'>
-                                <label htmlFor='customer'>Zákazník:</label>
-                                <input
-                                    className='form-control'
-                                    type='text'
-                                    id='customer'
-                                    name='customer'
-                                    defaultValue={project?.Customer}
-                                    disabled={disabled}
-                                />
-                            </div>
-                            <div className='form-group d-flex flex-column'>
-                                <CustomizedDateTimePicker finishDate={finishDate} setFinishDate={setFinishDate} disabled={disabled} />
-                            </div>
-                            <div className='form-check'>
-                                <label className='form-check-label' htmlFor='finished'>
-                                    Projekt dokončen
-                                </label>
-                                <input
-                                    className='form-check-input'
-                                    type='checkbox'
-                                    checked={finished}
-                                    onChange={() => setFinished(!finished)}
-                                    id='finished'
-                                    name='finished'
-                                    disabled={disabled}
-                                />
-                            </div>
-                            <hr />
+                            <StyledInput id='name' label='Název projektu' defaultValue={project?.Name} disabled={disabled} />
+                            <StyledInput id='customer' label='Zákazník' defaultValue={project?.Customer} disabled={disabled} />
+                            <StyledDateTimePicker value={finishDate} onChange={setFinishDate} disabled={disabled} />
+                            <StyledCheckbox
+                                id='finished'
+                                label='Projekt dokončen'
+                                checked={finished}
+                                onChange={() => setFinished(!finished)}
+                                disabled={disabled}
+                            />
+                            <Divider />
                             <UserSingleSelect disabled={disabled} users={users} owner={project?.OwnerID} />
                             <UserMultiSelect disabled={disabled} users={users} selectedUsers={selectedUsers} setSelectedUsers={setSelectedUsers} />
-                            <hr />
-                            <div className='form-group h-100 min-vh-25'>
-                                <label htmlFor='description'>Popis:</label>
-                                <textarea
-                                    className='form-control content-box_textarea'
-                                    id='description'
-                                    value={descriptionValue ?? ''}
-                                    onChange={(event) => setDescriptionValue(event.target.value)}
-                                    disabled={disabled}
-                                ></textarea>
-                            </div>
-                        </form>
+                            <Divider />
+                            <StyledInput
+                                id='description'
+                                label='Popis'
+                                multiline
+                                minRows={8}
+                                value={descriptionValue ?? ''}
+                                onChange={(event) => setDescriptionValue(event.target.value)}
+                                disabled={disabled}
+                            />
+                        </FormStack>
                     </div>
                 </div>
             </div>

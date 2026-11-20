@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { useModalDialog } from '../utils/useModalDialog';
 import { useAtom } from 'jotai';
 import { dialogAtom } from '../../state/atoms';
-import dayjs from 'dayjs';
-import { CustomizedDateTimePicker } from '../utils/CustomizedDateTimePicker';
+import dayjs from '../../dayjs';
+import { ButtonRow, FormStack, StyledButton, StyledDialog } from '../ui';
+import { MaterialRequirementFields } from './MaterialRequirementFields';
 
 export const AddMaterialRequirement = () => {
     const [dialog, setDialog] = useAtom(dialogAtom);
@@ -25,82 +25,22 @@ export const AddMaterialRequirement = () => {
         setDialog(null);
     };
 
-    const dialogRef = useModalDialog(handleCancel);
     return (
-        <div className='dialog-background'>
-            <div className='dialog' role='dialog' aria-modal='true' aria-labelledby='dialog-title' ref={dialogRef}>
-                <h1 id='dialog-title' className='dialog-h1'>
-                    Přidat požadavek na materiál
-                </h1>
-                <hr className='hline' />
-                <form className='d-flex flex-column gap-3'>
-                    <div className='form-group w-100'>
-                        <label htmlFor='name'>Název:</label>
-                        <input
-                            className='form-control'
-                            type='text'
-                            id='name'
-                            name='name'
-                            placeholder='Zadejte název'
-                            value={name}
-                            onChange={(event) => {
-                                setName(event.target.value);
-                            }}
-                        />
-                    </div>
-                    <div className='form-group'>
-                        <label htmlFor='amount'>Počet:</label>
-                        <input
-                            className='form-control'
-                            type='text'
-                            id='amount'
-                            name='amount'
-                            placeholder='Zadejte počet kusů'
-                            value={count}
-                            onChange={(event) => {
-                                setCount(event.target.value);
-                            }}
-                        />
-                    </div>
-                    <div className='form-group'>
-                        <label htmlFor='price'>Cena za kus (s DPH):</label>
-                        <input
-                            className='form-control'
-                            type='text'
-                            id='price'
-                            name='price'
-                            placeholder='Zadejte cenu s DPH'
-                            value={price}
-                            onChange={(event) => {
-                                setPrice(event.target.value);
-                            }}
-                        />
-                    </div>
-                    <div className='form-group'>
-                        <label htmlFor='description'>Popis:</label>
-                        <textarea
-                            className='form-control'
-                            id='description'
-                            rows='3'
-                            value={description}
-                            onChange={(event) => {
-                                setDescription(event.target.value);
-                            }}
-                        ></textarea>
-                    </div>
-                    <div className='form-group d-flex flex-column'>
-                        <CustomizedDateTimePicker label='Datum, kdy je materiál potřeba' finishDate={stopDateTime} setFinishDate={setStopDateTime} />
-                    </div>
-                    <div className='d-flex gap-3 justify-content-end'>
-                        <button className='btn btn-danger' type='reset' onClick={handleCancel}>
-                            Zrušit
-                        </button>
-                        <button className='btn btn-success' type='submit' onClick={handleSubmit}>
-                            Ok
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
+        <StyledDialog title='Přidat požadavek na materiál' onClose={handleCancel}>
+            <FormStack component='form' onSubmit={handleSubmit}>
+                <MaterialRequirementFields
+                    values={{ name, count, price, description, date: stopDateTime }}
+                    setters={{ name: setName, count: setCount, price: setPrice, description: setDescription, date: setStopDateTime }}
+                />
+                <ButtonRow>
+                    <StyledButton color='error' onClick={handleCancel}>
+                        Zrušit
+                    </StyledButton>
+                    <StyledButton color='success' type='submit'>
+                        Ok
+                    </StyledButton>
+                </ButtonRow>
+            </FormStack>
+        </StyledDialog>
     );
 };

@@ -6,7 +6,7 @@ import { dialogAtom, notificationsAtom, tickAtom } from '../../../state/atoms';
 import axios from 'axios';
 import { getAuthHeader, getUserID } from '../../../Auth';
 import { getBackendAddress } from '../../../config';
-import moment from 'moment/moment';
+import dayjs from '../../../dayjs';
 import { handleAxiosError } from '../../../errorHandler';
 
 export const GraphEvents = (props) => {
@@ -40,7 +40,7 @@ export const GraphEvents = (props) => {
                 getAuthHeader(),
             )
             .then(() => {
-                setTick(moment());
+                setTick(dayjs());
             })
             .catch((error) => {
                 handleAxiosError(error, [notifications, setNotifications]);

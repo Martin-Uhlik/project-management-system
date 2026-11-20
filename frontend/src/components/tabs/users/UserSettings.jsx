@@ -6,8 +6,16 @@ import { pushNotification } from '../../Notifications';
 import { handleAxiosError } from '../../../errorHandler';
 import { useAtom, useSetAtom } from 'jotai';
 import { notificationsAtom, tickAtom } from '../../../state/atoms';
-import moment from 'moment';
+import dayjs from '../../../dayjs';
 import { RestrictedComponent } from '../../utils/RestrictedComponent';
+import Divider from '@mui/material/Divider';
+import { ButtonRow, FormStack, StyledButton, StyledInput, StyledSelect } from '../../ui';
+import { userRoleOptions } from '../../dialogs/AddUser';
+
+const enabledOptions = [
+    { value: 'true', label: 'Povolen' },
+    { value: 'false', label: 'Zakázán' },
+];
 
 export const UserSettings = (props) => {
     const user = props.user;
@@ -32,7 +40,7 @@ export const UserSettings = (props) => {
                     setNotifications: setNotifications,
                 });
                 setDisabled(true);
-                setTick(moment());
+                setTick(dayjs());
             })
             .catch((error) => {
                 handleAxiosError(error, [notifications, setNotifications]);
@@ -57,65 +65,41 @@ export const UserSettings = (props) => {
                     setNotifications: setNotifications,
                 });
                 setDisabled(true);
-                setTick(moment());
+                setTick(dayjs());
             })
             .catch((error) => {
                 handleAxiosError(error, [notifications, setNotifications]);
             });
     };
 
+    // key: a different user gets fresh fields (they start from the user's current values)
     return (
-        <>
-            <div className='d-flex justify-content-between align-items-start'>
+        <FormStack key={user?.ID ?? 'none'} gap={3}>
+            <ButtonRow justify='space-between'>
                 <h1>{`${user?.FirstName} ${user?.LastName}`}</h1>
                 <RestrictedComponent types={['ADMIN']}>
                     {disabled ? (
-                        <button
-                            className='btn btn-outline-dark'
-                            onClick={() => {
-                                setDisabled(false);
-                            }}
-                        >
+                        <StyledButton variant='outlined' onClick={() => setDisabled(false)}>
                             Upravit
-                        </button>
+                        </StyledButton>
                     ) : (
-                        <button
-                            className='btn btn-danger'
-                            onClick={() => {
-                                setDisabled(true);
-                            }}
-                        >
+                        <StyledButton color='error' onClick={() => setDisabled(true)}>
                             Zrušit
-                        </button>
+                        </StyledButton>
                     )}
                 </RestrictedComponent>
-            </div>
+            </ButtonRow>
             <h2>Status uživatele:</h2>
-            <form
-                className='login-form'
-                onSubmit={(e) =>
-                    handleEdit(e, {
-                        Enabled: e.target.enabled.value === 'true',
-                    })
-                }
-            >
-                <div className='form-group'>
-                    <label htmlFor='enabled'>Status uživatele</label>
-                    <select id='enabled' defaultValue={user?.Enabled?.toString()} className='form-select'>
-                        <option value='true'>Povolen</option>
-                        <option value='false'>Zakázán</option>
-                    </select>
-                </div>
-                <div className='d-flex justify-content-end'>
-                    <button className='btn btn-dark' type='submit'>
-                        Použít
-                    </button>
-                </div>
-            </form>
-            <hr />
+            <FormStack component='form' onSubmit={(e) => handleEdit(e, { Enabled: e.target.enabled.value === 'true' })}>
+                <StyledSelect id='enabled' label='Status uživatele' defaultValue={user?.Enabled?.toString() ?? ''} options={enabledOptions} />
+                <ButtonRow>
+                    <StyledButton type='submit'>Použít</StyledButton>
+                </ButtonRow>
+            </FormStack>
+            <Divider />
             <h2>Uživatelské informace:</h2>
-            <form
-                className='login-form'
+            <FormStack
+                component='form'
                 onSubmit={(e) =>
                     handleEdit(e, {
                         UserName: e.target.uname.value,
@@ -125,76 +109,37 @@ export const UserSettings = (props) => {
                     })
                 }
             >
-                <div className='form-group'>
-                    <label htmlFor='uname'>Uživatelské jméno:</label>
-                    <input className='form-control' type='text' id='uname' name='uname' defaultValue={user?.UserName} disabled={disabled} />
-                </div>
-                <div className='form-group'>
-                    <label htmlFor='fname'>Jméno:</label>
-                    <input className='form-control' type='text' id='fname' name='fname' defaultValue={user?.FirstName} disabled={disabled} />
-                </div>
-                <div className='form-group'>
-                    <label htmlFor='lname'>Příjmení:</label>
-                    <input className='form-control' type='text' id='lname' name='lname' defaultValue={user?.LastName} disabled={disabled} />
-                </div>
-                <div className='form-group'>
-                    <label htmlFor='position'>Pozice:</label>
-                    <input className='form-control' type='text' id='position' name='position' defaultValue={user?.Position} disabled={disabled} />
-                </div>
-                <div className='d-flex justify-content-end'>
-                    <button className='btn btn-dark' type='submit' disabled={disabled}>
+                <StyledInput id='uname' label='Uživatelské jméno' defaultValue={user?.UserName} disabled={disabled} />
+                <StyledInput id='fname' label='Jméno' defaultValue={user?.FirstName} disabled={disabled} />
+                <StyledInput id='lname' label='Příjmení' defaultValue={user?.LastName} disabled={disabled} />
+                <StyledInput id='position' label='Pozice' defaultValue={user?.Position} disabled={disabled} />
+                <ButtonRow>
+                    <StyledButton type='submit' disabled={disabled}>
                         Použít
-                    </button>
-                </div>
-            </form>
-            <hr />
+                    </StyledButton>
+                </ButtonRow>
+            </FormStack>
+            <Divider />
             <h2>Heslo:</h2>
-            <form className='login-form' onSubmit={handlePasswordChange}>
-                <div className='form-group'>
-                    <label htmlFor='newPassword'>Nové heslo:</label>
-                    <input className='form-control' type='password' id='newPassword' name='newPassword' placeholder='Zadejte nové heslo' disabled={disabled} />
-                </div>
-                <div className='form-group'>
-                    <label htmlFor='rNewPassword'>Potvrzení nového hesla:</label>
-                    <input
-                        className='form-control'
-                        type='password'
-                        id='rNewPassword'
-                        name='rNewPassword'
-                        placeholder='Zopakujte nové heslo'
-                        disabled={disabled}
-                    />
-                </div>
-                <div className='d-flex justify-content-end'>
-                    <button className='btn btn-dark' type='submit' disabled={disabled}>
+            <FormStack component='form' onSubmit={handlePasswordChange}>
+                <StyledInput id='newPassword' label='Nové heslo' type='password' autoComplete='new-password' disabled={disabled} />
+                <StyledInput id='rNewPassword' label='Potvrzení nového hesla' type='password' autoComplete='new-password' disabled={disabled} />
+                <ButtonRow>
+                    <StyledButton type='submit' disabled={disabled}>
                         Použít
-                    </button>
-                </div>
-            </form>
-            <hr />
+                    </StyledButton>
+                </ButtonRow>
+            </FormStack>
+            <Divider />
             <h2>Role uživatele:</h2>
-            <form
-                className='login-form'
-                onSubmit={(e) =>
-                    handleEdit(e, {
-                        UserType: e.target.role.value,
-                    })
-                }
-            >
-                <div className='form-group'>
-                    <label htmlFor='role'>Role uživatele:</label>
-                    <select id='role' className='form-select' defaultValue={user?.UserType} disabled={disabled}>
-                        <option value='ADMIN'>Administrátor</option>
-                        <option value='MANAGER'>Manažer</option>
-                        <option value='USER'>Uživatel</option>
-                    </select>
-                </div>
-                <div className='d-flex justify-content-end'>
-                    <button className='btn btn-dark' type='submit' disabled={disabled}>
+            <FormStack component='form' onSubmit={(e) => handleEdit(e, { UserType: e.target.role.value })}>
+                <StyledSelect id='role' label='Role uživatele' defaultValue={user?.UserType ?? ''} options={userRoleOptions} disabled={disabled} />
+                <ButtonRow>
+                    <StyledButton type='submit' disabled={disabled}>
                         Použít
-                    </button>
-                </div>
-            </form>
-        </>
+                    </StyledButton>
+                </ButtonRow>
+            </FormStack>
+        </FormStack>
     );
 };

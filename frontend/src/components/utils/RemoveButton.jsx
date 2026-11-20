@@ -1,5 +1,6 @@
 import { useSetAtom } from 'jotai';
 import { dialogAtom } from '../../state/atoms';
+import { StyledButton } from '../ui';
 
 export const RemoveButton = (props) => {
     const setDialog = useSetAtom(dialogAtom);
@@ -17,8 +18,8 @@ export const RemoveButton = (props) => {
     };
 
     return (
-        <button type='button' className='btn btn-outline-danger' onClick={handleCLick}>
+        <StyledButton color='error' variant='outlined' onClick={handleCLick}>
             Odstranit
-        </button>
+        </StyledButton>
     );
 };

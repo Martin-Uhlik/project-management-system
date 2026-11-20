@@ -1,30 +1,21 @@
-import { Checkbox, TableCell, TableRow } from '@mui/material';
-import { blue } from '@mui/material/colors';
-
+import { StyledCheckbox, StyledTableCell, StyledTableRow } from '../../../ui';
 export const UserRow = (props) => {
     const user = props.user;
 
-    const checkerColor = {
-        '&.Mui-checked': {
-            color: blue[600],
-        },
-    };
-
     return (
-        <TableRow
-            hover
+        <StyledTableRow
             onClick={() => {
                 props.setSelectedUser(user);
             }}
         >
-            <TableCell>{`${user.FirstName} ${user.LastName}`}</TableCell>
-            <TableCell>{user.Position}</TableCell>
-            <TableCell>
-                <Checkbox disabled checked={user.WorkStartTime !== null} sx={checkerColor} slotProps={{ input: { 'aria-label': 'Pracuje' } }} />
-            </TableCell>
-            <TableCell>
-                <Checkbox disabled checked={user.Enabled} sx={checkerColor} slotProps={{ input: { 'aria-label': 'Povoleno' } }} />
-            </TableCell>
-        </TableRow>
+            <StyledTableCell>{`${user.FirstName} ${user.LastName}`}</StyledTableCell>
+            <StyledTableCell>{user.Position}</StyledTableCell>
+            <StyledTableCell>
+                <StyledCheckbox disabled checked={user.WorkStartTime !== null} aria-label='Pracuje' />
+            </StyledTableCell>
+            <StyledTableCell>
+                <StyledCheckbox disabled checked={user.Enabled} aria-label='Povoleno' />
+            </StyledTableCell>
+        </StyledTableRow>
     );
 };

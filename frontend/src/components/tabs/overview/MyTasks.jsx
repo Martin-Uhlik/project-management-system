@@ -6,7 +6,8 @@ import axios from 'axios';
 import { handleAxiosError } from '../../../errorHandler';
 import { getBackendAddress } from '../../../config';
 import { getAuthHeader, getUserID } from '../../../Auth';
-import moment from 'moment';
+import dayjs from '../../../dayjs';
+import { StyledButton, StyledAddButton } from '../../ui';
 
 export const MyTasks = () => {
     const setDialog = useSetAtom(dialogAtom);
@@ -30,7 +31,7 @@ export const MyTasks = () => {
         axios
             .post(getBackendAddress(`/auth/${getUserID()}/personal-tasks`), { task }, getAuthHeader())
             .then(() => {
-                setTick(moment());
+                setTick(dayjs());
             })
             .catch((error) => {
                 handleAxiosError(error, [notifications, setNotifications]);
@@ -51,7 +52,7 @@ export const MyTasks = () => {
         axios
             .delete(getBackendAddress(`/auth/${getUserID()}/personal-tasks`), getAuthHeader())
             .then(() => {
-                setTick(moment());
+                setTick(dayjs());
             })
             .catch((error) => {
                 handleAxiosError(error, [notifications, setNotifications]);
@@ -63,15 +64,13 @@ export const MyTasks = () => {
             <div className='content-box_header'>
                 <h1>Moje úkoly</h1>
                 <div className='content-box_subheader'>
-                    <button className='btn btn-outline-dark' onClick={handleRemoveFinishedTasks}>
+                    <StyledButton variant='outlined' onClick={handleRemoveFinishedTasks}>
                         Smazat dokončené
-                    </button>
-                    <button type='button' className='add-button' aria-label='Přidat vlastní úkol' onClick={handleAddMyTask}>
-                        +
-                    </button>
+                    </StyledButton>
+                    <StyledAddButton label='Přidat vlastní úkol' onClick={handleAddMyTask} />
                 </div>
             </div>
-            <table className='w-100'>
+            <table className='task-list'>
                 <thead>
                     <tr>
                         <th>Název</th>
@@ -79,7 +78,7 @@ export const MyTasks = () => {
                         <th>Popis</th>
                     </tr>
                 </thead>
-                <tbody className='w-100 '>
+                <tbody>
                     {tasks
                         .sort((a, b) => (a.Finished > b.Finished ? 1 : -1))
                         .map((task) => (

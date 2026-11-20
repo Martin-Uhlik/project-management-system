@@ -1,14 +1,22 @@
 import React, { useState } from 'react';
-import { useModalDialog } from '../utils/useModalDialog';
 import { useAtom } from 'jotai';
 import { dialogAtom } from '../../state/atoms';
-import moment from 'moment/moment';
-import { CustomizedDateTimePicker } from '../utils/CustomizedDateTimePicker';
+import dayjs from '../../dayjs';
+import { ButtonRow, FormStack, StyledButton, StyledDateTimePicker, StyledDialog, StyledInput, StyledSelect } from '../ui';
+
+export const taskSizeOptions = [
+    { value: 10, label: 'XS' },
+    { value: 20, label: 'S' },
+    { value: 30, label: 'M' },
+    { value: 40, label: 'L' },
+    { value: 50, label: 'XL' },
+];
 
 export const AddTask = () => {
     const [dialog, setDialog] = useAtom(dialogAtom);
     const [name, setName] = React.useState('');
-    const [role, setRole] = React.useState(30);
+    const [size, setSize] = React.useState(30);
+    const [finishDate, setFinishDate] = useState(dayjs());
 
     const handleCancel = (event) => {
         event.preventDefault();
@@ -18,68 +26,26 @@ export const AddTask = () => {
 
     const handleSubmit = (event) => {
         event.preventDefault();
-        dialog.data.handleSubmit(dialog.data.event, name, role, event.target.description.value, finishDate);
+        dialog.data.handleSubmit(dialog.data.event, name, size, event.target.description.value, finishDate);
         setDialog(null);
     };
 
-    const [finishDate, setFinishDate] = useState(moment());
-
-    const dialogRef = useModalDialog(handleCancel);
     return (
-        <div className='dialog-background'>
-            <div className='dialog' role='dialog' aria-modal='true' aria-labelledby='dialog-title' ref={dialogRef}>
-                <h1 id='dialog-title' className='dialog-h1'>
-                    Přidat úkol
-                </h1>
-                <hr className='hline' />
-                <form className='login-form' onSubmit={handleSubmit}>
-                    <div className='form-group'>
-                        <label htmlFor='name'>Název úkolu:</label>
-                        <input
-                            className='form-control'
-                            type='text'
-                            id='name'
-                            name='name'
-                            value={name}
-                            onChange={(event) => {
-                                setName(event.target.value);
-                            }}
-                        />
-                    </div>
-                    <CustomizedDateTimePicker finishDate={finishDate} setFinishDate={setFinishDate} />
-
-                    <div className='form-group'>
-                        <label htmlFor='role'>Velikost:</label>
-                        <select
-                            id='size'
-                            name='size'
-                            className='form-select'
-                            onChange={(event) => {
-                                setRole(+event.target.value);
-                            }}
-                            defaultValue={'30'}
-                        >
-                            <option value='10'>XS</option>
-                            <option value='20'>S</option>
-                            <option value='30'>M</option>
-                            <option value='40'>L</option>
-                            <option value='50'>XL</option>
-                        </select>
-                    </div>
-                    <div className='form-group'>
-                        <label htmlFor='description'>Popis:</label>
-                        <textarea className='form-control' id='description' name='description' rows='3'></textarea>
-                    </div>
-                    <div className='d-flex gap-3 justify-content-end'>
-                        <button className='btn btn-danger' type='reset' onClick={handleCancel}>
-                            Zrušit
-                        </button>
-                        <button className='btn btn-success' type='submit'>
-                            Ok
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
+        <StyledDialog title='Přidat úkol' onClose={handleCancel}>
+            <FormStack component='form' onSubmit={handleSubmit}>
+                <StyledInput id='name' label='Název úkolu' value={name} onChange={(event) => setName(event.target.value)} />
+                <StyledDateTimePicker value={finishDate} onChange={setFinishDate} />
+                <StyledSelect id='size' label='Velikost' value={size} onChange={(event) => setSize(+event.target.value)} options={taskSizeOptions} />
+                <StyledInput id='description' label='Popis' multiline rows={3} />
+                <ButtonRow>
+                    <StyledButton color='error' onClick={handleCancel}>
+                        Zrušit
+                    </StyledButton>
+                    <StyledButton color='success' type='submit'>
+                        Ok
+                    </StyledButton>
+                </ButtonRow>
+            </FormStack>
+        </StyledDialog>
     );
 };

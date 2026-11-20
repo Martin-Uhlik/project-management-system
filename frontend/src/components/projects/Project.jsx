@@ -1,6 +1,10 @@
-import { useNavigate } from 'react-router';
-import { useSetAtom } from 'jotai';
-import { selectedTabAtom } from '../../state/atoms';
+import { useNavigate, useParams } from 'react-router';
+import { useAtom, useSetAtom } from 'jotai';
+import axios from 'axios';
+import { notificationsAtom, selectedTabAtom } from '../../state/atoms';
+import { getBackendAddress } from '../../config';
+import { getAuthHeader } from '../../Auth';
+import { handleAxiosError } from '../../errorHandler';
 import React, { useState } from 'react';
 import { GraphEvents } from './project/GraphEvents';
 import { ControlsContainer, FullScreenControl, SigmaContainer, ZoomControl } from '@react-sigma/core';
@@ -8,6 +12,7 @@ import '@react-sigma/core/lib/style.css';
 import { LoadGraph } from './project/LoadGraph';
 import { TaskSearch } from './project/TaskSearch';
 import { RestrictedComponent } from '../utils/RestrictedComponent';
+import { StyledButton } from '../ui';
 
 export const Project = () => {
     const setTab = useSetAtom(selectedTabAtom);
@@ -26,11 +31,26 @@ export const Project = () => {
 
     const [addNode, setAddNode] = useState(false);
 
+    const projectID = useParams().project;
+    const [projectName, setProjectName] = useState('');
+    const [notifications, setNotifications] = useAtom(notificationsAtom);
+    React.useEffect(() => {
+        axios
+            .get(getBackendAddress(`/auth/projects/${projectID}`), getAuthHeader())
+            .then((response) => {
+                setProjectName(response.data.Name);
+            })
+            .catch((error) => {
+                handleAxiosError(error, [notifications, setNotifications]);
+            });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [projectID]);
+
     return (
         <div className='content-wrap_inner'>
             <div className='content-box'>
                 <div className='content-box_content'>
-                    <h1>Projekt 001</h1>
+                    <h1>{projectName}</h1>
                     <SigmaContainer>
                         <ControlsContainer position='top-left'>
                             <FullScreenControl />
@@ -41,32 +61,14 @@ export const Project = () => {
                         </ControlsContainer>
                         <RestrictedComponent types={['ADMIN', 'MANAGER']}>
                             <ControlsContainer position='bottom-left'>
-                                {addNode ? (
-                                    <button
-                                        className='btn btn-danger'
-                                        onClick={() => {
-                                            setAddNode(!addNode);
-                                        }}
-                                    >
-                                        Zrušit
-                                    </button>
-                                ) : (
-                                    <button
-                                        className='btn btn-dark'
-                                        onClick={() => {
-                                            setAddNode(!addNode);
-                                        }}
-                                    >
-                                        Přidat úkol
-                                    </button>
-                                )}
+                                <StyledButton color={addNode ? 'error' : 'dark'} onClick={() => setAddNode(!addNode)}>
+                                    {addNode ? 'Zrušit' : 'Přidat úkol'}
+                                </StyledButton>
                             </ControlsContainer>
                         </RestrictedComponent>
                         {selectedNode !== null ? (
-                            <ControlsContainer className='d-flex flex-column' position='bottom-right'>
-                                <button className='btn btn-dark' onClick={handleNavigate}>
-                                    Přejít na úkol
-                                </button>
+                            <ControlsContainer position='bottom-right'>
+                                <StyledButton onClick={handleNavigate}>Přejít na úkol</StyledButton>
                             </ControlsContainer>
                         ) : null}
                         <LoadGraph />
