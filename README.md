@@ -36,9 +36,9 @@ All settings live in one `.env` in this folder, made from the template: `cp .env
 docker compose -f docker-compose.dev.yml up
 ```
 
-- Frontend on http://localhost:3000 (sign in with `admin` / `admin`), API on http://localhost:4000, database on `localhost:5432` (`pms` / `pms` / `pms`).
+- Frontend on http://localhost:3000 (sign in with `admin` / `admin`, or a demo user such as `jnovak` / `demo1234`), API on http://localhost:4000, database on `localhost:5432` (`pms` / `pms` / `pms`).
 - `frontend/` and `backend/` are mounted into the containers: a saved file reloads the page (frontend) or restarts the API (backend). If it doesn't (rare with Docker Desktop), uncomment `VITE_WATCH_POLLING` in `docker-compose.dev.yml`.
-- On every start the backend installs packages when `package-lock.json` changed, applies new database migrations from `backend/prisma/migrations` (`npm run db:deploy`) and creates the first admin account in an empty database (`npm run db:seed`). After changing `backend/prisma/schema.prisma`, create a migration with `docker compose -f docker-compose.dev.yml exec backend npm run db:migrate -- --name <what-changed>` and commit it.
+- On every start a one-off `migrate` container installs packages when `package-lock.json` changed, applies new database migrations from `backend/prisma/migrations` (`npm run db:deploy`) and fills an empty database (`npm run db:seed`): the first admin account and example data (users, projects with task graphs, machines, material, requests; `SEED_DEMO_DATA`, on by default here). The backend starts after it; `docker compose -f docker-compose.dev.yml logs migrate` shows what it did. For a fresh database with new example data: `docker compose -f docker-compose.dev.yml down -v`. After changing `backend/prisma/schema.prisma`, create a migration with `docker compose -f docker-compose.dev.yml exec backend npm run db:migrate -- --name <what-changed>` and commit it.
 - The packages are installed inside the containers (Linux builds) into Docker volumes, never into `frontend/node_modules` or `backend/node_modules` here.
 - It is its own Compose project (`project-management-system-dev`) with its own database volume; the production data in `database/data` is never touched. `docker compose -f docker-compose.dev.yml down -v` throws the dev database and the packages away.
 
@@ -70,7 +70,7 @@ To skip typing `-f docker-compose.dev.yml`, run `export COMPOSE_FILE=docker-comp
 
 Node.js 26 (see `.nvmrc`; the Docker images use the same version). The app has two parts, each with its own `package.json`:
 
-- `backend/` (Express 5, Prisma 7, TypeScript): `npm install`, then `npm run dev` (uses `DATABASE_URL` and `BACKEND_PORT` from `.env`; `docker compose up -d database` starts a database for it). Apply the database migrations with `npm run db:deploy`, create the first admin account in an empty database with `npm run db:seed`, and after changing `prisma/schema.prisma` create a migration with `npm run db:migrate -- --name <what-changed>`. `npm test` runs the API tests (Vitest + Supertest) against a separate database, `TEST_DATABASE_URL` or `DATABASE_URL` with `_test` added to its name (created and migrated automatically; the tests empty its tables).
+- `backend/` (Express 5, Prisma 7, TypeScript): `npm install`, then `npm run dev` (uses `DATABASE_URL` and `BACKEND_PORT` from `.env`; `docker compose up -d database` starts a database for it). Apply the database migrations with `npm run db:deploy`, create the first admin account in an empty database with `npm run db:seed` (plus example data with `SEED_DEMO_DATA=true` in `.env`), and after changing `prisma/schema.prisma` create a migration with `npm run db:migrate -- --name <what-changed>`. `npm test` runs the API tests (Vitest + Supertest) against a separate database, `TEST_DATABASE_URL` or `DATABASE_URL` with `_test` added to its name (created and migrated automatically; the tests empty its tables).
 - `frontend/` (React 19, Vite, MUI): `npm install`, then `npm run dev` (the API address is `VITE_BACKEND` in `.env`).
 
 Both have `npm run lint` (ESLint), `npm run format` / `npm run format:check` (Prettier) and `npm run build`; the frontend has `npm test` (Vitest).
@@ -94,4 +94,4 @@ cd backend && npm run db:baseline && npm run db:deploy
 
 ## The whole system, like in production
 
-`docker compose up -d --build` builds the production images (nginx with the built frontend, the compiled API) and runs them with the database in `database/data`. The backend applies new migrations each time it starts.
+`docker compose up -d --build` builds the production images (nginx with the built frontend, the compiled API) and runs them with the database in `database/data`. Before the backend starts, a one-off `migrate` container applies new migrations and fills an empty database: the first admin account from `ADMIN_LOGIN` / `ADMIN_PASSWORD` in `.env` (change the password) and, only with `SEED_DEMO_DATA=true`, example data.

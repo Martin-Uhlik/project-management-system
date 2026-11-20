@@ -5,7 +5,7 @@
 # frontend/node_modules or backend/node_modules on this machine.
 # docker-compose.yml stays for the production build.
 #
-#   frontend  http://localhost:3000   (sign in with admin / admin, made by the seed on the first start)
+#   frontend  http://localhost:3000   (sign in with admin / admin, or a demo user such as jnovak / demo1234)
 #   API       http://localhost:4000
 #   database  localhost:5432           (for database tools; user/password/db as in .env, default pms / pms / pms)
 #
@@ -21,6 +21,7 @@ services:
     # Vite dev server with hot reload on http://localhost:3000
     frontend:
         <<: *node
+        container_name: project-management-system-dev-frontend
         working_dir: /app
         # installs the packages when package-lock.json changed, then starts Vite
         command: sh -c "([ node_modules/.package-lock.json -nt package-lock.json ] || npm ci --no-audit --no-fund) && npx vite --host 0.0.0.0 --port 3000"
@@ -38,13 +39,35 @@ services:
         depends_on:
             - backend
 
-    # The API with live reload (tsx watch) on http://localhost:4000. On every start it installs the packages when
-    # package-lock.json changed, applies prisma/schema.prisma to the database and fills an empty database
-    # (the first admin account, prisma/seed.ts).
+    # Runs once on every start, then exits: installs the packages when package-lock.json changed, applies new
+    # migrations (backend/prisma/migrations) and fills an empty database (src/seed.ts): the first admin account
+    # and, with SEED_DEMO_DATA (on by default here), example projects, tasks, machines, material and users.
+    # The backend starts when it has finished. Its output: docker compose -f docker-compose.dev.yml logs migrate
+    migrate:
+        <<: *node
+        container_name: project-management-system-dev-migrate
+        working_dir: /app
+        command: sh -c "([ node_modules/.package-lock.json -nt package-lock.json ] || npm ci --no-audit --no-fund) && npx prisma generate && npm run db:deploy && npm run db:seed"
+        volumes:
+            - ./backend:/app
+            - backend-node-modules:/app/node_modules
+        environment:
+            DATABASE_URL: postgres://${POSTGRES_USER:-pms}:${POSTGRES_PASSWORD:-pms}@db:5432/${POSTGRES_DB:-pms}
+            # the first admin account, created only when there are no users yet
+            ADMIN_LOGIN: ${ADMIN_LOGIN:-admin}
+            ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin}
+            # example data, added only when there are no projects yet (password of the demo users: demo1234)
+            SEED_DEMO_DATA: ${SEED_DEMO_DATA:-true}
+        depends_on:
+            db:
+                condition: service_healthy
+
+    # The API with live reload (tsx watch) on http://localhost:4000, started once "migrate" has finished
     backend:
         <<: *node
+        container_name: project-management-system-dev-backend
         working_dir: /app
-        command: sh -c "([ node_modules/.package-lock.json -nt package-lock.json ] || npm ci --no-audit --no-fund) && npx prisma generate && npm run db:deploy && npm run db:seed && npm run dev"
+        command: npm run dev
         ports:
             - '127.0.0.1:${BACKEND_PORT:-4000}:4000'
         volumes:
@@ -56,15 +79,13 @@ services:
             FRONTEND_ORIGIN: http://localhost:${FRONTEND_PORT:-3000}
             # the database container, not the localhost one from DATABASE_URL in .env (that is for npm run dev here)
             DATABASE_URL: postgres://${POSTGRES_USER:-pms}:${POSTGRES_PASSWORD:-pms}@db:5432/${POSTGRES_DB:-pms}
-            # the first admin account, created only when there are no users yet
-            ADMIN_LOGIN: ${ADMIN_LOGIN:-admin}
-            ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin}
         depends_on:
-            db:
-                condition: service_healthy
+            migrate:
+                condition: service_completed_successfully
 
     # a database for development only, with its own volume (production data in database/data is never touched)
     db:
+        container_name: project-management-system-dev-db
         image: postgres:18-alpine
         environment:
             POSTGRES_DB: ${POSTGRES_DB:-pms}
