@@ -6,8 +6,11 @@ import { getAuthHeader } from '../../../Auth';
 import { handleAxiosError } from '../../../errorHandler';
 import { useAtom, useAtomValue } from 'jotai';
 import { notificationsAtom, tickAtom } from '../../../state/atoms';
+import { FormStack, StyledSearchInput, useSearch } from '../../ui';
+import dayjs from '../../../dayjs';
 
-export const AssignedTasks = ({ showHeader, userID, machineTasks = [] }) => {
+// searchable: false hides the search field, for short lists such as a task's dependencies
+export const AssignedTasks = ({ showHeader, userID, machineTasks = [], searchable = true }) => {
     const tick = useAtomValue(tickAtom);
     const [notifications, setNotifications] = useAtom(notificationsAtom);
 
@@ -27,9 +30,18 @@ export const AssignedTasks = ({ showHeader, userID, machineTasks = [] }) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [tick, userID]);
 
+    const search = useSearch(userID ? tasks : machineTasks, (task) => [
+        task.Name,
+        task.Project?.Name,
+        task.Owner?.FirstName,
+        task.Owner?.LastName,
+        dayjs(task.FinishDate).format('L'),
+    ]);
+
     return (
-        <>
+        <FormStack>
             {showHeader && <h1>Moje úkoly</h1>}
+            {searchable && <StyledSearchInput value={search.query} onChange={search.setQuery} />}
             <table className='task-list'>
                 <thead>
                     <tr>
@@ -40,11 +52,11 @@ export const AssignedTasks = ({ showHeader, userID, machineTasks = [] }) => {
                     </tr>
                 </thead>
                 <tbody>
-                    {userID
-                        ? tasks.map((task) => <AssignedTask key={task.ID} task={task} />)
-                        : machineTasks.map((task) => <AssignedTask key={task.ID} task={task} />)}
+                    {search.results.map((task) => (
+                        <AssignedTask key={task.ID} task={task} />
+                    ))}
                 </tbody>
             </table>
-        </>
+        </FormStack>
     );
 };

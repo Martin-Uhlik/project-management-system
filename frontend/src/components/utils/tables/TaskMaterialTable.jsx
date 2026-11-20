@@ -1,4 +1,4 @@
-import { StyledTable } from '../../ui';
+import { StyledTable, useSearch } from '../../ui';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { getBackendAddress } from '../../../config';
@@ -29,9 +29,11 @@ export const TaskMaterialTable = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [tick]);
 
+    const search = useSearch(materials, (mat) => mat.Material?.Name);
+
     return (
-        <StyledTable columns={[{ label: 'Název' }, { label: 'Počet', align: 'right' }]}>
-            {materials?.map((mat) => (
+        <StyledTable columns={[{ label: 'Název' }, { label: 'Počet', align: 'right' }]} search={search}>
+            {search.results.map((mat) => (
                 <ReservedMaterialRow key={mat.ID} row={mat} />
             ))}
         </StyledTable>

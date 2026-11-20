@@ -1,4 +1,4 @@
-import { StyledTable } from '../../ui';
+import { StyledTable, useSearch } from '../../ui';
 import { useEffect, useState } from 'react';
 import { MaterialRequirementRow } from './rows/MaterialRequirementRow';
 import { useAtom, useAtomValue } from 'jotai';
@@ -30,6 +30,14 @@ export const MaterialRequirementTable = ({ taskID }) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [tick]);
 
+    const search = useSearch(materialRequests, (row) => [
+        row.Name,
+        row.TargetUser?.FirstName,
+        row.TargetUser?.LastName,
+        row.AcceptedBy?.FirstName,
+        row.AcceptedBy?.LastName,
+    ]);
+
     return (
         <StyledTable
             columns={[
@@ -39,8 +47,9 @@ export const MaterialRequirementTable = ({ taskID }) => {
                 { label: 'Autor', align: 'right' },
                 { label: 'Schválil', align: 'right' },
             ]}
+            search={search}
         >
-            {materialRequests?.map((row) => (
+            {search.results.map((row) => (
                 <MaterialRequirementRow key={row.ID} row={row} />
             ))}
         </StyledTable>

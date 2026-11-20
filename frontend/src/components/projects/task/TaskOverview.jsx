@@ -228,7 +228,7 @@ export const TaskOverview = () => {
                         </div>
                         <div className='content-box_chart-wrapper-outer'>
                             <div className='content-box_chart-wrapper-inner'>
-                                <AssignedTasks machineTasks={task?.Successors?.map((task) => task.Predecessor)} />
+                                <AssignedTasks searchable={false} machineTasks={task?.Successors?.map((task) => task.Predecessor)} />
                             </div>
                         </div>
                     </div>
@@ -256,7 +256,7 @@ export const TaskOverview = () => {
                         </div>
                         <div className='content-box_chart-wrapper-outer'>
                             <div className='content-box_chart-wrapper-inner'>
-                                <AssignedTasks machineTasks={task?.Predecessors?.map((task) => task.Successor)} />
+                                <AssignedTasks searchable={false} machineTasks={task?.Predecessors?.map((task) => task.Successor)} />
                             </div>
                         </div>
                     </div>

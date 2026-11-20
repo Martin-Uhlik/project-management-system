@@ -1,4 +1,4 @@
-import { StyledTable } from '../../ui';
+import { StyledTable, useSearch } from '../../ui';
 import { useEffect, useState } from 'react';
 import { MaterialRow } from './rows/MaterialRow';
 import axios from 'axios';
@@ -41,6 +41,8 @@ export const MaterialTable = (props) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [tick]);
 
+    const search = useSearch(materials, (mat) => mat.material.Name);
+
     return (
         <StyledTable
             columns={[
@@ -49,8 +51,9 @@ export const MaterialTable = (props) => {
                 { label: 'Zarezervované', align: 'right' },
                 { label: 'Dostupné', align: 'right' },
             ]}
+            search={search}
         >
-            {materials?.map((mat) => (
+            {search.results.map((mat) => (
                 <MaterialRow key={mat.material.ID} row={mat} taskID={props.taskID} />
             ))}
         </StyledTable>

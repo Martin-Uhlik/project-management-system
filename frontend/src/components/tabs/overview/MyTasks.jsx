@@ -7,7 +7,7 @@ import { handleAxiosError } from '../../../errorHandler';
 import { getBackendAddress } from '../../../config';
 import { getAuthHeader, getUserID } from '../../../Auth';
 import dayjs from '../../../dayjs';
-import { StyledButton, StyledAddButton } from '../../ui';
+import { FormStack, StyledButton, StyledAddButton, StyledSearchInput, useSearch } from '../../ui';
 
 export const MyTasks = () => {
     const setDialog = useSetAtom(dialogAtom);
@@ -59,8 +59,10 @@ export const MyTasks = () => {
             });
     };
 
+    const search = useSearch(tasks, (task) => [task.Name, task.Description, dayjs(task.FinishDate).format('L')]);
+
     return (
-        <>
+        <FormStack>
             <div className='content-box_header'>
                 <h1>Moje úkoly</h1>
                 <div className='content-box_subheader'>
@@ -70,6 +72,7 @@ export const MyTasks = () => {
                     <StyledAddButton label='Přidat vlastní úkol' onClick={handleAddMyTask} />
                 </div>
             </div>
+            <StyledSearchInput value={search.query} onChange={search.setQuery} />
             <table className='task-list'>
                 <thead>
                     <tr>
@@ -79,13 +82,13 @@ export const MyTasks = () => {
                     </tr>
                 </thead>
                 <tbody>
-                    {tasks
+                    {[...search.results]
                         .sort((a, b) => (a.Finished > b.Finished ? 1 : -1))
                         .map((task) => (
                             <MyTask key={task.ID} task={task} />
                         ))}
                 </tbody>
             </table>
-        </>
+        </FormStack>
     );
 };
