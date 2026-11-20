@@ -38,7 +38,12 @@ export const UserActivity = (props) => {
             <h2>Aktuální práce:</h2>
             <FormStack>
                 <StyledInput id='workStart' label='Začátek práce' value={user?.WorkStartTime ? dayjs(user.WorkStartTime).format('LLL') : ''} disabled />
-                <StyledInput id='currentTask' label='Aktuální úkol' value={user?.CurrentTaskID?.toString() ?? ''} disabled />
+                <StyledInput
+                    id='currentTask'
+                    label='Aktuální úkol'
+                    value={user?.User_Task?.find((row) => row.Task.ID === user.CurrentTaskID)?.Task.Name ?? ''}
+                    disabled
+                />
             </FormStack>
             <Divider />
             <h2>Plán práce:</h2>

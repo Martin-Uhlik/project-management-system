@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 import { z } from 'zod';
 import prisma from '../client.ts';
+import { taskProgressCount } from '../access.ts';
 import { notFound } from '../errors.ts';
 import { idParam, parseBody, requiredText, text } from '../validation.ts';
 
@@ -40,6 +41,7 @@ export const getMachine = async (req: Request, res: Response) => {
         include: {
             Task: {
                 include: {
+                    ...taskProgressCount,
                     Owner: {
                         select: {
                             FirstName: true,

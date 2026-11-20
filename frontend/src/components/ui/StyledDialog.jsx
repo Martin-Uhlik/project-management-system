@@ -11,7 +11,17 @@ const focusFirstField = (node) => {
 // The frame of every dialog: title, line, content. MUI keeps the focus inside and closes it with Escape (onClose).
 export const StyledDialog = ({ title, onClose, children }) => {
     return (
-        <Dialog open onClose={onClose} fullWidth maxWidth='sm' slotProps={{ transition: { onEntered: focusFirstField } }}>
+        <Dialog
+            open
+            onClose={onClose}
+            fullWidth
+            maxWidth='sm'
+            slotProps={{
+                transition: { onEntered: focusFirstField },
+                // the page behind the dialog is slightly blurred
+                backdrop: { sx: { backdropFilter: 'blur(1px)' } },
+            }}
+        >
             <DialogTitle variant='h4' component='h1'>
                 {title}
             </DialogTitle>

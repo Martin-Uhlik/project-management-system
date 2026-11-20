@@ -4,15 +4,17 @@ import { dialogAtom } from '../../state/atoms';
 import dayjs from '../../dayjs';
 import { ButtonRow, FormStack, StyledButton, StyledDateTimePicker, StyledDialog, StyledInput } from '../ui';
 
+// Adds a personal task, or edits one: dialog.data.task holds the task to edit
 export const AddMyTask = () => {
     const [dialog, setDialog] = useAtom(dialogAtom);
-    const [name, setName] = React.useState('');
-    const [description, setDescription] = React.useState('');
-    const [stopDateTime, setStopDateTime] = React.useState(dayjs());
+    const task = dialog.data.task;
+    const [name, setName] = React.useState(task?.Name ?? '');
+    const [description, setDescription] = React.useState(task?.Description ?? '');
+    const [stopDateTime, setStopDateTime] = React.useState(task ? dayjs(task.FinishDate) : dayjs());
 
     const handleCancel = (event) => {
         event.preventDefault();
-        dialog.data.handleCancel();
+        dialog.data.handleCancel?.();
         setDialog(null);
     };
 
@@ -23,7 +25,7 @@ export const AddMyTask = () => {
     };
 
     return (
-        <StyledDialog title='Přidat úkol' onClose={handleCancel}>
+        <StyledDialog title={task ? 'Upravit úkol' : 'Přidat úkol'} onClose={handleCancel}>
             <FormStack component='form' onSubmit={handleSubmit}>
                 <StyledInput id='name' label='Název' value={name} onChange={(event) => setName(event.target.value)} />
                 <StyledInput id='description' label='Popis' multiline rows={3} value={description} onChange={(event) => setDescription(event.target.value)} />

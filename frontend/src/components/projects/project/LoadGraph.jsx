@@ -8,6 +8,7 @@ import { getBackendAddress } from '../../../config';
 import { getAuthHeader } from '../../../Auth';
 import { handleAxiosError } from '../../../errorHandler';
 import { useParams } from 'react-router';
+import { taskStatus, useGraphColors } from '../../ui';
 
 export const LoadGraph = () => {
     const loadGraph = useLoadGraph();
@@ -16,8 +17,11 @@ export const LoadGraph = () => {
     const [notifications, setNotifications] = useAtom(notificationsAtom);
     const tick = useAtomValue(tickAtom);
 
+    // node colours: finished green, in progress orange, todo blue (taskStatus), in the light or dark look
+    const colors = useGraphColors();
+
     const createNode = (task, graph) => {
-        const color = task.Finished ? 'lightgreen' : 'red';
+        const color = colors.task[taskStatus(task)];
         return graph.addNode(task.ID, {
             x: task.XPosition,
             y: task.YPosition,
@@ -50,7 +54,7 @@ export const LoadGraph = () => {
                 handleAxiosError(error, [notifications, setNotifications]);
             });
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [tick]);
+    }, [tick, colors]);
 
     return null;
 };

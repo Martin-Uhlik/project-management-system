@@ -2,6 +2,7 @@ import React from 'react';
 import { Notification } from './utils/Notification';
 import { useAtom } from 'jotai';
 import { notificationsAtom } from '../state/atoms';
+import { StyledToastStack } from './ui';
 
 export const pushNotification = ({ notification, notifications, setNotifications }) => {
     setNotifications([...notifications, { id: new Date(), ...notification }]);
@@ -16,10 +17,10 @@ export const Notifications = () => {
     }, [notifications, setNotifications]);
 
     return (
-        <div className='notifications'>
+        <StyledToastStack>
             {notifications.map((notification) => {
                 return <Notification key={notification.id.getTime()} notification={notification} />;
             })}
-        </div>
+        </StyledToastStack>
     );
 };

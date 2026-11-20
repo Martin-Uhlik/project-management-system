@@ -2,7 +2,7 @@ import { Bar } from 'react-chartjs-2';
 import { BarElement, CategoryScale, Chart as ChartJS, LinearScale, Tooltip } from 'chart.js';
 import { useNavigate } from 'react-router';
 import dayjs from '../../dayjs';
-import { chartTooltip, useChartColors } from '../ui';
+import { chartTooltip, taskStatus, taskStatusLabels, useChartColors } from '../ui';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip);
 
@@ -29,8 +29,10 @@ export const WorkPlanChart = (props) => {
         const finishDate = dayjs(task.FinishDate);
         const hour = finishDate.diff(finishDate.startOf('day'), 'hour', true);
         data[finishDate.isoWeekday() - 1] = [hour - task.DurationHours - task.DurationMinutes / 60, hour];
+        // the bar's colour shows the task's status (finished green, in progress orange, todo blue)
+        const bar = colors.workPlan[taskStatus(task)];
         // the task travels with its bar, for the tooltip and the click
-        return { data, task };
+        return { data, task, borderColor: bar.border, backgroundColor: bar.background, hoverBackgroundColor: bar.hover };
     });
 
     const taskAt = (item) => item && datasets[item.datasetIndex]?.task;
@@ -64,9 +66,6 @@ export const WorkPlanChart = (props) => {
             duration: 0,
         },
         borderSkipped: false,
-        borderColor: colors.workPlan.border,
-        backgroundColor: colors.workPlan.background,
-        hoverBackgroundColor: colors.workPlan.hover,
         interaction: { mode: 'nearest', intersect: true },
         plugins: {
             tooltip: {
@@ -82,7 +81,7 @@ export const WorkPlanChart = (props) => {
                             task.Project?.Name && `Projekt: ${task.Project.Name}`,
                             `Čas: ${start.format('dd D. M. HH:mm')} – ${finish.format('HH:mm')}`,
                             `Délka: ${formatDuration(task)}`,
-                            `Stav: ${task.Finished ? 'Dokončeno' : 'Nedokončeno'}`,
+                            `Stav: ${taskStatusLabels[taskStatus(task)]}`,
                         ].filter(Boolean);
                     },
                     footer: () => 'Kliknutím otevřete úkol',

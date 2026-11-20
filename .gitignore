@@ -25,3 +25,6 @@ npm-debug.log*
 
 # Settings; .env.example is the template
 .env
+
+# Sample files for trying the file previews locally (see test-files/README.md)
+test-files/

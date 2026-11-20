@@ -68,6 +68,7 @@ export const createApp = (options: AppOptions = {}) => {
     app.get('/auth/projects', projects.getProjects);
     app.post('/auth/projects', MANAGER, projects.createProject);
     app.get('/auth/projects/:projectID', projects.getProject);
+    app.get('/auth/projects/:projectID/stats', projects.getProjectStats);
     app.patch('/auth/projects/:projectID', MANAGER, projects.updateProject);
     app.delete('/auth/projects/:projectID', ADMIN, projects.removeProject);
 
@@ -87,12 +88,15 @@ export const createApp = (options: AppOptions = {}) => {
     app.get('/auth/projects/:projectID/tasks/:taskID/output-files', tasks.getOutputFiles);
     app.post('/auth/projects/:projectID/tasks/:taskID/input-files', tasks.uploadInputFile);
     app.post('/auth/projects/:projectID/tasks/:taskID/output-files', tasks.uploadOutputFile);
+    app.get('/auth/projects/:projectID/tasks/:taskID/input-files/:fileName', tasks.downloadInputFile);
+    app.get('/auth/projects/:projectID/tasks/:taskID/output-files/:fileName', tasks.downloadOutputFile);
 
     // personal tasks management
     app.get('/auth/:userID/personal-tasks', personalTasks.getTasks);
     app.post('/auth/:userID/personal-tasks', personalTasks.createTask);
     app.patch('/auth/:userID/personal-tasks/:taskID', personalTasks.updateTask);
     app.delete('/auth/:userID/personal-tasks', personalTasks.removeFinished);
+    app.delete('/auth/:userID/personal-tasks/:taskID', personalTasks.removeTask);
 
     // material management
     app.get('/auth/material', material.getMaterials);

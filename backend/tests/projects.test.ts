@@ -195,6 +195,31 @@ describe('task files', () => {
         expect((await s.other.agent.post(`${base}/output-files`).attach('file', Buffer.from('x'), 'x.txt')).status).toBe(403);
         expect((await s.user.agent.post(`${base}/output-files`)).status).toBe(400);
     });
+
+    it('record who uploaded them and can be downloaded, only as a download', async () => {
+        const project = await createProject(s.manager.user.ID, [s.user.user.ID]);
+        const task = await createTask(project.ID, s.manager.user.ID);
+        const base = `/auth/projects/${project.ID}/tasks/${task.ID}`;
+
+        expect((await s.user.agent.post(`${base}/output-files`).attach('file', Buffer.from('<svg/>'), 'drawing.svg')).status).toBe(200);
+        const list = await s.manager.agent.get(`${base}/output-files`);
+        const drawing = list.body.find((file: { file: string }) => file.file === 'drawing.svg');
+        expect(drawing).toMatchObject({ Bytes: 6, UploadedBy: { ID: s.user.user.ID } });
+        expect(drawing.UploadedBy.PasswordHash).toBeUndefined();
+
+        const download = await s.manager.agent.get(`${base}/output-files/drawing.svg`);
+        expect(download.status).toBe(200);
+        expect(download.headers['content-disposition']).toMatch(/^attachment/);
+        expect(download.headers['x-content-type-options']).toBe('nosniff');
+        expect(download.headers['content-security-policy']).toContain('sandbox');
+
+        expect((await s.manager.agent.get(`${base}/output-files/missing.txt`)).status).toBe(404);
+        expect((await s.manager.agent.get(`${base}/output-files/..%2F..%2Fsecret`)).status).toBe(400);
+        expect((await s.other.agent.get(`${base}/output-files/drawing.svg`)).status).toBe(403);
+
+        // the task can still be removed with its file records
+        expect((await s.manager.agent.delete(`${base}`)).status).toBe(200);
+    });
 });
 
 describe('assigned tasks', () => {
@@ -209,5 +234,29 @@ describe('assigned tasks', () => {
         expect(res.status).toBe(200);
         expect(res.body).toHaveLength(1);
         expect(res.body[0].Task.Project.Name).toBe('Project');
+    });
+});
+
+describe('project statistics', () => {
+    it('compare planned and logged time per worker, for those who may open the project', async () => {
+        const project = await createProject(s.manager.user.ID);
+        const shared = await createTask(project.ID, s.manager.user.ID, [s.user.user.ID, s.manager.user.ID]);
+        await prisma.task.update({ where: { ID: shared.ID }, data: { DurationHours: 4 } });
+        const start = new Date('2026-01-01T08:00:00Z');
+        await prisma.userTaskTime.create({
+            data: { UserID: s.user.user.ID, TaskID: shared.ID, StartTime: start, StopTime: new Date(start.getTime() + 90 * 60000) },
+        });
+
+        expect((await s.user.agent.get(`/auth/projects/${project.ID}/stats`)).status).toBe(403);
+        const res = await s.manager.agent.get(`/auth/projects/${project.ID}/stats`);
+        expect(res.status).toBe(200);
+        expect(res.body.PlannedMinutes).toBe(240);
+        expect(res.body.ActualMinutes).toBe(90);
+        const byUser = Object.fromEntries(res.body.Workers.map((worker: { User: { ID: number } }) => [worker.User.ID, worker]));
+        expect(byUser[s.user.user.ID]).toMatchObject({ PlannedMinutes: 120, ActualMinutes: 90, TaskCount: 1 });
+        expect(byUser[s.manager.user.ID]).toMatchObject({ PlannedMinutes: 120, ActualMinutes: 0 });
+        expect(byUser[s.user.user.ID].User.PasswordHash).toBeUndefined();
+        expect(res.body.Tasks).toHaveLength(1);
+        expect(res.body.Tasks[0].Workers).toHaveLength(2);
     });
 });

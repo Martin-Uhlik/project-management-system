@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import { useAtom, useSetAtom } from 'jotai';
 import { dialogAtom, notificationsAtom, tickAtom, userAtom } from '../state/atoms';
 import { pushNotification } from './Notifications';
@@ -7,7 +6,7 @@ import { getAuthHeader, getUserID } from '../Auth';
 import axios from 'axios';
 import { handleAxiosError } from '../errorHandler';
 import dayjs from '../dayjs';
-import { StyledButton } from './ui';
+import { StyledButton, useElapsed } from './ui';
 
 export const Timer = () => {
     const [user, setUser] = useAtom(userAtom);
@@ -15,22 +14,13 @@ export const Timer = () => {
     const setTick = useSetAtom(tickAtom);
 
     const startTime = user?.WorkStartTime;
-    const setStartTime = (newTime) => {
-        setUser({ ...user, WorkStartTime: newTime });
+    // the timer runs from WorkStartTime, on the task CurrentTaskID (or none)
+    const setTimer = (newTime, taskID = null) => {
+        setUser({ ...user, WorkStartTime: newTime, CurrentTaskID: taskID });
     };
 
-    const [time, setTime] = useState(0);
+    const elapsed = useElapsed(startTime);
     const setDialog = useSetAtom(dialogAtom);
-
-    useEffect(() => {
-        let interval = null;
-        if (startTime) {
-            interval = setInterval(() => setTime(Date.now() - new Date(startTime)), 1000);
-        }
-        return () => {
-            clearInterval(interval);
-        };
-    }, [startTime]);
 
     const handleSuccess = (newStartTime, newStopTime) => {
         axios
@@ -48,8 +38,7 @@ export const Timer = () => {
                     notifications: notifications,
                     setNotifications: setNotifications,
                 });
-                setStartTime(null);
-                setTime(0);
+                setTimer(null);
                 setTick(dayjs());
             })
             .catch((error) => {
@@ -59,10 +48,9 @@ export const Timer = () => {
 
     const handleDiscard = () => {
         axios
-            .patch(getBackendAddress(`/auth/users/${getUserID()}`), { WorkStartTime: null }, getAuthHeader())
+            .patch(getBackendAddress(`/auth/users/${getUserID()}`), { WorkStartTime: null, CurrentTaskID: null }, getAuthHeader())
             .then(() => {
-                setStartTime(null);
-                setTime(0);
+                setTimer(null);
                 setTick(dayjs());
             })
             .catch((error) => {
@@ -70,16 +58,21 @@ export const Timer = () => {
             });
     };
 
-    const handleTimerStart = () => {
+    const startTimer = (taskID) => {
         axios
-            .patch(getBackendAddress(`/auth/users/${getUserID()}`), { WorkStartTime: new Date() }, getAuthHeader())
+            .patch(getBackendAddress(`/auth/users/${getUserID()}`), { WorkStartTime: new Date(), CurrentTaskID: taskID }, getAuthHeader())
             .then(() => {
-                setStartTime(Date.now());
+                setTimer(Date.now(), taskID);
                 setTick(dayjs());
             })
             .catch((error) => {
                 handleAxiosError(error, [notifications, setNotifications]);
             });
+    };
+
+    // first ask which task the time is for
+    const handleTimerStart = () => {
+        setDialog({ type: 'StartTimer', data: { handleSubmit: startTimer } });
     };
 
     const handleTimerStop = () => {
@@ -97,9 +90,7 @@ export const Timer = () => {
     return (
         <div className='timer'>
             <img className='menu-icon' src='/icons/timer-outline.svg' alt='Časovač' />
-            <span className='menu-text'>
-                {startTime !== null ? new Date(time + new Date().getTimezoneOffset() * 60000).toLocaleTimeString('cs-CZ') : '0:00:00'}
-            </span>
+            <span className='menu-text'>{elapsed}</span>
             {startTime ? (
                 <StyledButton color='error' onClick={handleTimerStop}>
                     Zapsat

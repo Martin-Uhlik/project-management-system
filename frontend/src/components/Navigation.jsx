@@ -9,7 +9,7 @@ function Navigation() {
         { key: 2, to: '/auth/projects', icon: '/icons/folder-multiple.svg', text: 'Projekty' },
         { key: 3, to: '/auth/inventory', icon: '/icons/package-variant.svg', text: 'Sklad' },
         { key: 4, to: '/auth/machines', icon: '/icons/robot-industrial.svg', text: 'Stroje' },
-        { key: 5, to: '/auth/users', icon: '/icons/account-multiple.svg', text: 'Uživatelé' },
+        { key: 5, to: '/auth/users', icon: '/icons/account-multiple.svg', text: 'Pracovníci' },
         { key: 6, to: '/auth/settings', icon: '/icons/cog.svg', text: 'Nastavení' },
     ];
     const createItem = (item) => {

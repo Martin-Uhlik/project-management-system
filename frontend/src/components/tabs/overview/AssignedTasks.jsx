@@ -6,7 +6,7 @@ import { getAuthHeader } from '../../../Auth';
 import { handleAxiosError } from '../../../errorHandler';
 import { useAtom, useAtomValue } from 'jotai';
 import { notificationsAtom, tickAtom } from '../../../state/atoms';
-import { FormStack, StyledSearchInput, useSearch } from '../../ui';
+import { FormStack, StyledTable, useSearch } from '../../ui';
 import dayjs from '../../../dayjs';
 
 // searchable: false hides the search field, for short lists such as a task's dependencies
@@ -41,22 +41,14 @@ export const AssignedTasks = ({ showHeader, userID, machineTasks = [], searchabl
     return (
         <FormStack>
             {showHeader && <h1>Moje úkoly</h1>}
-            {searchable && <StyledSearchInput value={search.query} onChange={search.setQuery} />}
-            <table className='task-list'>
-                <thead>
-                    <tr>
-                        <th>Název</th>
-                        <th>Projekt</th>
-                        <th>Autor</th>
-                        <th>Dokončení</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {search.results.map((task) => (
-                        <AssignedTask key={task.ID} task={task} />
-                    ))}
-                </tbody>
-            </table>
+            <StyledTable
+                columns={[{ label: 'Název' }, { label: 'Projekt' }, { label: 'Autor' }, { label: 'Dokončení' }]}
+                search={searchable ? search : undefined}
+            >
+                {search.results.map((task) => (
+                    <AssignedTask key={task.ID} task={task} />
+                ))}
+            </StyledTable>
         </FormStack>
     );
 };

@@ -16,13 +16,8 @@
 
     --content-box-background: rgba(248, 249, 250);
 
-    /* Notifications */
-    --success-color: rgba(46, 204, 113, 0.9);
-    --danger-color: rgba(231, 76, 60, 0.9);
-
     /* Page surfaces */
     --page-background: #ecf0f1;
-    --task-finished-background: #e9ecef;
     --scrollbar-track: #e9ecef;
     --subtab-active-hover: #e0e0e0;
 
@@ -53,7 +48,6 @@
     --content-box-background: #1e2125;
 
     --page-background: #121417;
-    --task-finished-background: #343a40;
     --scrollbar-track: #2b3035;
     --subtab-active-hover: #2b3035;
 
@@ -141,15 +135,6 @@ h1 {
     outline-offset: 2px;
 }
 
-/* task name inside a clickable table row: looks like the plain text it replaces */
-.task_toggle,
-.task_link {
-    color: inherit;
-    font: inherit;
-    text-align: left;
-    text-decoration: none;
-}
-
 button {
     background: none;
     border: none;
@@ -159,10 +144,6 @@ button {
 
 .min-vh-25 {
     min-height: 25vh;
-}
-
-.task-list {
-    width: 100%;
 }
 
 .menu-icon {
@@ -436,90 +417,7 @@ button {
     color: var(--icons-primary);
 }
 
-.task {
-    /*display: flex;*/
-    /*justify-content: space-between;*/
-    /*align-items: center;*/
-    background-color: var(--foreground-primary);
-    width: 100%;
-    box-shadow: var(--shadow-small);
-    /*padding: min(1rem, calc(0.2rem + 1.5vw));*/
-    margin: 1rem;
-}
-
-.task__finished {
-    background-color: var(--task-finished-background);
-    text-decoration: line-through;
-}
-
-.task:hover {
-    cursor: pointer;
-}
-
-table {
-    border-collapse: separate;
-    border-spacing: 0 1rem;
-    font-size: min(1rem, calc(0.3rem + 1.5vw));
-}
-
-td {
-    padding: min(1rem, calc(1.5vw));
-    /*padding: 1rem 0;*/
-}
-
-th {
-    padding: 0 1rem;
-}
-
-/* extra buttons in a task row show on hover; the task name (task_toggle) is a button too and always shows */
-.task button:not(.task_toggle) {
-    visibility: hidden;
-}
-
-.task:hover button,
-.task:active button {
-    visibility: visible;
-}
-
-.task_toggle {
-    cursor: pointer;
-}
-
-/* -Notifications- */
-
-.notifications {
-    display: flex;
-    flex-direction: column;
-    position: absolute;
-    left: 0;
-    top: 0;
-
-    width: 100%;
-}
-
-.notification {
-    display: flex;
-    justify-content: space-between;
-    margin: 1rem 1rem 0 1rem;
-    padding: 0.25rem 1rem;
-    color: rgba(44, 62, 80, 1);
-    box-shadow: var(--shadow-normal);
-    border-radius: 0.2rem;
-}
-
-.notification__success {
-    background-color: var(--success-color);
-    border: 0.12rem solid #27ae60;
-}
-
-.notification__danger {
-    background-color: var(--danger-color);
-    border: 0.12rem solid #c0392b;
-}
-
-.notification_icon {
-    height: 1rem;
-}
+/* -Notifications-: ui/StyledToast.jsx */
 
 .login_right {
     z-index: -1;

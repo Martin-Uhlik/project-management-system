@@ -50,28 +50,57 @@ export const theme = createTheme(
     pickersCsCZ,
 );
 
+// The colour of each task status (see taskStatus.js): finished green, in progress orange, todo blue; lighter on dark backgrounds
+export const taskStatusColors = {
+    light: { finished: '#198754', inProgress: '#e8590c', todo: '#1c7ed6' },
+    dark: { finished: '#51cf66', inProgress: '#ff922b', todo: '#4dabf7' },
+};
+
+// The colour of a worker's state in the workers table: working green (with the running timer), disabled grey
+export const userStatusColors = {
+    light: { working: '#198754', disabled: '#adb5bd' },
+    dark: { working: '#51cf66', disabled: '#6c757d' },
+};
+
+// '#rrggbb' at the given opacity, for the canvas charts
+const withAlpha = (hex, alpha) => {
+    const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
+
+// a bar in the work plan chart for every task status
+const statusBars = (colors, background, hover) =>
+    Object.fromEntries(
+        Object.entries(colors).map(([status, color]) => [status, { border: color, background: withAlpha(color, background), hover: withAlpha(color, hover) }]),
+    );
+
 // Colours for the charts (chart.js draws on a canvas, so it needs real colours, not CSS variables): see useChartColors
 export const chartColors = {
     light: {
         text: '#666666',
         grid: 'rgba(0, 0, 0, 0.1)',
         workTime: { border: 'rgb(255, 99, 132)', background: 'rgba(255, 99, 132, 0.5)' },
-        workPlan: { border: 'rgb(53, 162, 235)', background: 'rgba(53, 162, 235, 0.5)', hover: 'rgba(53, 162, 235, 0.8)' },
+        workPlan: statusBars(taskStatusColors.light, 0.5, 0.8),
+        // project statistics: planned time against time actually spent (checked for colour blindness and contrast)
+        plannedTime: '#1098ad',
+        actualTime: '#7048e8',
         tooltip: { background: '#ffffff', title: '#212529', body: '#495057', border: 'rgba(0, 0, 0, 0.15)' },
     },
     dark: {
         text: '#adb5bd',
         grid: 'rgba(255, 255, 255, 0.12)',
         workTime: { border: 'rgb(255, 120, 150)', background: 'rgba(255, 99, 132, 0.45)' },
-        workPlan: { border: 'rgb(90, 180, 245)', background: 'rgba(53, 162, 235, 0.45)', hover: 'rgba(90, 180, 245, 0.75)' },
+        workPlan: statusBars(taskStatusColors.dark, 0.45, 0.75),
+        plannedTime: '#1098ad',
+        actualTime: '#845ef7',
         tooltip: { background: '#2b3035', title: '#f1f3f5', body: '#ced4da', border: 'rgba(255, 255, 255, 0.15)' },
     },
 };
 
 // Colours for the task graph (sigma, also a canvas)
 export const graphColors = {
-    light: { label: '#000000', labelBackground: '#ffffff', edge: '#cccccc' },
-    dark: { label: '#f1f3f5', labelBackground: '#2b3035', edge: '#6c757d' },
+    light: { label: '#000000', labelBackground: '#ffffff', edge: '#cccccc', task: taskStatusColors.light },
+    dark: { label: '#f1f3f5', labelBackground: '#2b3035', edge: '#6c757d', task: taskStatusColors.dark },
 };
 
 // The look of a chart.js tooltip in the given chart colours (useChartColors), so every chart's tooltip matches the theme

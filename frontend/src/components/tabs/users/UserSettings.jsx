@@ -11,6 +11,7 @@ import { RestrictedComponent } from '../../utils/RestrictedComponent';
 import Divider from '@mui/material/Divider';
 import { ButtonRow, FormStack, StyledButton, StyledInput, StyledSelect } from '../../ui';
 import { userRoleOptions } from '../../dialogs/AddUser';
+import { UserSingleSelect } from '../../utils/UserSingleSelect';
 
 const enabledOptions = [
     { value: 'true', label: 'Povolen' },
@@ -89,15 +90,15 @@ export const UserSettings = (props) => {
                     )}
                 </RestrictedComponent>
             </ButtonRow>
-            <h2>Status uživatele:</h2>
+            <h2>Status pracovníka:</h2>
             <FormStack component='form' onSubmit={(e) => handleEdit(e, { Enabled: e.target.enabled.value === 'true' })}>
-                <StyledSelect id='enabled' label='Status uživatele' defaultValue={user?.Enabled?.toString() ?? ''} options={enabledOptions} />
+                <StyledSelect id='enabled' label='Status pracovníka' defaultValue={user?.Enabled?.toString() ?? ''} options={enabledOptions} />
                 <ButtonRow>
                     <StyledButton type='submit'>Použít</StyledButton>
                 </ButtonRow>
             </FormStack>
             <Divider />
-            <h2>Uživatelské informace:</h2>
+            <h2>Informace o pracovníkovi:</h2>
             <FormStack
                 component='form'
                 onSubmit={(e) =>
@@ -106,6 +107,7 @@ export const UserSettings = (props) => {
                         FirstName: e.target.fname.value,
                         LastName: e.target.lname.value,
                         Position: e.target.position.value,
+                        ManagerID: e.target.manager.value ? +e.target.manager.value : null,
                     })
                 }
             >
@@ -113,6 +115,14 @@ export const UserSettings = (props) => {
                 <StyledInput id='fname' label='Jméno' defaultValue={user?.FirstName} disabled={disabled} />
                 <StyledInput id='lname' label='Příjmení' defaultValue={user?.LastName} disabled={disabled} />
                 <StyledInput id='position' label='Pozice' defaultValue={user?.Position} disabled={disabled} />
+                <UserSingleSelect
+                    id='manager'
+                    label='Vedoucí'
+                    emptyLabel='Bez vedoucího'
+                    users={(props.users ?? []).filter((other) => other.ID !== user?.ID)}
+                    owner={user?.ManagerID}
+                    disabled={disabled}
+                />
                 <ButtonRow>
                     <StyledButton type='submit' disabled={disabled}>
                         Použít
@@ -131,9 +141,9 @@ export const UserSettings = (props) => {
                 </ButtonRow>
             </FormStack>
             <Divider />
-            <h2>Role uživatele:</h2>
+            <h2>Role pracovníka:</h2>
             <FormStack component='form' onSubmit={(e) => handleEdit(e, { UserType: e.target.role.value })}>
-                <StyledSelect id='role' label='Role uživatele' defaultValue={user?.UserType ?? ''} options={userRoleOptions} disabled={disabled} />
+                <StyledSelect id='role' label='Role pracovníka' defaultValue={user?.UserType ?? ''} options={userRoleOptions} disabled={disabled} />
                 <ButtonRow>
                     <StyledButton type='submit' disabled={disabled}>
                         Použít

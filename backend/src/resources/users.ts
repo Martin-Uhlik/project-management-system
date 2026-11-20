@@ -4,9 +4,9 @@ import dayjs from 'dayjs';
 import isoWeek from 'dayjs/plugin/isoWeek.js';
 import prisma from '../client.ts';
 import { currentUser, deleteUserSessions, hashPassword, hasRole, MIN_PASSWORD_LENGTH, requireSelf } from '../auth.ts';
-import { publicUserSelect } from '../access.ts';
+import { publicUserSelect, taskProgressCount } from '../access.ts';
 import { badRequest, forbidden } from '../errors.ts';
-import { date, idParam, parseBody, requiredText, sentKeys } from '../validation.ts';
+import { date, id, idParam, parseBody, requiredText, sentKeys } from '../validation.ts';
 
 dayjs.extend(isoWeek);
 
@@ -20,6 +20,7 @@ const createUserSchema = z.object({
         Password: z.string().min(MIN_PASSWORD_LENGTH).max(1000),
         Position: z.string().trim().max(200).default(''),
         UserType: userType,
+        ManagerID: id.nullable().optional(),
     }),
 });
 
@@ -35,6 +36,7 @@ export const createUser = async (req: Request, res: Response) => {
             Enabled: true,
             Position: user.Position,
             UserType: user.UserType,
+            ManagerID: user.ManagerID ?? null,
         },
     });
     return res.status(200).send();
@@ -60,7 +62,7 @@ export const getUser = async (req: Request, res: Response) => {
             User_Task: {
                 include: {
                     // the project name is shown in the work plan chart's tooltip
-                    Task: { include: { Project: { select: { Name: true } } } },
+                    Task: { include: { ...taskProgressCount, Project: { select: { Name: true } } } },
                 },
             },
         },
@@ -77,7 +79,8 @@ export const getUsers = async (req: Request, res: Response) => {
     return res.status(200).send(users);
 };
 
-// What an admin may change on an account; everyone may only start or stop their own work timer
+// What an admin may change on an account; everyone may only start or stop their own work timer and pick the task
+// they are working on (CurrentTaskID, one of their assigned tasks)
 const adminUpdateSchema = z.object({
     UserName: requiredText(100).optional(),
     FirstName: requiredText(100).optional(),
@@ -86,8 +89,10 @@ const adminUpdateSchema = z.object({
     UserType: userType.optional(),
     Enabled: z.boolean().optional(),
     WorkStartTime: date.nullable().optional(),
+    CurrentTaskID: id.nullable().optional(),
+    ManagerID: id.nullable().optional(),
 });
-const SELF_FIELDS = ['WorkStartTime'];
+const SELF_FIELDS = ['WorkStartTime', 'CurrentTaskID'];
 
 export const updateUser = async (req: Request, res: Response) => {
     const userID = idParam(req, 'userID');
@@ -101,6 +106,11 @@ export const updateUser = async (req: Request, res: Response) => {
     // an admin can't lock themselves out
     if (me.ID === userID && ((data.UserType && data.UserType !== 'ADMIN') || data.Enabled === false)) {
         throw badRequest('Vlastní roli ani přístup nelze změnit.');
+    }
+    if (data.ManagerID === userID) throw badRequest('Pracovník nemůže být sám sobě vedoucím.');
+    if (data.CurrentTaskID) {
+        const assignment = await prisma.user_Task.findFirst({ where: { UserID: userID, TaskID: data.CurrentTaskID }, select: { ID: true } });
+        if (!assignment) throw badRequest('Úkol není uživateli přiřazen.');
     }
 
     await prisma.user.update({
@@ -126,18 +136,17 @@ export const logTime = async (req: Request, res: Response) => {
     requireSelf(res, userID);
     const time = parseBody(logTimeSchema, req.body);
 
+    // the time also counts for the task the user started the timer on, if any
+    const user = await prisma.user.findUnique({ where: { ID: userID }, select: { CurrentTaskID: true } });
+    const period = { StartTime: time.WorkStartTime, StopTime: time.WorkStopTime, UserID: userID };
+
     await prisma.$transaction([
         prisma.user.update({
             where: { ID: userID },
-            data: { WorkStartTime: null },
+            data: { WorkStartTime: null, CurrentTaskID: null },
         }),
-        prisma.workTime.create({
-            data: {
-                StartTime: time.WorkStartTime,
-                StopTime: time.WorkStopTime,
-                UserID: userID,
-            },
-        }),
+        prisma.workTime.create({ data: period }),
+        ...(user?.CurrentTaskID ? [prisma.userTaskTime.create({ data: { ...period, TaskID: user.CurrentTaskID } })] : []),
     ]);
     return res.status(200).send();
 };

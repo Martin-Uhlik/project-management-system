@@ -56,6 +56,12 @@ export const requireTaskAccessByID = async (user: SessionUser, taskID: number) =
     return requireTaskAccess(user, task.ProjectID, taskID);
 };
 
+// Added to a task query (include or select): how many users work on the task now and how many time records it has,
+// which make an unfinished task "in progress" in the browser (taskStatus)
+export const taskProgressCount = {
+    _count: { select: { WorkingUsers: true, UserTaskTime: true } },
+} as const;
+
 // The user fields that are safe to send to the browser (never the password hash or salt)
 export const publicUserSelect = {
     ID: true,
@@ -67,4 +73,5 @@ export const publicUserSelect = {
     WorkStartTime: true,
     UserType: true,
     CurrentTaskID: true,
+    ManagerID: true,
 } as const;

@@ -38,6 +38,10 @@ model User {
   Deleted           Boolean               @default(false)
   CurrentTask       Task?                 @relation(name: "CurrentTask", fields: [CurrentTaskID], references: [ID])
   CurrentTaskID     Int?
+  // the worker's manager (vedoucí)
+  Manager           User?                 @relation(name: "UserManager", fields: [ManagerID], references: [ID])
+  ManagerID         Int?
+  Subordinates      User[]                @relation(name: "UserManager")
   Requests          MaterialRequest[]     @relation(name: "Creator")
   AcceptedRequests  MaterialRequest[]     @relation(name: "Acceptor")
   Sessions          UserSession[]         @relation(name: "UserSessions")
@@ -49,6 +53,7 @@ model User {
   User_Task         User_Task[]           @relation(name: "UserTask_User")
   WorkTime          WorkTime[]            @relation(name: "HasTime")
   PrivateTask       PrivateTask[]         @relation(name: "HasPrivateTask")
+  UploadedFiles     TaskFile[]            @relation(name: "FileUploader")
 }
 
 enum UserType {
@@ -117,6 +122,27 @@ model Task {
   MaterialRequest   MaterialRequest[]     @relation(name: "Request_Task")
   UserTaskTime      UserTaskTime[]        @relation(name: "TaskTime_Task")
   User_Task         User_Task[]           @relation(name: "UserTask_Task")
+  Files             TaskFile[]            @relation(name: "TaskFiles")
+}
+
+// Who uploaded a task's input or output file and when (the file itself lives on disk, see DATA_DIR in tasks.ts).
+// Files from before this table have no row; uploading a file with the same name again updates its row.
+model TaskFile {
+  ID                Int                   @id @default(autoincrement())
+  Task              Task                  @relation(name: "TaskFiles", fields: [TaskID], references: [ID])
+  TaskID            Int
+  Kind              TaskFileKind
+  Name              String
+  UploadedAt        DateTime              @default(now())
+  UploadedBy        User?                 @relation(name: "FileUploader", fields: [UploadedByID], references: [ID], onDelete: SetNull)
+  UploadedByID      Int?
+
+  @@unique([TaskID, Kind, Name])
+}
+
+enum TaskFileKind {
+  INPUT
+  OUTPUT
 }
 
 model TaskDependency {

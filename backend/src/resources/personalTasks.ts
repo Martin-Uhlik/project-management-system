@@ -64,6 +64,20 @@ export const updateTask = async (req: Request, res: Response) => {
     return res.status(200).send(updated[0]);
 };
 
+// Deletes one of the user's personal tasks
+export const removeTask = async (req: Request, res: Response) => {
+    const userID = idParam(req, 'userID');
+    requireSelf(res, userID);
+    const removed = await prisma.privateTask.deleteMany({
+        where: {
+            ID: idParam(req, 'taskID'),
+            UserID: userID,
+        },
+    });
+    if (removed.count === 0) throw notFound();
+    return res.status(200).send();
+};
+
 // Deletes the user's finished personal tasks
 export const removeFinished = async (req: Request, res: Response) => {
     const userID = idParam(req, 'userID');

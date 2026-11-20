@@ -1,4 +1,5 @@
 import { TimeDialog } from './dialogs/TimeDialog';
+import { StartTimer } from './dialogs/StartTimer';
 import { useAtomValue } from 'jotai';
 import { dialogAtom } from '../state/atoms';
 import { ConfirmDialog } from './dialogs/ConfirmDialog';
@@ -18,6 +19,7 @@ export const Dialogs = () => {
     const dialog = useAtomValue(dialogAtom);
     const dialogs = {
         TimeDialog: <TimeDialog />,
+        StartTimer: <StartTimer />,
         ConfirmDialog: <ConfirmDialog />,
         AddMyTask: <AddMyTask />,
         AddUser: <AddUser />,

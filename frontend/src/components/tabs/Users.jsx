@@ -16,7 +16,7 @@ export const Users = () => {
     const setTab = useSetAtom(selectedTabAtom);
     const setDialog = useSetAtom(dialogAtom);
     React.useEffect(() => {
-        setTab('Uživatelé');
+        setTab('Pracovníci');
     });
     const [selectedButton, setSelectedButton] = React.useState(0);
     const [tick, setTick] = useAtom(tickAtom);
@@ -54,6 +54,7 @@ export const Users = () => {
         setDialog({
             type: 'AddUser',
             data: {
+                users,
                 handleSubmit: addUser,
                 handleCancel: () => {},
             },
@@ -66,9 +67,9 @@ export const Users = () => {
                 <div className='content-box'>
                     <div className='content-box_content'>
                         <div className='content-box_header'>
-                            <h1>Uživatelé</h1>
+                            <h1>Pracovníci</h1>
                             <RestrictedComponent types={['ADMIN']}>
-                                <StyledAddButton label='Přidat uživatele' onClick={handleAddUser} />
+                                <StyledAddButton label='Přidat pracovníka' onClick={handleAddUser} />
                             </RestrictedComponent>
                         </div>
                         <UserTable users={users} setSelectedUser={setSelectedUser} />
@@ -77,10 +78,10 @@ export const Users = () => {
 
                 <div className='content-box'>
                     <RestrictedComponent types={['ADMIN', 'MANAGER']}>
-                        <StyledToggle options={['Aktivita uživatele', 'Nastavení uživatele']} value={selectedButton} onChange={setSelectedButton} />
+                        <StyledToggle options={['Aktivita pracovníka', 'Nastavení pracovníka']} value={selectedButton} onChange={setSelectedButton} />
                     </RestrictedComponent>
                     <div className='content-box_content'>
-                        {selectedButton === 0 ? <UserActivity user={selectedUser} /> : <UserSettings user={selectedUser} />}
+                        {selectedButton === 0 ? <UserActivity user={selectedUser} /> : <UserSettings user={selectedUser} users={users} />}
                     </div>
                 </div>
             </div>

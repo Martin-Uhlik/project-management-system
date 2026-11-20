@@ -1,21 +1,16 @@
-import { StyledCheckbox, StyledTableCell, StyledTableRow } from '../../../ui';
+import { StyledTableCell, StyledTableRow, StyledStatus } from '../../../ui';
 import dayjs from '../../../../dayjs';
 
-export const ProjectRow = (props) => {
-    const project = props.project;
-
+// A project: finished projects are green, running ones orange (the same colours and icons as tasks)
+export const ProjectRow = ({ project, setSelectedProject }) => {
+    const status = project.Finished ? 'finished' : 'inProgress';
     return (
-        <StyledTableRow
-            onClick={() => {
-                props.setSelectedProject(project.ID);
-            }}
-        >
-            <StyledTableCell>{project.Name}</StyledTableCell>
-            <StyledTableCell>{project.Customer}</StyledTableCell>
-            <StyledTableCell>{dayjs(project.FinishDate).format('L')}</StyledTableCell>
+        <StyledTableRow status={status} onClick={() => setSelectedProject(project.ID)}>
             <StyledTableCell>
-                <StyledCheckbox disabled checked={project.Finished} aria-label='Dokončeno' />
+                <StyledStatus status={status}>{project.Name}</StyledStatus>
             </StyledTableCell>
+            <StyledTableCell>{project.Customer}</StyledTableCell>
+            <StyledTableCell>{project.FinishDate ? dayjs(project.FinishDate).format('L') : ''}</StyledTableCell>
         </StyledTableRow>
     );
 };

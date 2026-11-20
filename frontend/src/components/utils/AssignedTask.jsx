@@ -1,21 +1,20 @@
-import { Link, useNavigate } from 'react-router';
+import { useNavigate } from 'react-router';
 import dayjs from '../../dayjs';
+import { StyledTableCell, StyledTableRow, StyledStatus, taskStatus } from '../ui';
 
-export const AssignedTask = (props) => {
+// A project task in a task list: its status in colour and as an icon; clicking the row opens the task
+export const AssignedTask = ({ task }) => {
     const navigate = useNavigate();
-    const owner = props.task.Owner;
-    const taskAddress = `/auth/projects/${props.task.ProjectID.toString()}/${props.task.ID.toString()}`;
+    const owner = task.Owner;
+    const status = taskStatus(task);
     return (
-        <tr className='task' onClick={() => navigate(taskAddress)}>
-            <td>
-                {/* the whole row opens the task with a mouse; the link makes it reachable by keyboard too */}
-                <Link className='task_link' to={taskAddress} onClick={(event) => event.stopPropagation()}>
-                    {props.task.Name}
-                </Link>
-            </td>
-            <td>{props.task.Project.Name}</td>
-            <td>{`${owner.FirstName} ${owner.LastName}`}</td>
-            <td>{dayjs(props.task.FinishDate).format('L')}</td>
-        </tr>
+        <StyledTableRow status={status} onClick={() => navigate(`/auth/projects/${task.ProjectID}/${task.ID}`)}>
+            <StyledTableCell>
+                <StyledStatus status={status}>{task.Name}</StyledStatus>
+            </StyledTableCell>
+            <StyledTableCell>{task.Project?.Name}</StyledTableCell>
+            <StyledTableCell>{owner ? `${owner.FirstName} ${owner.LastName}` : ''}</StyledTableCell>
+            <StyledTableCell>{dayjs(task.FinishDate).format('L')}</StyledTableCell>
+        </StyledTableRow>
     );
 };

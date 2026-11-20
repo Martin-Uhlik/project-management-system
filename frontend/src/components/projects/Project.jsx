@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from 'react-router';
+import { useNavigate, useParams, useSearchParams } from 'react-router';
 import { useAtom, useSetAtom } from 'jotai';
 import axios from 'axios';
 import { notificationsAtom, selectedTabAtom } from '../../state/atoms';
@@ -13,7 +13,16 @@ import { LoadGraph } from './project/LoadGraph';
 import { GraphTheme } from './project/GraphTheme';
 import { TaskSearch } from './project/TaskSearch';
 import { RestrictedComponent } from '../utils/RestrictedComponent';
-import { StyledButton } from '../ui';
+import { ProjectStats } from './project/ProjectStats';
+import { ProjectTaskList } from './project/ProjectTaskList';
+import dayjs from '../../dayjs';
+import { AccountIcon, BriefcaseIcon, CalendarIcon, StyledButton, StyledPageHeader, StyledPageHeaderFact } from '../ui';
+
+const tabs = [
+    { label: 'Graf úkolů', value: 'graph' },
+    { label: 'Seznam úkolů', value: 'tasks' },
+    { label: 'Statistiky', value: 'stats' },
+];
 
 export const Project = () => {
     const setTab = useSetAtom(selectedTabAtom);
@@ -33,13 +42,17 @@ export const Project = () => {
     const [addNode, setAddNode] = useState(false);
 
     const projectID = useParams().project;
-    const [projectName, setProjectName] = useState('');
+    const [project, setProject] = useState(null);
+    // the open tab lives in the address (?tab=tasks, ?tab=stats), so it survives a reload and can be linked to
+    const [searchParams, setSearchParams] = useSearchParams();
+    const tab = tabs.some((item) => item.value === searchParams.get('tab')) ? searchParams.get('tab') : 'graph';
+    const selectTab = (value) => setSearchParams(value === 'graph' ? {} : { tab: value }, { replace: true });
     const [notifications, setNotifications] = useAtom(notificationsAtom);
     React.useEffect(() => {
         axios
             .get(getBackendAddress(`/auth/projects/${projectID}`), getAuthHeader())
             .then((response) => {
-                setProjectName(response.data.Name);
+                setProject(response.data);
             })
             .catch((error) => {
                 handleAxiosError(error, [notifications, setNotifications]);
@@ -47,37 +60,72 @@ export const Project = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [projectID]);
 
+    const status = project ? (project.Finished ? 'finished' : 'inProgress') : null;
+    const deadline = project?.FinishDate ? dayjs(project.FinishDate) : null;
+    const overdue = deadline && !project.Finished && deadline.isBefore(dayjs());
+
     return (
-        <div className='content-wrap_inner'>
-            <div className='content-box'>
-                <div className='content-box_content'>
-                    <h1>{projectName}</h1>
-                    <SigmaContainer>
-                        <ControlsContainer position='top-left'>
-                            <FullScreenControl />
-                            <ZoomControl />
-                        </ControlsContainer>
-                        <ControlsContainer position='top-right'>
-                            <TaskSearch selectNode={selectNode} />
-                        </ControlsContainer>
-                        <RestrictedComponent types={['ADMIN', 'MANAGER']}>
-                            <ControlsContainer position='bottom-left'>
-                                <StyledButton color={addNode ? 'error' : 'dark'} onClick={() => setAddNode(!addNode)}>
-                                    {addNode ? 'Zrušit' : 'Přidat úkol'}
-                                </StyledButton>
-                            </ControlsContainer>
-                        </RestrictedComponent>
-                        {selectedNode !== null ? (
-                            <ControlsContainer position='bottom-right'>
-                                <StyledButton onClick={handleNavigate}>Přejít na úkol</StyledButton>
-                            </ControlsContainer>
-                        ) : null}
-                        <GraphTheme />
-                        <LoadGraph />
-                        <GraphEvents selectNode={selectNode} addNode={{ addNode, setAddNode }} />
-                    </SigmaContainer>
-                </div>
+        <>
+            <StyledPageHeader
+                breadcrumbs={[{ label: 'Projekty', to: '/auth/projects' }]}
+                title={project?.Name ?? null}
+                status={status}
+                statusLabel={project && !project.Finished ? 'Probíhá' : undefined}
+                facts={
+                    project ? (
+                        <>
+                            <StyledPageHeaderFact icon={BriefcaseIcon} label='Zákazník'>
+                                {project.Customer}
+                            </StyledPageHeaderFact>
+                            <StyledPageHeaderFact icon={CalendarIcon} label='Termín' color={overdue ? 'error' : undefined}>
+                                {deadline?.format('LL')}
+                            </StyledPageHeaderFact>
+                            <StyledPageHeaderFact icon={AccountIcon} label='Zodpovědný pracovník'>
+                                {project.Owner ? `${project.Owner.FirstName} ${project.Owner.LastName}` : null}
+                            </StyledPageHeaderFact>
+                        </>
+                    ) : null
+                }
+                tabs={tabs}
+                active={tab}
+                onSelect={selectTab}
+            />
+            <div className='content-wrap_inner'>
+                {tab === 'stats' ? (
+                    <ProjectStats />
+                ) : tab === 'tasks' ? (
+                    <ProjectTaskList />
+                ) : (
+                    <div className='content-box'>
+                        <div className='content-box_content'>
+                            <SigmaContainer>
+                                <ControlsContainer position='top-left'>
+                                    <FullScreenControl />
+                                    <ZoomControl />
+                                </ControlsContainer>
+                                <ControlsContainer position='top-right'>
+                                    <TaskSearch selectNode={selectNode} />
+                                </ControlsContainer>
+                                <RestrictedComponent types={['ADMIN', 'MANAGER']}>
+                                    <ControlsContainer position='bottom-left'>
+                                        <StyledButton color={addNode ? 'error' : 'dark'} onClick={() => setAddNode(!addNode)}>
+                                            {addNode ? 'Zrušit' : 'Přidat úkol'}
+                                        </StyledButton>
+                                    </ControlsContainer>
+                                </RestrictedComponent>
+                                {selectedNode !== null ? (
+                                    <ControlsContainer position='bottom-right'>
+                                        <StyledButton onClick={handleNavigate}>Přejít na úkol</StyledButton>
+                                    </ControlsContainer>
+                                ) : null}
+                                <GraphTheme />
+                                <LoadGraph />
+                                <GraphEvents selectNode={selectNode} addNode={{ addNode, setAddNode }} />
+                            </SigmaContainer>
+                        </div>
+                    </div>
+                )}
             </div>
-        </div>
+        </>
     );
 };

@@ -147,6 +147,15 @@ describe('personal tasks', () => {
         expect(after.UserID).toBe(s.user.user.ID);
     });
 
+    it('can be deleted one by one, only by their owner', async () => {
+        await s.user.agent.post(`/auth/${s.user.user.ID}/personal-tasks`).send({ task });
+        const id = (await prisma.privateTask.findFirstOrThrow()).ID;
+        expect((await s.other.agent.delete(`/auth/${s.other.user.ID}/personal-tasks/${id}`)).status).toBe(404);
+        expect((await s.other.agent.delete(`/auth/${s.user.user.ID}/personal-tasks/${id}`)).status).toBe(403);
+        expect((await s.user.agent.delete(`/auth/${s.user.user.ID}/personal-tasks/${id}`)).status).toBe(200);
+        expect(await prisma.privateTask.count()).toBe(0);
+    });
+
     it("removing finished tasks only removes the user's own", async () => {
         for (const who of [s.user, s.other]) {
             await who.agent.post(`/auth/${who.user.ID}/personal-tasks`).send({ task });
