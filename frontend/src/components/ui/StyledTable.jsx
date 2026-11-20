@@ -59,7 +59,7 @@ export const StyledTable = ({ columns, search, children }) => {
 // onClick: the row highlights on hover, can be reached with Tab and opened with Enter, and shows an arrow on the right
 //   (showArrow={false} for rows whose click does something in place instead of opening a detail, like ticking off a task)
 // status: a status (of a task - see taskStatus, or of a worker - see userStatus) as a coloured stripe on the left;
-//   rows with a status other than todo are also tinted in its colour (finished green, in progress orange,
+//   rows with a status other than todo are also tinted in its colour (finished green, in progress orange, blocked red,
 //   working green, disabled grey); hover keeps the usual highlight
 // disabled: greyed out and struck through, e.g. a disabled worker
 // selected: the row whose detail is open next to the table (highlighted, with a red line on the right)

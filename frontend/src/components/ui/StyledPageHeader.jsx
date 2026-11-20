@@ -21,7 +21,7 @@ const onDark = {
 // The top of a detail page (a project, a task): where it sits (breadcrumbs back up), its title with a status, a line of
 // facts about it (StyledPageHeaderFact), buttons on the right, and the page's tabs along the bottom edge.
 // breadcrumbs: [{ label, to }] (links, relative to the page); title: null while loading shows a placeholder;
-// status: a task status ('finished', 'inProgress', 'todo') shown as a label next to the title, statusLabel: its text if not
+// status: a task status ('finished', 'inProgress', 'todo', 'blocked') shown as a label next to the title, statusLabel: its text if not
 // the usual one; tabs: [{ label, to, value }] (links) with active = the open tab's value; or tabs: [{ label, value }] with onSelect(value)
 export const StyledPageHeader = ({ breadcrumbs = [], title, status, statusLabel, facts, actions, tabs, active, onSelect }) => {
     return (

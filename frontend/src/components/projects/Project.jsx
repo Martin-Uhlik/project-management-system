@@ -1,7 +1,7 @@
 import { useNavigate, useParams, useSearchParams } from 'react-router';
-import { useAtom, useSetAtom } from 'jotai';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import axios from 'axios';
-import { notificationsAtom, selectedTabAtom } from '../../state/atoms';
+import { notificationsAtom, selectedTabAtom, tickAtom } from '../../state/atoms';
 import { getBackendAddress } from '../../config';
 import { getAuthHeader } from '../../Auth';
 import { handleAxiosError } from '../../errorHandler';
@@ -16,7 +16,17 @@ import { RestrictedComponent } from '../utils/RestrictedComponent';
 import { ProjectStats } from './project/ProjectStats';
 import { ProjectTaskList } from './project/ProjectTaskList';
 import dayjs from '../../dayjs';
-import { AccountIcon, BriefcaseIcon, CalendarIcon, StyledButton, StyledPageHeader, StyledPageHeaderFact } from '../ui';
+import {
+    AccountIcon,
+    BriefcaseIcon,
+    CalendarIcon,
+    StyledButton,
+    StyledPageHeader,
+    StyledPageHeaderFact,
+    projectStatus,
+    projectStatusLabels,
+    useElapsed,
+} from '../ui';
 
 const tabs = [
     { label: 'Graf úkolů', value: 'graph' },
@@ -48,6 +58,8 @@ export const Project = () => {
     const tab = tabs.some((item) => item.value === searchParams.get('tab')) ? searchParams.get('tab') : 'graph';
     const selectTab = (value) => setSearchParams(value === 'graph' ? {} : { tab: value }, { replace: true });
     const [notifications, setNotifications] = useAtom(notificationsAtom);
+    // reloaded on tick too, so the status follows timers started and stopped in this browser
+    const tick = useAtomValue(tickAtom);
     React.useEffect(() => {
         axios
             .get(getBackendAddress(`/auth/projects/${projectID}`), getAuthHeader())
@@ -58,9 +70,12 @@ export const Project = () => {
                 handleAxiosError(error, [notifications, setNotifications]);
             });
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [projectID]);
+    }, [projectID, tick]);
 
-    const status = project ? (project.Finished ? 'finished' : 'inProgress') : null;
+    // finished green, orange with how long work has been running while someone works on one of its tasks, otherwise blue
+    const status = project ? projectStatus(project) : null;
+    const elapsed = useElapsed(project?.WorkingSince ?? null);
+    const statusLabel = status === 'inProgress' ? `${projectStatusLabels.inProgress} ${elapsed}` : status ? projectStatusLabels[status] : undefined;
     const deadline = project?.FinishDate ? dayjs(project.FinishDate) : null;
     const overdue = deadline && !project.Finished && deadline.isBefore(dayjs());
 
@@ -70,7 +85,7 @@ export const Project = () => {
                 breadcrumbs={[{ label: 'Projekty', to: '/auth/projects' }]}
                 title={project?.Name ?? null}
                 status={status}
-                statusLabel={project && !project.Finished ? 'Probíhá' : undefined}
+                statusLabel={statusLabel}
                 facts={
                     project ? (
                         <>

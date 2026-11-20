@@ -17,7 +17,7 @@ export const LoadGraph = () => {
     const [notifications, setNotifications] = useAtom(notificationsAtom);
     const tick = useAtomValue(tickAtom);
 
-    // node colours: finished green, in progress orange, todo blue (taskStatus), in the light or dark look
+    // node colours: finished green, in progress orange, todo blue, blocked red (taskStatus), in the light or dark look
     const colors = useGraphColors();
 
     const createNode = (task, graph) => {

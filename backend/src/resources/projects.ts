@@ -2,7 +2,7 @@ import type { Request, Response } from 'express';
 import { z } from 'zod';
 import prisma from '../client.ts';
 import { currentUser } from '../auth.ts';
-import { publicUserSelect, requireProjectAccess } from '../access.ts';
+import { projectWork, projectWorkSelect, publicUserSelect, requireProjectAccess, taskProgressCount } from '../access.ts';
 import { notFound } from '../errors.ts';
 import { date, id, idParam, parseBody, requiredText, text } from '../validation.ts';
 
@@ -39,12 +39,13 @@ export const getProjects = async (req: Request, res: Response) => {
             Customer: true,
             FinishDate: true,
             Finished: true,
+            ...projectWorkSelect,
         },
         orderBy: {
             Name: 'asc',
         },
     });
-    return res.status(200).send(projects);
+    return res.status(200).send(projects.map(projectWork));
 };
 
 export const getProject = async (req: Request, res: Response) => {
@@ -60,10 +61,11 @@ export const getProject = async (req: Request, res: Response) => {
                     User: { select: publicUserSelect },
                 },
             },
+            ...projectWorkSelect,
         },
     });
     if (!project) throw notFound();
-    return res.status(200).send(project);
+    return res.status(200).send(projectWork(project));
 };
 
 const updateProjectSchema = z.object({
@@ -134,7 +136,7 @@ export const getProjectStats = async (req: Request, res: Response) => {
             FinishDate: true,
             DurationHours: true,
             DurationMinutes: true,
-            _count: { select: { WorkingUsers: true, UserTaskTime: true } },
+            ...taskProgressCount,
             User_Task: { select: { UserID: true, User: { select: { ID: true, FirstName: true, LastName: true } } } },
             UserTaskTime: { select: { UserID: true, StartTime: true, StopTime: true } },
         },

@@ -29,7 +29,7 @@ export const WorkPlanChart = (props) => {
         const finishDate = dayjs(task.FinishDate);
         const hour = finishDate.diff(finishDate.startOf('day'), 'hour', true);
         data[finishDate.isoWeekday() - 1] = [hour - task.DurationHours - task.DurationMinutes / 60, hour];
-        // the bar's colour shows the task's status (finished green, in progress orange, todo blue)
+        // the bar's colour shows the task's status (finished green, in progress orange, todo blue, blocked red)
         const bar = colors.workPlan[taskStatus(task)];
         // the task travels with its bar, for the tooltip and the click
         return { data, task, borderColor: bar.border, backgroundColor: bar.background, hoverBackgroundColor: bar.hover };
@@ -68,6 +68,8 @@ export const WorkPlanChart = (props) => {
         borderSkipped: false,
         interaction: { mode: 'nearest', intersect: true },
         plugins: {
+            // one series: no legend (PlannedActualChart registers the Legend plugin for every chart)
+            legend: { display: false },
             tooltip: {
                 ...chartTooltip(colors),
                 callbacks: {

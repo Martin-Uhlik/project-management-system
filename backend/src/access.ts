@@ -57,10 +57,27 @@ export const requireTaskAccessByID = async (user: SessionUser, taskID: number) =
 };
 
 // Added to a task query (include or select): how many users work on the task now and how many time records it has,
-// which make an unfinished task "in progress" in the browser (taskStatus)
+// which make an unfinished task "in progress" in the browser (taskStatus), and how many of its prerequisites are not
+// finished yet, which make it "blocked". (Task.Successors are the dependencies in which the task is the successor,
+// i.e. its prerequisites - see TaskDependency.)
 export const taskProgressCount = {
-    _count: { select: { WorkingUsers: true, UserTaskTime: true } },
+    _count: { select: { WorkingUsers: true, UserTaskTime: true, Successors: { where: { Predecessor: { Finished: false } } } } },
 } as const;
+
+// Added to a project query (include or select): its tasks someone has the timer running on, with when they started.
+// Pass the result through projectWork, which turns them into WorkingSince (see projectStatus in the browser).
+export const projectWorkSelect = {
+    Task: { where: { WorkingUsers: { some: {} } }, select: { WorkingUsers: { select: { WorkStartTime: true } } } },
+} as const;
+
+// A project queried with projectWorkSelect, with the tasks replaced by WorkingSince: when the earliest of the timers
+// running on its tasks started (null when nobody works on the project now)
+export const projectWork = <P extends { Task: { WorkingUsers: { WorkStartTime: Date | null }[] }[] }>(project: P) => {
+    const { Task, ...rest } = project;
+    const starts = Task.flatMap((task) => task.WorkingUsers.map((user) => user.WorkStartTime)).filter((start) => start !== null);
+    const WorkingSince = starts.length ? new Date(Math.min(...starts.map((start) => start.getTime()))) : null;
+    return { ...rest, WorkingSince };
+};
 
 // The user fields that are safe to send to the browser (never the password hash or salt)
 export const publicUserSelect = {

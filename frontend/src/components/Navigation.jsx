@@ -1,15 +1,20 @@
 import React from 'react';
 import { NavigationItem } from './utils/NavigationItem';
-import { useAtom } from 'jotai';
-import { showNavAtom } from '../state/atoms';
+import { useAtom, useAtomValue } from 'jotai';
+import { showNavAtom, userAtom } from '../state/atoms';
 
 function Navigation() {
+    const user = useAtomValue(userAtom);
     const menuItems = [
         { key: 0, to: '/auth/overview', icon: '/icons/home.svg', text: 'Přehled' },
         { key: 2, to: '/auth/projects', icon: '/icons/folder-multiple.svg', text: 'Projekty' },
         { key: 3, to: '/auth/inventory', icon: '/icons/package-variant.svg', text: 'Sklad' },
         { key: 4, to: '/auth/machines', icon: '/icons/robot-industrial.svg', text: 'Stroje' },
-        { key: 5, to: '/auth/users', icon: '/icons/account-multiple.svg', text: 'Pracovníci' },
+        { key: 7, to: '/auth/stats', icon: '/icons/chart-box.svg', text: 'Statistiky' },
+    ];
+    // at the bottom: managing the workers' accounts (admins only) and the user's own settings
+    const bottomItems = [
+        ...(user?.UserType === 'ADMIN' ? [{ key: 5, to: '/auth/users', icon: '/icons/account-multiple.svg', text: 'Pracovníci' }] : []),
         { key: 6, to: '/auth/settings', icon: '/icons/cog.svg', text: 'Nastavení' },
     ];
     const createItem = (item) => {
@@ -48,9 +53,9 @@ function Navigation() {
             <nav id='main-navigation' aria-label='Hlavní menu' className={'nav' + (showNav ? ' nav__visible' : '')}>
                 <div className='nav_items'>
                     <NavigationItem key={menuItems[0].key} to={menuItems[0].to} icon={menuItems[0].icon} text={menuItems[0].text} />
-                    {menuItems.slice(1, -1).map(createItem)}
+                    {menuItems.slice(1).map(createItem)}
                 </div>
-                {createItem(menuItems[menuItems.length - 1])}
+                {bottomItems.map(createItem)}
             </nav>
         </>
     );

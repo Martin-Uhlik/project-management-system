@@ -12,6 +12,7 @@ import * as machines from './resources/machines.ts';
 import * as material from './resources/material.ts';
 import * as materialRequirements from './resources/materialRequirements.ts';
 import * as personalTasks from './resources/personalTasks.ts';
+import * as stats from './resources/stats.ts';
 
 // The addresses the frontend is opened from (FRONTEND_ORIGIN, comma separated). Only they may call the API from a
 // browser: CORS answers them alone, and requests that change data from any other origin are refused.
@@ -63,6 +64,10 @@ export const createApp = (options: AppOptions = {}) => {
     app.post('/auth/users', ADMIN, users.createUser);
     app.get('/auth/users/:userID', users.getUser);
     app.patch('/auth/users/:userID', users.updateUser);
+
+    // worker statistics (whose: see stats.ts)
+    app.get('/auth/stats/people', stats.getStatsPeople);
+    app.get('/auth/stats/users/:userID', stats.getUserStats);
 
     // project management
     app.get('/auth/projects', projects.getProjects);

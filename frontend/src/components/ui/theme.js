@@ -50,10 +50,11 @@ export const theme = createTheme(
     pickersCsCZ,
 );
 
-// The colour of each task status (see taskStatus.js): finished green, in progress orange, todo blue; lighter on dark backgrounds
+// The colour of each task status (see taskStatus.js): finished green, in progress orange, todo blue, blocked (unfinished
+// prerequisites) red; lighter on dark backgrounds
 export const taskStatusColors = {
-    light: { finished: '#198754', inProgress: '#e8590c', todo: '#1c7ed6' },
-    dark: { finished: '#51cf66', inProgress: '#ff922b', todo: '#4dabf7' },
+    light: { finished: '#198754', inProgress: '#e8590c', todo: '#1c7ed6', blocked: '#e03131' },
+    dark: { finished: '#51cf66', inProgress: '#ff922b', todo: '#4dabf7', blocked: '#ff6b6b' },
 };
 
 // The colour of a worker's state in the workers table: working green (with the running timer), disabled grey

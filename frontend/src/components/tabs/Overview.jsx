@@ -51,13 +51,11 @@ export const Overview = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [tick]);
 
-    const workTimeDataset = [0, 0, 0, 0, 0, 0, 0];
-    user?.WorkTime.map((time) => {
+    // minutes worked on each day of this week (Monday first)
+    const workTimeMinutes = [0, 0, 0, 0, 0, 0, 0];
+    user?.WorkTime.forEach((time) => {
         const startTime = dayjs(time.StartTime);
-        const endTime = dayjs(time.StopTime);
-        const hours = endTime.diff(startTime, 'hour', true);
-        workTimeDataset[startTime.isoWeekday() - 1] += hours;
-        return { hours: hours, day: startTime.isoWeekday() - 1 };
+        workTimeMinutes[startTime.isoWeekday() - 1] += dayjs(time.StopTime ?? undefined).diff(startTime, 'minute', true);
     });
 
     return (
@@ -83,7 +81,7 @@ export const Overview = () => {
                             <h1>Odpracovaný čas</h1>
                             <div className='content-box_chart-wrapper-outer'>
                                 <div className='content-box_chart-wrapper-inner'>
-                                    <WorkTimeChart dataset={workTimeDataset} />
+                                    <WorkTimeChart minutes={workTimeMinutes} />
                                 </div>
                             </div>
                         </div>

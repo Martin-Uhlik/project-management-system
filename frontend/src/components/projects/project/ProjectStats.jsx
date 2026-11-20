@@ -10,56 +10,20 @@ import { getAuthHeader } from '../../../Auth';
 import { handleAxiosError } from '../../../errorHandler';
 import { PlannedActualChart } from '../../utils/PlannedActualChart';
 import {
+    StyledSection,
     StyledStatTile,
     StyledStatus,
     StyledTable,
     StyledTableCell,
     StyledTableRow,
+    StyledTimeDifference,
+    StyledTimeUsage,
     formatMinutes,
     taskStatus,
+    timeUsage,
     useChartColors,
     useStatusColors,
 } from '../../ui';
-
-const percent = (actual, planned) => (planned > 0 ? Math.round((actual / planned) * 100) : null);
-
-// actual - planned, signed, red when over the plan
-const Difference = ({ planned, actual }) => {
-    const difference = actual - planned;
-    if (!planned && !actual) return '–';
-    return (
-        <Typography component='span' variant='inherit' sx={{ color: difference > 0 ? 'error.main' : 'text.secondary', fontWeight: difference > 0 ? 600 : 400 }}>
-            {difference > 0 ? '+' : ''}
-            {formatMinutes(difference)}
-        </Typography>
-    );
-};
-
-const Usage = ({ planned, actual }) => {
-    const value = percent(actual, planned);
-    if (value === null) return '–';
-    return (
-        <Typography component='span' variant='inherit' sx={{ color: value > 100 ? 'error.main' : 'text.primary', fontWeight: 600 }}>
-            {value} %
-        </Typography>
-    );
-};
-
-const Section = ({ title, caption, children }) => (
-    <div className='content-box' style={{ height: 'auto', flexBasis: 'auto', flexGrow: 0 }}>
-        <div className='content-box_content' style={{ overflow: 'visible' }}>
-            <div>
-                <h2 style={{ margin: 0 }}>{title}</h2>
-                {caption ? (
-                    <Typography variant='body2' sx={{ color: 'text.secondary', mt: 0.5 }}>
-                        {caption}
-                    </Typography>
-                ) : null}
-            </div>
-            {children}
-        </div>
-    </div>
-);
 
 // The project's statistics (useProjectStats loads them, also for the task list): planned time (the tasks' estimates) against the time the workers logged on its tasks,
 // for the whole project, per worker and per task
@@ -94,6 +58,7 @@ export const ProjectStats = () => {
         return {
             finished: statuses.filter((status) => status === 'finished').length,
             inProgress: statuses.filter((status) => status === 'inProgress').length,
+            blocked: statuses.filter((status) => status === 'blocked').length,
             unassigned: Math.max(0, stats.PlannedMinutes - assignedPlan),
             withoutEstimate: stats.Tasks.filter((task) => !task.PlannedMinutes).length,
         };
@@ -101,7 +66,7 @@ export const ProjectStats = () => {
 
     if (!stats) return null;
 
-    const usage = percent(stats.ActualMinutes, stats.PlannedMinutes);
+    const usage = timeUsage(stats.ActualMinutes, stats.PlannedMinutes);
     const remaining = stats.PlannedMinutes - stats.ActualMinutes;
     const workerName = (user) => `${user.FirstName} ${user.LastName}`;
 
@@ -136,11 +101,11 @@ export const ProjectStats = () => {
                     label='Dokončené úkoly'
                     value={`${summary.finished} / ${stats.Tasks.length}`}
                     accent={statusColors.finished}
-                    caption={`${summary.inProgress} rozpracováno`}
+                    caption={`${summary.inProgress} rozpracováno, ${summary.blocked} čeká na předchozí`}
                 />
             </Box>
 
-            <Section
+            <StyledSection
                 title='Pracovníci'
                 caption={`Plán úkolu se dělí rovným dílem mezi přiřazené pracovníky.${
                     summary.unassigned ? ` Nepřiřazeno: ${formatMinutes(summary.unassigned)}.` : ''
@@ -176,19 +141,19 @@ export const ProjectStats = () => {
                                     <StyledTableCell align='right'>{formatMinutes(worker.PlannedMinutes)}</StyledTableCell>
                                     <StyledTableCell align='right'>{formatMinutes(worker.ActualMinutes)}</StyledTableCell>
                                     <StyledTableCell align='right'>
-                                        <Difference planned={worker.PlannedMinutes} actual={worker.ActualMinutes} />
+                                        <StyledTimeDifference planned={worker.PlannedMinutes} actual={worker.ActualMinutes} />
                                     </StyledTableCell>
                                     <StyledTableCell align='right'>
-                                        <Usage planned={worker.PlannedMinutes} actual={worker.ActualMinutes} />
+                                        <StyledTimeUsage planned={worker.PlannedMinutes} actual={worker.ActualMinutes} />
                                     </StyledTableCell>
                                 </StyledTableRow>
                             ))}
                         </StyledTable>
                     </>
                 )}
-            </Section>
+            </StyledSection>
 
-            <Section title='Úkoly'>
+            <StyledSection title='Úkoly'>
                 <StyledTable
                     columns={[
                         { label: 'Úkol' },
@@ -208,16 +173,16 @@ export const ProjectStats = () => {
                                 <StyledTableCell align='right'>{task.PlannedMinutes ? formatMinutes(task.PlannedMinutes) : '–'}</StyledTableCell>
                                 <StyledTableCell align='right'>{formatMinutes(task.ActualMinutes)}</StyledTableCell>
                                 <StyledTableCell align='right'>
-                                    <Difference planned={task.PlannedMinutes} actual={task.ActualMinutes} />
+                                    <StyledTimeDifference planned={task.PlannedMinutes} actual={task.ActualMinutes} />
                                 </StyledTableCell>
                                 <StyledTableCell align='right'>
-                                    <Usage planned={task.PlannedMinutes} actual={task.ActualMinutes} />
+                                    <StyledTimeUsage planned={task.PlannedMinutes} actual={task.ActualMinutes} />
                                 </StyledTableCell>
                             </StyledTableRow>
                         );
                     })}
                 </StyledTable>
-            </Section>
+            </StyledSection>
         </Box>
     );
 };

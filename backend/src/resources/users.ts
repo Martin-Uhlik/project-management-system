@@ -6,6 +6,7 @@ import prisma from '../client.ts';
 import { currentUser, deleteUserSessions, hashPassword, hasRole, MIN_PASSWORD_LENGTH, requireSelf } from '../auth.ts';
 import { publicUserSelect, taskProgressCount } from '../access.ts';
 import { badRequest, forbidden } from '../errors.ts';
+import { visibleStatsUserIDs } from './stats.ts';
 import { date, id, idParam, parseBody, requiredText, sentKeys } from '../validation.ts';
 
 dayjs.extend(isoWeek);
@@ -42,12 +43,19 @@ export const createUser = async (req: Request, res: Response) => {
     return res.status(200).send();
 };
 
+// Anyone may see a worker's public details; their work time and tasks only the worker, their managers and admins
+// (the same people as for the statistics)
 export const getUser = async (req: Request, res: Response) => {
+    const userID = idParam(req, 'userID');
+    if (!(await visibleStatsUserIDs(currentUser(res))).includes(userID)) {
+        const user = await prisma.user.findUniqueOrThrow({ where: { ID: userID }, select: publicUserSelect });
+        return res.status(200).send(user);
+    }
     const start = dayjs().startOf('isoWeek');
     const stop = dayjs().endOf('isoWeek');
     const user = await prisma.user.findUniqueOrThrow({
         where: {
-            ID: idParam(req, 'userID'),
+            ID: userID,
         },
         select: {
             ...publicUserSelect,
