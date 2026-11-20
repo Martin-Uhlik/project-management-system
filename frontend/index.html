@@ -9,11 +9,16 @@
 
         <title>ADAM DESIGN</title>
         <script>
-            // the light or dark look before the app loads, so the page doesn't flash white (same rule as components/ui/theme.js)
+            // the light or dark look and the text size before the app loads, so the page doesn't flash or jump
+            // (same rules as components/ui/theme.js and useFontSize.js)
             try {
                 var mode = localStorage.getItem('mui-mode') || 'system';
                 if (mode === 'system') mode = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
                 document.documentElement.setAttribute('data-theme', mode);
+                // the text size (components/ui/useFontSize.js)
+                var sizes = { small: '87.5%', medium: '100%', large: '112.5%' };
+                var size = localStorage.getItem('font-size');
+                if (sizes[size]) document.documentElement.style.fontSize = sizes[size];
             } catch (e) {}
         </script>
     </head>

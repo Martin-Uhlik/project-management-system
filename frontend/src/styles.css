@@ -356,6 +356,12 @@ button {
     width: min(50rem, 100%);
 }
 
+/* a smaller heading inside a box (Settings) */
+.settings_subtitle {
+    margin: 0.5rem 0 -0.5rem;
+    font-size: 1.15rem;
+}
+
 /* a short explanation under a box's title (Settings) */
 .settings_description {
     margin: 0;
