@@ -1,22 +1,33 @@
 import type { Request, Response } from 'express';
-import { getToken } from './utilities.ts';
+import { z } from 'zod';
 import prisma from '../client.ts';
-import { verifyUser } from '../auth.ts';
-import { exceptionHandler } from '../exceptionHandler.ts';
+import { publicUserSelect } from '../access.ts';
+import { notFound } from '../errors.ts';
+import { date, id, idParam, parseBody, requiredText, text } from '../validation.ts';
 
-export const createProject = exceptionHandler(async (req: Request, res: Response) => {
-    await verifyUser(getToken(req));
+const projectFields = {
+    Name: requiredText(200),
+    Description: text(5000).nullable().optional(),
+    Customer: text(200).nullable().optional(),
+    FinishDate: date.nullable().optional(),
+    OwnerID: id,
+};
+
+const createProjectSchema = z.object(projectFields);
+
+// ADMIN and MANAGER (see app.ts)
+export const createProject = async (req: Request, res: Response) => {
+    const project = parseBody(createProjectSchema, req.body);
     await prisma.project.create({
         data: {
-            ...req.body,
+            ...project,
             Finished: false,
         },
     });
     return res.status(200).send();
-});
+};
 
-export const getProjects = exceptionHandler(async (req: Request, res: Response) => {
-    await verifyUser(getToken(req));
+export const getProjects = async (req: Request, res: Response) => {
     const projects = await prisma.project.findMany({
         where: {
             Deleted: false,
@@ -33,60 +44,72 @@ export const getProjects = exceptionHandler(async (req: Request, res: Response) 
         },
     });
     return res.status(200).send(projects);
-});
+};
 
-export const getProject = exceptionHandler(async (req: Request, res: Response) => {
-    await verifyUser(getToken(req));
-    const project = await prisma.project.findUnique({
+export const getProject = async (req: Request, res: Response) => {
+    const project = await prisma.project.findFirst({
         where: {
-            ID: +req.params.projectID,
+            ID: idParam(req, 'projectID'),
+            Deleted: false,
         },
         include: {
-            Memeber: {
+            Member: {
                 select: {
-                    User: true,
+                    User: { select: publicUserSelect },
                 },
             },
         },
     });
+    if (!project) throw notFound();
     return res.status(200).send(project);
+};
+
+const updateProjectSchema = z.object({
+    Name: projectFields.Name.optional(),
+    Description: projectFields.Description,
+    Customer: projectFields.Customer,
+    FinishDate: projectFields.FinishDate,
+    Finished: z.boolean().optional(),
+    OwnerID: id.optional(),
+    Members: z
+        .array(z.object({ UserID: id }))
+        .max(1000)
+        .optional(),
 });
 
-export const updateProject = exceptionHandler(async (req: Request, res: Response) => {
-    await verifyUser(getToken(req));
+// ADMIN and MANAGER (see app.ts)
+export const updateProject = async (req: Request, res: Response) => {
+    const projectID = idParam(req, 'projectID');
+    const { Members, ...data } = parseBody(updateProjectSchema, req.body);
     await prisma.project.update({
         where: {
-            ID: +req.params.projectID,
+            ID: projectID,
+            Deleted: false,
         },
         data: {
-            Name: req.body.Name,
-            Description: req.body.Description,
-            Customer: req.body.Customer,
-            FinishDate: req.body.FinishDate,
-            Finished: req.body.Finished,
-            OwnerID: req.body.OwnerID,
-            Memeber: {
-                deleteMany: {
-                    ProjectID: +req.params.projectID,
+            ...data,
+            ...(Members && {
+                Member: {
+                    deleteMany: {},
+                    createMany: {
+                        data: [...new Set(Members.map((member) => member.UserID))].map((UserID) => ({ UserID })),
+                    },
                 },
-                createMany: {
-                    data: req.body.Members,
-                },
-            },
+            }),
         },
     });
     return res.status(200).send();
-});
+};
 
-export const removeProject = exceptionHandler(async (req: Request, res: Response) => {
-    await verifyUser(getToken(req));
+// ADMIN only (see app.ts)
+export const removeProject = async (req: Request, res: Response) => {
     await prisma.project.update({
         where: {
-            ID: +req.params.projectID,
+            ID: idParam(req, 'projectID'),
         },
         data: {
             Deleted: true,
         },
     });
     return res.status(200).send();
-});
+};

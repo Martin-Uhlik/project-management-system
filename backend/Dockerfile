@@ -30,9 +30,12 @@ ENV NODE_ENV=production
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
+# the migrations, applied to the database on every start (prisma migrate deploy only runs the ones not applied yet)
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/prisma.config.ts ./
 # uploaded task files live here (bind-mounted from the host in docker-compose.yml)
 RUN mkdir -p data && chown node:node data
 
 USER node
 EXPOSE 4000
-CMD ["node", "dist/index.js"]
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/index.js"]

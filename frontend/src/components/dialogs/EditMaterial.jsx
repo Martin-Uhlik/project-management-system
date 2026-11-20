@@ -4,7 +4,8 @@ import { useAtom, useSetAtom } from 'jotai';
 import { dialogAtom, notificationsAtom, tickAtom } from '../../state/atoms';
 import axios from 'axios';
 import { getBackendAddress } from '../../config';
-import { getAuthHeader, getUserID } from '../../Auth';
+import { getAuthHeader } from '../../Auth';
+import { RestrictedComponent } from '../utils/RestrictedComponent';
 import moment from 'moment';
 import { handleAxiosError } from '../../errorHandler';
 
@@ -49,7 +50,6 @@ export const EditMaterial = () => {
                 getBackendAddress(`/auth/material/${dialog.data.material.ID}/event`),
                 {
                     Count: +amount,
-                    TargetUserID: +getUserID(),
                     EventType: eventType,
                     TargetTaskID: +dialog.data.taskID || null,
                 },
@@ -99,31 +99,33 @@ export const EditMaterial = () => {
                         </button>
                     </div>
                 </form>
-                <hr className='hline' />
-                <form className='d-flex flex-column gap-3'>
-                    <div className='form-group'>
-                        <label htmlFor='name'>Název:</label>
-                        <input
-                            className='form-control'
-                            type='text'
-                            id='name'
-                            name='name'
-                            placeholder='Zadejte název'
-                            value={name}
-                            onChange={(event) => {
-                                setName(event.target.value);
-                            }}
-                        />
-                    </div>
-                    <div className='d-flex gap-3 justify-content-end'>
-                        <button className='btn btn-danger' onClick={handleCancel}>
-                            Zrušit
-                        </button>
-                        <button className='btn btn-dark' onClick={handleSubmit}>
-                            Změnit
-                        </button>
-                    </div>
-                </form>
+                <RestrictedComponent types={['ADMIN', 'MANAGER']}>
+                    <hr className='hline' />
+                    <form className='d-flex flex-column gap-3'>
+                        <div className='form-group'>
+                            <label htmlFor='name'>Název:</label>
+                            <input
+                                className='form-control'
+                                type='text'
+                                id='name'
+                                name='name'
+                                placeholder='Zadejte název'
+                                value={name}
+                                onChange={(event) => {
+                                    setName(event.target.value);
+                                }}
+                            />
+                        </div>
+                        <div className='d-flex gap-3 justify-content-end'>
+                            <button className='btn btn-danger' onClick={handleCancel}>
+                                Zrušit
+                            </button>
+                            <button className='btn btn-dark' onClick={handleSubmit}>
+                                Změnit
+                            </button>
+                        </div>
+                    </form>
+                </RestrictedComponent>
             </div>
         </div>
     );

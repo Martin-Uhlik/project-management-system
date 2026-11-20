@@ -4,7 +4,7 @@ import { useAtom, useSetAtom } from 'jotai';
 import { dialogAtom, notificationsAtom, showNavAtom, userAtom } from '../state/atoms';
 import { Timer } from './Timer';
 import axios from 'axios';
-import { getAuthHeader, getUserID, setAuthCookie } from '../Auth';
+import { getAuthHeader, getUserID } from '../Auth';
 import { getBackendAddress } from '../config';
 import { handleAxiosError } from '../errorHandler';
 
@@ -28,9 +28,8 @@ export const Header = () => {
     }, []);
 
     const logout = () => {
-        axios.post(getBackendAddress('/auth/logout'), {}, getAuthHeader()).then((response) => {
-            setAuthCookie(response.data.cookie);
-            setAuthCookie(response.data.userId);
+        axios.post(getBackendAddress('/auth/logout'), {}, getAuthHeader()).then(() => {
+            // the backend has cleared the session cookies
             navigate('/');
         });
     };

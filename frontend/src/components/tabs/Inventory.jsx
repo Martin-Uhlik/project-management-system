@@ -5,7 +5,7 @@ import { MaterialTable } from '../utils/tables/MaterialTable';
 import { MaterialRequirementTable } from '../utils/tables/MaterialRequirementTable';
 import axios from 'axios';
 import { getBackendAddress } from '../../config';
-import { getAuthHeader, getUserID } from '../../Auth';
+import { getAuthHeader } from '../../Auth';
 import moment from 'moment/moment';
 import { handleAxiosError } from '../../errorHandler';
 import { RestrictedComponent } from '../utils/RestrictedComponent';
@@ -27,7 +27,6 @@ export const Inventory = () => {
                 {
                     Name: props.name,
                     Count: +props.count,
-                    TargetUserID: +getUserID(),
                 },
                 getAuthHeader(),
             )
@@ -49,7 +48,6 @@ export const Inventory = () => {
                     Count: +props.count,
                     Price: +props.price,
                     NeededDate: props.date,
-                    TargetUserID: +getUserID(),
                 },
                 getAuthHeader(),
             )

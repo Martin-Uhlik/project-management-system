@@ -44,7 +44,7 @@ export const MyTask = (props) => {
                     {props.task.Name}
                 </button>
             </td>
-            <td>{moment(props.task.FinifhDate).format('L')}</td>
+            <td>{moment(props.task.FinishDate).format('L')}</td>
             <td>{props.task.Description}</td>
         </tr>
     );

@@ -7,7 +7,6 @@ import { getAuthHeader } from '../../../Auth';
 import { handleAxiosError } from '../../../errorHandler';
 import { useAtom } from 'jotai';
 import { notificationsAtom, tickAtom } from '../../../state/atoms';
-import Cookies from 'js-cookie';
 import moment from 'moment/moment';
 
 export const TaskOutputFiles = () => {
@@ -44,12 +43,7 @@ export const TaskOutputFiles = () => {
         data.append('file', selectedFile);
 
         axios
-            .post(getBackendAddress(`/auth/projects/${projectID}/tasks/${taskID}/output-files`), data, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                    Authorization: `Bearer ${Cookies.get('auth')}`,
-                },
-            })
+            .post(getBackendAddress(`/auth/projects/${projectID}/tasks/${taskID}/output-files`), data, getAuthHeader())
             .then(() => {
                 setTick(moment());
             })

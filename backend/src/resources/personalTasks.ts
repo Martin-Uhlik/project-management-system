@@ -1,51 +1,78 @@
 import type { Request, Response } from 'express';
-import { getToken } from './utilities.ts';
+import { z } from 'zod';
 import prisma from '../client.ts';
-import { verifyUser } from '../auth.ts';
-import { exceptionHandler } from '../exceptionHandler.ts';
+import { requireSelf } from '../auth.ts';
+import { notFound } from '../errors.ts';
+import { date, idParam, parseBody, requiredText, text } from '../validation.ts';
 
-export const createTask = exceptionHandler(async (req: Request, res: Response) => {
-    await verifyUser(getToken(req));
+// Personal tasks are private: only their owner can see or change them
+
+const taskFields = {
+    Name: requiredText(200),
+    Description: text(5000).default(''),
+    FinishDate: date,
+};
+
+const createSchema = z.object({ task: z.object(taskFields) });
+
+export const createTask = async (req: Request, res: Response) => {
+    const userID = idParam(req, 'userID');
+    requireSelf(res, userID);
+    const { task } = parseBody(createSchema, req.body);
     await prisma.privateTask.create({
         data: {
-            ...req.body.task,
+            ...task,
             Finished: false,
-            UserID: +req.params.userID,
+            UserID: userID,
         },
     });
     return res.status(200).send();
-});
+};
 
-export const getTasks = exceptionHandler(async (req: Request, res: Response) => {
-    await verifyUser(getToken(req));
+export const getTasks = async (req: Request, res: Response) => {
+    const userID = idParam(req, 'userID');
+    requireSelf(res, userID);
     const tasks = await prisma.privateTask.findMany({
         where: {
-            UserID: +req.params.userID,
+            UserID: userID,
         },
     });
     return res.status(200).send(tasks);
+};
+
+const updateSchema = z.object({
+    task: z.object({
+        Name: taskFields.Name.optional(),
+        Description: text(5000).optional(),
+        FinishDate: date.optional(),
+        Finished: z.boolean().optional(),
+    }),
 });
 
-export const updateTask = exceptionHandler(async (req: Request, res: Response) => {
-    await verifyUser(getToken(req));
-    const tasks = await prisma.privateTask.update({
+export const updateTask = async (req: Request, res: Response) => {
+    const userID = idParam(req, 'userID');
+    requireSelf(res, userID);
+    const { task } = parseBody(updateSchema, req.body);
+    const updated = await prisma.privateTask.updateManyAndReturn({
         where: {
-            ID: +req.params.taskID,
+            ID: idParam(req, 'taskID'),
+            UserID: userID,
         },
-        data: {
-            ...req.body.task,
-        },
+        data: task,
     });
-    return res.status(200).send(tasks);
-});
+    if (updated.length === 0) throw notFound();
+    return res.status(200).send(updated[0]);
+};
 
-export const removeFinished = exceptionHandler(async (req: Request, res: Response) => {
-    await verifyUser(getToken(req));
+// Deletes the user's finished personal tasks
+export const removeFinished = async (req: Request, res: Response) => {
+    const userID = idParam(req, 'userID');
+    requireSelf(res, userID);
     const tasks = await prisma.privateTask.deleteMany({
         where: {
-            ID: req.body.ID,
+            UserID: userID,
             Finished: true,
         },
     });
     return res.status(200).send(tasks);
-});
+};

@@ -1,5 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// The database schema. After changing it, create a migration: npm run db:migrate -- --name <what-changed>
+// (docs: https://pris.ly/d/prisma-schema)
 
 generator client {
   provider            = "prisma-client"
@@ -13,10 +13,13 @@ datasource db {
 
 model UserSession {
   ID                Int                   @id @default(autoincrement())
+  // SHA-256 of the session token; the token itself only lives in the browser's httpOnly cookie
   Token             String                @unique
   Expires           DateTime
   User              User                  @relation(name: "UserSessions", fields: [UserID], references: [ID])
   UserID            Int
+
+  @@index([UserID])
 }
 
 model User {
@@ -24,8 +27,10 @@ model User {
   UserName          String                @unique
   FirstName         String
   LastName          String
-  PasswordHash      String                @unique
-  PasswordSalt      String
+  // "scrypt$N$r$p$salt$hash"; accounts made before scrypt keep a SHA-256 hash in PasswordHash with its salt in
+  // PasswordSalt until their next sign-in, which upgrades them (PasswordSalt is then null)
+  PasswordHash      String
+  PasswordSalt      String?
   Enabled           Boolean
   Position          String
   WorkStartTime     DateTime?
@@ -38,8 +43,8 @@ model User {
   Sessions          UserSession[]         @relation(name: "UserSessions")
   OwnedProjects     Project[]             @relation(name: "ProjectOwner")
   OwnedTasks        Task[]                @relation(name: "TaskOwner")
-  Memeber           User_Project[]        @relation(name: "UserMember")
-  MaterialEvent     MaterialEvent[]       @relation(name: "Evenet_User")
+  Member            User_Project[]        @relation(name: "UserMember")
+  MaterialEvent     MaterialEvent[]       @relation(name: "Event_User")
   UserTaskTime      UserTaskTime[]        @relation(name: "TaskTime_User")
   User_Task         User_Task[]           @relation(name: "UserTask_User")
   WorkTime          WorkTime[]            @relation(name: "HasTime")
@@ -56,7 +61,7 @@ model PrivateTask {
   ID                Int                   @id @default(autoincrement())
   Name              String
   Description       String
-  FinifhDate        DateTime
+  FinishDate        DateTime
   Finished          Boolean
   User              User                  @relation(name: "HasPrivateTask", fields: [UserID], references: [ID])
   UserID            Int
@@ -108,7 +113,7 @@ model Task {
   Predecessors      TaskDependency[]      @relation(name: "Predecessor")
   Successors        TaskDependency[]      @relation(name: "Successor")
   WorkingUsers      User[]                @relation(name: "CurrentTask")
-  MaterialEvent     MaterialEvent[]       @relation(name: "Evenet_Task")
+  MaterialEvent     MaterialEvent[]       @relation(name: "Event_Task")
   MaterialRequest   MaterialRequest[]     @relation(name: "Request_Task")
   UserTaskTime      UserTaskTime[]        @relation(name: "TaskTime_Task")
   User_Task         User_Task[]           @relation(name: "UserTask_Task")
@@ -152,9 +157,9 @@ model MaterialRequest {
 model MaterialEvent {
   ID                Int                   @id @default(autoincrement())
   Count             Int
-  TargetTask        Task?                 @relation(name: "Evenet_Task", fields: [TargetTaskID], references: [ID])
+  TargetTask        Task?                 @relation(name: "Event_Task", fields: [TargetTaskID], references: [ID])
   TargetTaskID      Int?
-  TargetUser        User?                 @relation(name: "Evenet_User", fields: [TargetUserID], references: [ID])
+  TargetUser        User?                 @relation(name: "Event_User", fields: [TargetUserID], references: [ID])
   TargetUserID      Int?
   Material          Material              @relation(name: "Event_Material", fields: [MaterialID], references: [ID])
   MaterialID        Int
@@ -184,7 +189,7 @@ model Project {
   Deleted           Boolean               @default(false)
   Owner             User                  @relation(name: "ProjectOwner", fields: [OwnerID], references: [ID])
   OwnerID           Int
-  Memeber           User_Project[]        @relation(name: "ProjectMemeber")
+  Member            User_Project[]        @relation(name: "ProjectMember")
   Task              Task[]                @relation(name: "Tasks")
   TaskDependency    TaskDependency[]      @relation(name: "Dependencies")
 }
@@ -193,6 +198,6 @@ model User_Project {
   ID                Int                   @id @default(autoincrement())
   User              User                  @relation(name: "UserMember", fields: [UserID], references: [ID])
   UserID            Int
-  Project           Project               @relation(name: "ProjectMemeber", fields: [ProjectID], references: [ID])
+  Project           Project               @relation(name: "ProjectMember", fields: [ProjectID], references: [ID])
   ProjectID         Int
 }

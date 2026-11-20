@@ -1,21 +1,24 @@
 import type { Request, Response } from 'express';
-import { getToken } from './utilities.ts';
+import { z } from 'zod';
 import prisma from '../client.ts';
-import { verifyUser } from '../auth.ts';
-import { exceptionHandler } from '../exceptionHandler.ts';
+import { notFound } from '../errors.ts';
+import { idParam, parseBody, requiredText, text } from '../validation.ts';
 
-export const createMachine = exceptionHandler(async (req: Request, res: Response) => {
-    await verifyUser(getToken(req));
-    await prisma.machine.create({
-        data: {
-            ...req.body,
-        },
-    });
-    return res.status(200).send();
+const createMachineSchema = z.object({
+    Name: requiredText(200),
+    Description: text(5000).nullable().optional(),
 });
 
-export const getMachines = exceptionHandler(async (req: Request, res: Response) => {
-    await verifyUser(getToken(req));
+// ADMIN only (see app.ts)
+export const createMachine = async (req: Request, res: Response) => {
+    const machine = parseBody(createMachineSchema, req.body);
+    await prisma.machine.create({
+        data: machine,
+    });
+    return res.status(200).send();
+};
+
+export const getMachines = async (req: Request, res: Response) => {
     const machines = await prisma.machine.findMany({
         where: {
             Deleted: false,
@@ -26,13 +29,13 @@ export const getMachines = exceptionHandler(async (req: Request, res: Response) 
         },
     });
     return res.status(200).send(machines);
-});
+};
 
-export const getMachine = exceptionHandler(async (req: Request, res: Response) => {
-    await verifyUser(getToken(req));
-    const machine = await prisma.machine.findUnique({
+export const getMachine = async (req: Request, res: Response) => {
+    const machine = await prisma.machine.findFirst({
         where: {
-            ID: +req.params.machineID,
+            ID: idParam(req, 'machineID'),
+            Deleted: false,
         },
         include: {
             Task: {
@@ -52,31 +55,33 @@ export const getMachine = exceptionHandler(async (req: Request, res: Response) =
             },
         },
     });
+    if (!machine) throw notFound();
     return res.status(200).send(machine);
-});
+};
 
-export const updateMachine = exceptionHandler(async (req: Request, res: Response) => {
-    await verifyUser(getToken(req));
+const updateMachineSchema = createMachineSchema.partial();
+
+// ADMIN and MANAGER (see app.ts)
+export const updateMachine = async (req: Request, res: Response) => {
     await prisma.machine.update({
         where: {
-            ID: +req.params.machineID,
+            ID: idParam(req, 'machineID'),
+            Deleted: false,
         },
-        data: {
-            ...req.body,
-        },
+        data: parseBody(updateMachineSchema, req.body),
     });
     return res.status(200).send();
-});
+};
 
-export const removeMachine = exceptionHandler(async (req: Request, res: Response) => {
-    await verifyUser(getToken(req));
+// ADMIN only (see app.ts)
+export const removeMachine = async (req: Request, res: Response) => {
     await prisma.machine.update({
         where: {
-            ID: +req.params.machineID,
+            ID: idParam(req, 'machineID'),
         },
         data: {
             Deleted: true,
         },
     });
     return res.status(200).send();
-});
+};

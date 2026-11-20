@@ -8,7 +8,6 @@ import { getBackendAddress } from '../../../config';
 import { getAuthHeader } from '../../../Auth';
 import moment from 'moment';
 import { handleAxiosError } from '../../../errorHandler';
-import Cookies from 'js-cookie';
 
 export const TaskInputFiles = () => {
     const props = useOutletContext();
@@ -45,12 +44,7 @@ export const TaskInputFiles = () => {
         data.append('file', selectedFile);
 
         axios
-            .post(getBackendAddress(`/auth/projects/${projectID}/tasks/${taskID}/input-files`), data, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                    Authorization: `Bearer ${Cookies.get('auth')}`,
-                },
-            })
+            .post(getBackendAddress(`/auth/projects/${projectID}/tasks/${taskID}/input-files`), data, getAuthHeader())
             .then(() => {
                 setTick(moment());
             })

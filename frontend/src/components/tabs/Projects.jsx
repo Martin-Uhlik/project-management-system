@@ -65,7 +65,7 @@ export const Projects = () => {
                 .then((response) => {
                     setProject(response.data);
                     setFinishDate(response.data.FinishDate);
-                    setSelectedUsers(response.data.Memeber.map((user) => user.User.ID));
+                    setSelectedUsers(response.data.Member.map((user) => user.User.ID));
                     setDescriptionValue(response.data.Description);
                     setFinished(response.data.Finished);
                 })

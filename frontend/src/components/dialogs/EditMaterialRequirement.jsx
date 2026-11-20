@@ -5,7 +5,8 @@ import { dialogAtom, notificationsAtom, tickAtom } from '../../state/atoms';
 import { CustomizedDateTimePicker } from '../utils/CustomizedDateTimePicker';
 import axios from 'axios';
 import { getBackendAddress } from '../../config';
-import { getAuthHeader, getUserID } from '../../Auth';
+import { getAuthHeader } from '../../Auth';
+import { RestrictedComponent } from '../utils/RestrictedComponent';
 import moment from 'moment';
 import { handleAxiosError } from '../../errorHandler';
 
@@ -50,19 +51,17 @@ export const EditMaterialRequirement = () => {
         event.preventDefault();
         const data = {
             Name: name,
-            Count: count,
+            Count: +count,
             Description: description,
             NeededDate: stopDateTime,
-            Price: price,
+            Price: +price,
         };
         patchRequirement(data);
     };
 
     const acceptRequirement = () => {
-        const data = {
-            AcceptedByID: +getUserID(),
-            AcceptedDate: moment(),
-        };
+        // the backend records who accepted it, and when
+        const data = { Accepted: true };
         patchRequirement(data);
     };
 
@@ -85,7 +84,6 @@ export const EditMaterialRequirement = () => {
                 {
                     Name: requirement.Name,
                     Count: +requirement.Count,
-                    TargetUserID: +getUserID(),
                 },
                 getAuthHeader(),
             )
@@ -106,19 +104,22 @@ export const EditMaterialRequirement = () => {
                 </h1>
                 <hr />
                 <div className='d-flex gap-3 justify-content-center'>
-                    {requirement.AcceptedByID ? (
-                        <button className='btn btn-success w-100' onClick={handleAddMaterial}>
-                            Přidat na sklad
+                    <RestrictedComponent types={['ADMIN', 'MANAGER']}>
+                        {requirement.AcceptedByID ? (
+                            <button className='btn btn-success w-100' onClick={handleAddMaterial}>
+                                Přidat na sklad
+                            </button>
+                        ) : (
+                            <button className='btn btn-dark w-100' onClick={acceptRequirement}>
+                                Schválit
+                            </button>
+                        )}
+                    </RestrictedComponent>
+                    <RestrictedComponent types={['ADMIN', 'MANAGER']} ids={[requirement.TargetUserID]}>
+                        <button className='btn btn-danger w-100' onClick={removeRequirement}>
+                            Odebrat
                         </button>
-                    ) : (
-                        <button className='btn btn-dark w-100' onClick={acceptRequirement}>
-                            Schválit
-                        </button>
-                    )}
-
-                    <button className='btn btn-danger w-100' onClick={removeRequirement}>
-                        Odebrat
-                    </button>
+                    </RestrictedComponent>
                 </div>
                 <hr className='hline' />
                 <form className='d-flex flex-column gap-3'>

@@ -1,54 +1,56 @@
 import type { Request, Response } from 'express';
-import prisma from '../client.ts';
-import { getToken } from './utilities.ts';
-import { calculateHash, calculateSalt, verifyUser } from '../auth.ts';
+import { z } from 'zod';
 import moment from 'moment';
-import { exceptionHandler } from '../exceptionHandler.ts';
+import prisma from '../client.ts';
+import { currentUser, deleteUserSessions, hashPassword, hasRole, MIN_PASSWORD_LENGTH, requireSelf } from '../auth.ts';
+import { publicUserSelect } from '../access.ts';
+import { badRequest, forbidden } from '../errors.ts';
+import { date, idParam, parseBody, requiredText, sentKeys } from '../validation.ts';
 
-export const createUser = exceptionHandler(async (req: Request, res: Response) => {
-    await verifyUser(getToken(req));
+const userType = z.enum(['ADMIN', 'MANAGER', 'USER']);
 
-    const user = req.body.user;
-    const salt = calculateSalt();
-    const hash = calculateHash(user.Password, salt);
+const createUserSchema = z.object({
+    user: z.object({
+        UserName: requiredText(100),
+        FirstName: requiredText(100),
+        LastName: requiredText(100),
+        Password: z.string().min(MIN_PASSWORD_LENGTH).max(1000),
+        Position: z.string().trim().max(200).default(''),
+        UserType: userType,
+    }),
+});
+
+// ADMIN only (see app.ts)
+export const createUser = async (req: Request, res: Response) => {
+    const { user } = parseBody(createUserSchema, req.body);
     await prisma.user.create({
         data: {
             UserName: user.UserName,
             FirstName: user.FirstName,
             LastName: user.LastName,
-            PasswordHash: hash,
-            PasswordSalt: salt,
+            PasswordHash: await hashPassword(user.Password),
             Enabled: true,
             Position: user.Position,
             UserType: user.UserType,
         },
     });
     return res.status(200).send();
-});
+};
 
-export const getUser = exceptionHandler(async (req: Request, res: Response) => {
-    await verifyUser(getToken(req));
+export const getUser = async (req: Request, res: Response) => {
     const start = moment().startOf('isoWeek');
     const stop = moment().endOf('isoWeek');
     const user = await prisma.user.findUniqueOrThrow({
         where: {
-            ID: +req.params.userID,
+            ID: idParam(req, 'userID'),
         },
         select: {
-            ID: true,
-            UserName: true,
-            FirstName: true,
-            LastName: true,
-            Enabled: true,
-            Position: true,
-            WorkStartTime: true,
-            UserType: true,
-            CurrentTaskID: true,
+            ...publicUserSelect,
             WorkTime: {
                 where: {
                     StartTime: {
-                        gte: new Date(start.toString()),
-                        lt: new Date(stop.toString()),
+                        gte: start.toDate(),
+                        lt: stop.toDate(),
                     },
                 },
             },
@@ -61,56 +63,77 @@ export const getUser = exceptionHandler(async (req: Request, res: Response) => {
     });
 
     return res.status(200).send(user);
-});
+};
 
-export const getUsers = exceptionHandler(async (req: Request, res: Response) => {
-    await verifyUser(getToken(req));
+export const getUsers = async (req: Request, res: Response) => {
     const users = await prisma.user.findMany({
-        select: {
-            ID: true,
-            UserName: true,
-            FirstName: true,
-            LastName: true,
-            Enabled: true,
-            Position: true,
-            WorkStartTime: true,
-            UserType: true,
-            CurrentTaskID: true,
-        },
+        where: { Deleted: false },
+        select: publicUserSelect,
     });
     return res.status(200).send(users);
-});
+};
 
-export const updateUser = exceptionHandler(async (req: Request, res: Response) => {
-    await verifyUser(getToken(req));
+// What an admin may change on an account; everyone may only start or stop their own work timer
+const adminUpdateSchema = z.object({
+    UserName: requiredText(100).optional(),
+    FirstName: requiredText(100).optional(),
+    LastName: requiredText(100).optional(),
+    Position: z.string().trim().max(200).optional(),
+    UserType: userType.optional(),
+    Enabled: z.boolean().optional(),
+    WorkStartTime: date.nullable().optional(),
+});
+const SELF_FIELDS = ['WorkStartTime'];
+
+export const updateUser = async (req: Request, res: Response) => {
+    const userID = idParam(req, 'userID');
+    const me = currentUser(res);
+    const keys = sentKeys(req.body);
+
+    if (!hasRole(me, 'ADMIN')) {
+        if (me.ID !== userID || keys.some((key) => !SELF_FIELDS.includes(key))) throw forbidden();
+    }
+    const data = parseBody(adminUpdateSchema, req.body);
+    // an admin can't lock themselves out
+    if (me.ID === userID && ((data.UserType && data.UserType !== 'ADMIN') || data.Enabled === false)) {
+        throw badRequest('Vlastní roli ani přístup nelze změnit.');
+    }
+
     await prisma.user.update({
-        where: {
-            ID: +req.params.userID,
-        },
-        data: {
-            ...req.body,
-        },
+        where: { ID: userID },
+        data,
     });
+    if (data.Enabled === false) {
+        await deleteUserSessions(userID);
+    }
     return res.status(200).send();
-});
+};
 
-export const logTime = exceptionHandler(async (req: Request, res: Response) => {
-    await verifyUser(getToken(req));
-    const user = await prisma.user.update({
-        where: {
-            ID: +req.params.userID,
-        },
-        data: {
-            WorkStartTime: null,
-        },
-    });
+const logTimeSchema = z
+    .object({
+        WorkStartTime: date,
+        WorkStopTime: date,
+    })
+    .refine((time) => time.WorkStopTime >= time.WorkStartTime, { message: 'Konec práce je před začátkem.', path: ['WorkStopTime'] });
 
-    await prisma.workTime.create({
-        data: {
-            StartTime: req.body.WorkStartTime,
-            StopTime: req.body.WorkStopTime,
-            UserID: user.ID,
-        },
-    });
+// Users log their own work time only
+export const logTime = async (req: Request, res: Response) => {
+    const userID = idParam(req, 'userID');
+    requireSelf(res, userID);
+    const time = parseBody(logTimeSchema, req.body);
+
+    await prisma.$transaction([
+        prisma.user.update({
+            where: { ID: userID },
+            data: { WorkStartTime: null },
+        }),
+        prisma.workTime.create({
+            data: {
+                StartTime: time.WorkStartTime,
+                StopTime: time.WorkStopTime,
+                UserID: userID,
+            },
+        }),
+    ]);
     return res.status(200).send();
-});
+};

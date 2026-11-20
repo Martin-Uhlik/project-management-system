@@ -4,7 +4,7 @@ import { useAtom, useSetAtom } from 'jotai';
 import { dialogAtom, notificationsAtom, tickAtom } from '../../../state/atoms';
 import axios from 'axios';
 import { getBackendAddress } from '../../../config';
-import { getAuthHeader, getUserID } from '../../../Auth';
+import { getAuthHeader } from '../../../Auth';
 import moment from 'moment';
 import { handleAxiosError } from '../../../errorHandler';
 import { MaterialTable } from '../../utils/tables/MaterialTable';
@@ -35,7 +35,6 @@ export const TaskMaterial = () => {
                     Count: +props.count,
                     Price: +props.price,
                     NeededDate: props.date,
-                    TargetUserID: +getUserID(),
                     TargetTaskID: +taskID,
                 },
                 getAuthHeader(),

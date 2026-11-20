@@ -1,6 +1,5 @@
 import { useNavigate } from 'react-router';
 import axios from 'axios';
-import { setAuthCookie } from '../Auth';
 import { getBackendAddress } from '../config';
 
 export const Login = () => {
@@ -13,9 +12,8 @@ export const Login = () => {
                 name: event.target.name.value,
                 password: event.target.password.value,
             })
-            .then((response) => {
-                setAuthCookie(response.data.cookie);
-                setAuthCookie(response.data.userId);
+            .then(() => {
+                // the backend has set the session cookies
                 navigate('/auth/overview');
             });
     };

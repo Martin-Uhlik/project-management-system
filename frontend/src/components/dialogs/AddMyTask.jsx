@@ -19,7 +19,7 @@ export const AddMyTask = () => {
 
     const handleSubmit = (event) => {
         event.preventDefault();
-        dialog.data.handleSubmit({ Name: name, Description: description, FinifhDate: stopDateTime });
+        dialog.data.handleSubmit({ Name: name, Description: description, FinishDate: stopDateTime });
         setDialog(null);
     };
 

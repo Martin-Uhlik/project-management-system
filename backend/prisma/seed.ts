@@ -3,19 +3,17 @@
 // The account comes from ADMIN_LOGIN / ADMIN_PASSWORD (defaults admin / admin, meant for a dev database only).
 import '../src/env.ts';
 import prisma from '../src/client.ts';
-import { calculateHash, calculateSalt } from '../src/auth.ts';
+import { hashPassword } from '../src/auth.ts';
 
 const userCount = await prisma.user.count();
 if (userCount === 0) {
     const login = process.env.ADMIN_LOGIN || 'admin';
-    const salt = calculateSalt();
     await prisma.user.create({
         data: {
             UserName: login,
             FirstName: 'Admin',
             LastName: 'Admin',
-            PasswordHash: calculateHash(process.env.ADMIN_PASSWORD || 'admin', salt),
-            PasswordSalt: salt,
+            PasswordHash: await hashPassword(process.env.ADMIN_PASSWORD || 'admin'),
             Enabled: true,
             Position: 'Administrátor',
             UserType: 'ADMIN',

@@ -1,4 +1,4 @@
-// Prisma CLI settings, used by: npx prisma generate / npm run db:push / npm run db:seed
+// Prisma CLI settings, used by: npx prisma generate / npm run db:migrate / npm run db:deploy / npm run db:seed
 import { defineConfig } from 'prisma/config';
 
 // DATABASE_URL comes from the environment, or from the .env in the repository root on a dev machine

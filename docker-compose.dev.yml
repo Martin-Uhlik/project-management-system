@@ -44,7 +44,7 @@ services:
     backend:
         <<: *node
         working_dir: /app
-        command: sh -c "([ node_modules/.package-lock.json -nt package-lock.json ] || npm ci --no-audit --no-fund) && npx prisma generate && npm run db:push && npm run db:seed && npm run dev"
+        command: sh -c "([ node_modules/.package-lock.json -nt package-lock.json ] || npm ci --no-audit --no-fund) && npx prisma generate && npm run db:deploy && npm run db:seed && npm run dev"
         ports:
             - '127.0.0.1:${BACKEND_PORT:-4000}:4000'
         volumes:
@@ -53,6 +53,7 @@ services:
             - backend-node-modules:/app/node_modules
         environment:
             BACKEND_PORT: 4000
+            FRONTEND_ORIGIN: http://localhost:${FRONTEND_PORT:-3000}
             # the database container, not the localhost one from DATABASE_URL in .env (that is for npm run dev here)
             DATABASE_URL: postgres://${POSTGRES_USER:-pms}:${POSTGRES_PASSWORD:-pms}@db:5432/${POSTGRES_DB:-pms}
             # the first admin account, created only when there are no users yet

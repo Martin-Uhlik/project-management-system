@@ -141,7 +141,7 @@ export const TaskOverview = () => {
 
     const removeDependency = (id, dependencyType) => {
         axios
-            .delete(getBackendAddress(`/auth/projects/${projectID}/tasks/${taskID}/${dependencyType}`), { id: +id }, getAuthHeader())
+            .delete(getBackendAddress(`/auth/projects/${projectID}/tasks/${taskID}/${dependencyType}`), { ...getAuthHeader(), data: { id: +id } })
             .then(() => {
                 setTick(moment());
             })
