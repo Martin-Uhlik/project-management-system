@@ -1,3 +1,4 @@
+import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
 
@@ -25,9 +26,10 @@ export const StyledSubTabs = ({ children, sx }) => {
 
 const activeLine = 'inset 0 -3px 0 var(--mui-palette-primary-main)';
 
-// One tab: a link (component={Link} to=...) or a button. active: the tab that is open.
+// One tab: a link (component={Link} to=...) or a button. active: the tab that is open. count: a small red number
+// after the label (e.g. unread messages), hidden when 0
 // back: a red "back" tab, kept for pages that still want one (the page header has its own breadcrumb instead)
-export const StyledSubTab = ({ active, back, children, sx, ...props }) => {
+export const StyledSubTab = ({ active, back, count, children, sx, ...props }) => {
     return (
         <Button
             color='inherit'
@@ -68,7 +70,29 @@ export const StyledSubTab = ({ active, back, children, sx, ...props }) => {
             }}
             {...props}
         >
-            {children}
+            {count ? (
+                <Box component='span' sx={{ display: 'inline-flex', alignItems: 'center' }}>
+                    {children}
+                    <Box
+                        component='span'
+                        aria-label={`nepřečtené: ${count}`}
+                        sx={{
+                            ml: 1,
+                            minWidth: '1.25rem',
+                            px: 0.5,
+                            lineHeight: '1.25rem',
+                            fontSize: '0.75rem',
+                            fontWeight: 'bold',
+                            bgcolor: 'primary.main',
+                            color: '#ffffff',
+                        }}
+                    >
+                        {count > 99 ? '99+' : count}
+                    </Box>
+                </Box>
+            ) : (
+                children
+            )}
         </Button>
     );
 };

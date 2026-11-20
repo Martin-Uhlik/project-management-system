@@ -10,6 +10,7 @@ import { getBackendAddress } from '../config';
 import { handleAxiosError } from '../errorHandler';
 import { StyledUserMenu } from './ui';
 import { userRoleOptions } from './dialogs/AddUser';
+import { ChatButton } from './chat/ChatButton';
 
 export const Header = () => {
     const [user, setUser] = useAtom(userAtom);
@@ -75,6 +76,7 @@ export const Header = () => {
             </button>
             <Timer />
             <div className='logout'>
+                <ChatButton />
                 <StyledUserMenu
                     name={user ? `${user.FirstName} ${user.LastName}` : ''}
                     detail={[user?.UserName, roleLabel].filter(Boolean).join(' · ')}

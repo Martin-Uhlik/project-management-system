@@ -21,6 +21,7 @@ const onDark = {
 // The top of a detail page (a project, a task): where it sits (breadcrumbs back up), its title with a status, a line of
 // facts about it (StyledPageHeaderFact), buttons on the right, and the page's tabs along the bottom edge.
 // breadcrumbs: [{ label, to }] (links, relative to the page); title: null while loading shows a placeholder;
+// tabs may carry a count (e.g. unread chat messages), shown as a small red number after the label;
 // status: a task status ('finished', 'inProgress', 'todo', 'blocked') shown as a label next to the title, statusLabel: its text if not
 // the usual one; tabs: [{ label, to, value }] (links) with active = the open tab's value; or tabs: [{ label, value }] with onSelect(value)
 export const StyledPageHeader = ({ breadcrumbs = [], title, status, statusLabel, facts, actions, tabs, active, onSelect }) => {
@@ -90,11 +91,11 @@ export const StyledPageHeader = ({ breadcrumbs = [], title, status, statusLabel,
                 <StyledSubTabs sx={{ px: { xs: 0.5, md: 1.5 }, backgroundColor: 'transparent' }}>
                     {tabs.map((tab) =>
                         tab.to !== undefined ? (
-                            <StyledSubTab key={tab.value} component={Link} to={tab.to} active={active === tab.value}>
+                            <StyledSubTab key={tab.value} component={Link} to={tab.to} active={active === tab.value} count={tab.count}>
                                 {tab.label}
                             </StyledSubTab>
                         ) : (
-                            <StyledSubTab key={tab.value} active={active === tab.value} onClick={() => onSelect(tab.value)}>
+                            <StyledSubTab key={tab.value} active={active === tab.value} count={tab.count} onClick={() => onSelect(tab.value)}>
                                 {tab.label}
                             </StyledSubTab>
                         ),

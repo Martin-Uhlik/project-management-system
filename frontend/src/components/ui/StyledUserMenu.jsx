@@ -41,7 +41,11 @@ export const StyledUserMenu = ({ name, detail, settingsLink, onLogout }) => {
                 sx={{
                     color: 'var(--icons-primary)',
                     borderRadius: '0.5rem',
-                    px: 1.5,
+                    px: { xs: 0.5, md: 1.5 },
+                    minWidth: 0,
+                    // on a phone only the icon shows (no name, no arrow), leaving room for the timer and the chat icon
+                    '& .MuiButton-endIcon': { display: { xs: 'none', md: 'inherit' } },
+                    '& .MuiButton-startIcon': { mr: { xs: 0, md: 1 } },
                     backgroundColor: anchor ? 'rgba(255, 255, 255, 0.12)' : 'transparent',
                     '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.12)' },
                 }}

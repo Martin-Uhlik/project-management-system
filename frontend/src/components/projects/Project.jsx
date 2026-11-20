@@ -7,6 +7,7 @@ import { getBackendAddress } from '../../config';
 import { getAuthHeader } from '../../Auth';
 import { handleAxiosError } from '../../errorHandler';
 import React, { useState } from 'react';
+import Box from '@mui/material/Box';
 import { GraphEvents } from './project/GraphEvents';
 import { ControlsContainer, FullScreenControl, SigmaContainer, ZoomControl } from '@react-sigma/core';
 import '@react-sigma/core/lib/style.css';
@@ -17,6 +18,8 @@ import { RestrictedComponent } from '../utils/RestrictedComponent';
 import { ProjectStats } from './project/ProjectStats';
 import { ProjectTaskList } from './project/ProjectTaskList';
 import dayjs from '../../dayjs';
+import { reloadChatOverview, useChatUnread } from '../../state/chat';
+import { ChatConversation } from '../chat/ChatConversation';
 import {
     AccountIcon,
     BriefcaseIcon,
@@ -33,6 +36,7 @@ const tabs = [
     { label: 'Graf úkolů', value: 'graph' },
     { label: 'Seznam úkolů', value: 'tasks' },
     { label: 'Statistiky', value: 'stats' },
+    { label: 'Chat', value: 'chat' },
 ];
 
 export const Project = () => {
@@ -80,6 +84,8 @@ export const Project = () => {
     const statusLabel = status === 'inProgress' ? `${projectStatusLabels.inProgress} ${elapsed}` : status ? projectStatusLabels[status] : undefined;
     const deadline = project?.FinishDate ? dayjs(project.FinishDate) : null;
     const overdue = deadline && !project.Finished && deadline.isBefore(dayjs());
+    // the project's group chat (the "Chat" tab), with its unread messages on the tab
+    const chatUnread = useChatUnread('project', projectID);
 
     return (
         <>
@@ -103,46 +109,62 @@ export const Project = () => {
                         </>
                     ) : null
                 }
-                tabs={tabs}
+                tabs={tabs.map((item) => (item.value === 'chat' ? { ...item, count: chatUnread } : item))}
                 active={tab}
                 onSelect={selectTab}
             />
-            <div className='content-wrap_inner'>
-                {tab === 'stats' ? (
-                    <ProjectStats />
-                ) : tab === 'tasks' ? (
-                    <ProjectTaskList />
-                ) : (
-                    <div className='content-box'>
-                        <div className='content-box_content'>
-                            <SigmaContainer>
-                                <ControlsContainer position='top-left'>
-                                    <FullScreenControl />
-                                    <ZoomControl />
-                                </ControlsContainer>
-                                <ControlsContainer position='top-right'>
-                                    <TaskSearch selectNode={selectNode} />
-                                </ControlsContainer>
-                                <RestrictedComponent types={['ADMIN', 'MANAGER']}>
-                                    <ControlsContainer position='bottom-left'>
-                                        <StyledButton color={addNode ? 'error' : 'dark'} onClick={() => setAddNode(!addNode)}>
-                                            {addNode ? 'Zrušit' : 'Přidat úkol'}
-                                        </StyledButton>
+            {tab === 'chat' ? (
+                // the project's group chat fills the page under the header
+                <Box
+                    sx={{
+                        flex: 1,
+                        minHeight: 0,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        bgcolor: 'background.paper',
+                        boxShadow: 'var(--shadow-small-inset)',
+                    }}
+                >
+                    <ChatConversation key={projectID} conversation={{ kind: 'project', id: Number(projectID) }} onRead={reloadChatOverview} />
+                </Box>
+            ) : (
+                <div className='content-wrap_inner'>
+                    {tab === 'stats' ? (
+                        <ProjectStats />
+                    ) : tab === 'tasks' ? (
+                        <ProjectTaskList />
+                    ) : (
+                        <div className='content-box'>
+                            <div className='content-box_content'>
+                                <SigmaContainer>
+                                    <ControlsContainer position='top-left'>
+                                        <FullScreenControl />
+                                        <ZoomControl />
                                     </ControlsContainer>
-                                </RestrictedComponent>
-                                {selectedNode !== null ? (
-                                    <ControlsContainer position='bottom-right'>
-                                        <StyledButton onClick={handleNavigate}>Přejít na úkol</StyledButton>
+                                    <ControlsContainer position='top-right'>
+                                        <TaskSearch selectNode={selectNode} />
                                     </ControlsContainer>
-                                ) : null}
-                                <GraphTheme />
-                                <LoadGraph />
-                                <GraphEvents selectNode={selectNode} addNode={{ addNode, setAddNode }} />
-                            </SigmaContainer>
+                                    <RestrictedComponent types={['ADMIN', 'MANAGER']}>
+                                        <ControlsContainer position='bottom-left'>
+                                            <StyledButton color={addNode ? 'error' : 'dark'} onClick={() => setAddNode(!addNode)}>
+                                                {addNode ? 'Zrušit' : 'Přidat úkol'}
+                                            </StyledButton>
+                                        </ControlsContainer>
+                                    </RestrictedComponent>
+                                    {selectedNode !== null ? (
+                                        <ControlsContainer position='bottom-right'>
+                                            <StyledButton onClick={handleNavigate}>Přejít na úkol</StyledButton>
+                                        </ControlsContainer>
+                                    ) : null}
+                                    <GraphTheme />
+                                    <LoadGraph />
+                                    <GraphEvents selectNode={selectNode} addNode={{ addNode, setAddNode }} />
+                                </SigmaContainer>
+                            </div>
                         </div>
-                    </div>
-                )}
-            </div>
+                    )}
+                </div>
+            )}
         </>
     );
 };

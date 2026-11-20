@@ -9,6 +9,7 @@ import { Projects } from './components/tabs/Projects';
 import { Inventory } from './components/tabs/Inventory';
 import { Machines } from './components/tabs/Machines';
 import { Users } from './components/tabs/Users';
+import { ChatPage } from './components/chat/ChatPage';
 import { Machine } from './components/machines/Machine';
 import { ProjectTask } from './components/projects/ProjectTask';
 import { TaskInputFiles } from './components/projects/task/TaskInputFiles';
@@ -52,6 +53,7 @@ export const App = () => {
                         <Route path=':machine' element={<Machine />} />
                     </Route>
                     <Route path='users' element={<Users />} />
+                    <Route path='chat' element={<ChatPage />} />
                 </Route>
                 <Route path='*' element={<h1>Stránka nenalezena (404)</h1>}></Route>
             </Routes>

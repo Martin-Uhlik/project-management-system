@@ -1,7 +1,7 @@
 import express, { type NextFunction, type Request, type Response } from 'express';
 import cors from 'cors';
 import fileUpload from 'express-fileupload';
-import { requireRole, requireSession } from './auth.ts';
+import { currentUser, requireRole, requireSession } from './auth.ts';
 import { errorHandler, HttpError } from './errors.ts';
 import { createLoginLimiter, defaultLoginLimits, type LoginLimiterOptions } from './rateLimit.ts';
 import * as utilities from './resources/utilities.ts';
@@ -13,6 +13,7 @@ import * as material from './resources/material.ts';
 import * as materialRequirements from './resources/materialRequirements.ts';
 import * as personalTasks from './resources/personalTasks.ts';
 import * as stats from './resources/stats.ts';
+import * as chat from './resources/chat.ts';
 import { live, personalTaskTopics, projectTopics, resync, topic, userTopics } from './live.ts';
 
 // The addresses the frontend is opened from (FRONTEND_ORIGIN, comma separated). Only they may call the API from a
@@ -57,6 +58,8 @@ export const createApp = (options: AppOptions = {}) => {
     const PERSONAL_TASKS = live(personalTaskTopics());
     const MATERIAL = live(topic('material'));
     const MACHINES = live(topic('machines'));
+    // the user's own other tabs update their unread counts (new messages themselves go out from chat.ts)
+    const OWN_CHAT = live((req, res) => [`chat:${currentUser(res).ID}`]);
 
     // sign-in; everything under /auth needs a valid session
     app.post('/login', utilities.login(loginLimiter));
@@ -134,6 +137,15 @@ export const createApp = (options: AppOptions = {}) => {
     app.get('/auth/machines/:machineID', machines.getMachine);
     app.patch('/auth/machines/:machineID', MANAGER, MACHINES, machines.updateMachine);
     app.delete('/auth/machines/:machineID', ADMIN, MACHINES, machines.removeMachine);
+
+    // chat: direct messages and project group chats (who may use which: see chat.ts)
+    app.get('/auth/chat', chat.getConversations);
+    app.get('/auth/chat/users/:userID/messages', chat.getDirectMessages);
+    app.post('/auth/chat/users/:userID/messages', chat.sendDirectMessage);
+    app.post('/auth/chat/users/:userID/read', OWN_CHAT, chat.readDirectMessages);
+    app.get('/auth/chat/projects/:projectID/messages', chat.getProjectMessages);
+    app.post('/auth/chat/projects/:projectID/messages', chat.sendProjectMessage);
+    app.post('/auth/chat/projects/:projectID/read', OWN_CHAT, chat.readProjectMessages);
 
     app.all('/{*splat}', (req: Request, res: Response) => {
         res.status(404).send({ errorMessage: 'Chybná adresa zdroje.' });

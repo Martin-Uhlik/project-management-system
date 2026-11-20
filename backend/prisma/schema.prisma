@@ -54,6 +54,10 @@ model User {
   WorkTime          WorkTime[]            @relation(name: "HasTime")
   PrivateTask       PrivateTask[]         @relation(name: "HasPrivateTask")
   UploadedFiles     TaskFile[]            @relation(name: "FileUploader")
+  SentMessages      ChatMessage[]         @relation(name: "ChatSender")
+  ReceivedMessages  ChatMessage[]         @relation(name: "ChatRecipient")
+  ChatReads         ChatRead[]            @relation(name: "ChatReader")
+  ChatReadsAsPartner ChatRead[]           @relation(name: "ChatReadPartner")
 }
 
 enum UserType {
@@ -218,6 +222,8 @@ model Project {
   Member            User_Project[]        @relation(name: "ProjectMember")
   Task              Task[]                @relation(name: "Tasks")
   TaskDependency    TaskDependency[]      @relation(name: "Dependencies")
+  ChatMessages      ChatMessage[]         @relation(name: "ProjectChat")
+  ChatReads         ChatRead[]            @relation(name: "ProjectChatRead")
 }
 
 model User_Project {
@@ -226,4 +232,38 @@ model User_Project {
   UserID            Int
   Project           Project               @relation(name: "ProjectMember", fields: [ProjectID], references: [ID])
   ProjectID         Int
+}
+
+// Chat: a message goes either to one user (a direct message, RecipientID) or to a project's group chat (ProjectID),
+// never both (a CHECK constraint in the migration). Who may read and write a project's chat: see chat.ts.
+model ChatMessage {
+  ID                Int                   @id @default(autoincrement())
+  Sender            User                  @relation(name: "ChatSender", fields: [SenderID], references: [ID])
+  SenderID          Int
+  Recipient         User?                 @relation(name: "ChatRecipient", fields: [RecipientID], references: [ID], onDelete: Cascade)
+  RecipientID       Int?
+  Project           Project?              @relation(name: "ProjectChat", fields: [ProjectID], references: [ID], onDelete: Cascade)
+  ProjectID         Int?
+  Text              String
+  SentAt            DateTime              @default(now())
+
+  @@index([SenderID, RecipientID, ID])
+  @@index([RecipientID, SenderID, ID])
+  @@index([ProjectID, ID])
+}
+
+// How far a user has read a conversation: every message up to LastReadID. One row per user and direct-message
+// partner (PartnerID) or per user and project (ProjectID).
+model ChatRead {
+  ID                Int                   @id @default(autoincrement())
+  User              User                  @relation(name: "ChatReader", fields: [UserID], references: [ID])
+  UserID            Int
+  Partner           User?                 @relation(name: "ChatReadPartner", fields: [PartnerID], references: [ID], onDelete: Cascade)
+  PartnerID         Int?
+  Project           Project?              @relation(name: "ProjectChatRead", fields: [ProjectID], references: [ID], onDelete: Cascade)
+  ProjectID         Int?
+  LastReadID        Int
+
+  @@unique([UserID, PartnerID])
+  @@unique([UserID, ProjectID])
 }

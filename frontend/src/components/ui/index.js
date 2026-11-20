@@ -41,3 +41,14 @@ export { fileType, fileExtension, formatBytes } from './fileTypes';
 export { StyledMonthPicker } from './StyledMonthPicker';
 export { StyledSection } from './StyledSection';
 export { StyledTimeDifference, StyledTimeUsage, timeUsage } from './StyledTimeComparison';
+export {
+    StyledChatButton,
+    StyledChatComposer,
+    StyledChatConversation,
+    StyledChatDay,
+    StyledChatEmpty,
+    StyledChatHeader,
+    StyledChatLayout,
+    StyledChatListHeading,
+    StyledChatMessage,
+} from './StyledChat';

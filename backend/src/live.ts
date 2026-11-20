@@ -18,12 +18,17 @@ import { currentUser, findSessionUser, getTokenFromHeaders, type SessionUser } f
 //   personal-tasks:<id>   the user        their personal tasks
 //   material              everyone        material, its movements and the material requests
 //   machines              everyone        machines
+//   chat:<id>             the user        their chat conversations and unread counts (e.g. read in another tab)
 //
 // The browser connects with its session cookie (or "Authorization: Bearer <token>", like the API) and gets the
 // message "changed" with a list of topics.
+//
+// Chat messages are the one exception: a new message itself goes out at once as the message "chat" (see sendToUsers)
+// to the people in its conversation, so it shows without another request.
 
 export const LIVE_PATH = '/live';
 export const LIVE_EVENT = 'changed';
+export const CHAT_EVENT = 'chat';
 // a request's X-Socket-ID (the browser's own connection) is not told about its own change: that screen already reloads
 export const SOCKET_ID_HEADER = 'x-socket-id';
 
@@ -125,6 +130,7 @@ const audience = async (topic: string): Promise<string[]> => {
         case 'user':
             return [userRoom(id), roleRoom('ADMIN'), ...(await managersOf(id)).map(userRoom)];
         case 'personal-tasks':
+        case 'chat':
             return [userRoom(id)];
         default:
             return [];
@@ -141,6 +147,14 @@ export const publish = async (topics: Iterable<string>, exceptSocketID?: string)
         const target = exceptSocketID ? server.to(rooms).except(exceptSocketID) : server.to(rooms);
         target.emit(LIVE_EVENT, [topic]);
     }
+};
+
+// Sends an event with its data straight to every connection of these users (a chat message to its conversation)
+export const sendToUsers = (userIDs: Iterable<number>, event: string, data: unknown) => {
+    const server = io;
+    if (!server) return;
+    const rooms = [...new Set(userIDs)].map(userRoom);
+    if (rooms.length) server.to(rooms).emit(event, data);
 };
 
 // Checks this user's connections again after their sessions or role changed: a connection whose session ended is

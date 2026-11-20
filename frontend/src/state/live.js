@@ -17,6 +17,14 @@ const liveVersionsAtom = atom({});
 let socketID = null;
 export const liveSocketID = () => socketID;
 
+// Chat messages arrive whole (the event "chat", see backend/src/resources/chat.ts): whoever listens with onChatEvent gets
+// each one, e.g. the open conversation and the header's unread badge
+const chatListeners = new Set();
+export const onChatEvent = (listener) => {
+    chatListeners.add(listener);
+    return () => chatListeners.delete(listener);
+};
+
 // many changes at once (a project with many tasks) reload a screen once
 const BATCH_MS = 100;
 
@@ -53,6 +61,8 @@ export const LiveUpdates = () => {
                 setVersions((versions) => bump(versions, topics));
             }, BATCH_MS);
         });
+
+        socket.on('chat', (data) => chatListeners.forEach((listener) => listener(data)));
 
         socket.on('connect', () => {
             socketID = socket.id;
