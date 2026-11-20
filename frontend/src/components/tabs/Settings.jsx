@@ -6,7 +6,7 @@ import axios from 'axios';
 import { getBackendAddress } from '../../config';
 import { getAuthHeader, getUserID } from '../../Auth';
 import { handleAxiosError } from '../../errorHandler';
-import { ButtonRow, FormStack, StyledButton, StyledInput, StyledThemeToggle } from '../ui';
+import { ButtonRow, FormStack, StyledButton, StyledInput, StyledThemeSelect } from '../ui';
 
 export const Settings = () => {
     const setTab = useSetAtom(selectedTabAtom);
@@ -47,7 +47,14 @@ export const Settings = () => {
                 <div className='content-box'>
                     <div className='content-box_content'>
                         <h1>Vzhled</h1>
-                        <StyledThemeToggle />
+                        <p className='settings_description'>
+                            Světlý, tmavý, nebo podle nastavení vašeho počítače či telefonu. Volba se uloží v tomto prohlížeči.
+                        </p>
+                        <StyledThemeSelect showLabels />
+                    </div>
+                </div>
+                <div className='content-box'>
+                    <div className='content-box_content'>
                         <h1>Heslo</h1>
                         <FormStack component='form' onSubmit={handlePasswordChange}>
                             <StyledInput

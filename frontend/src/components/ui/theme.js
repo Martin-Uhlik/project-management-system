@@ -7,7 +7,8 @@ import { csCZ as pickersCsCZ } from '@mui/x-date-pickers/locales';
 const { augmentColor } = createTheme().palette;
 
 const shared = {
-    primary: { main: '#dc3545' },
+    // dark: the hover colour of red buttons (--active-primary-hover in styles.css)
+    primary: { main: '#dc3545', dark: '#bb2d3b' },
     error: { main: '#dc3545' },
     success: { main: '#198754' },
     secondary: { main: '#6c757d' },

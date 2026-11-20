@@ -7,7 +7,8 @@ import axios from 'axios';
 import { getAuthHeader, getUserID } from '../Auth';
 import { getBackendAddress } from '../config';
 import { handleAxiosError } from '../errorHandler';
-import { StyledThemeButton } from './ui';
+import { StyledUserMenu } from './ui';
+import { userRoleOptions } from './dialogs/AddUser';
 
 export const Header = () => {
     const [user, setUser] = useAtom(userAtom);
@@ -51,6 +52,8 @@ export const Header = () => {
         }
     };
 
+    const roleLabel = userRoleOptions.find((option) => option.value === user?.UserType)?.label;
+
     const handleShowMenu = () => {
         setShowNav(!showNav);
     };
@@ -69,11 +72,12 @@ export const Header = () => {
             </button>
             <Timer />
             <div className='logout'>
-                <span className='menu-text menu-text-md'>{`${user?.FirstName} ${user?.LastName}`}</span>
-                <StyledThemeButton />
-                <button type='button' onClick={handleLogout}>
-                    <img className='menu-icon' src='/icons/logout.svg' alt='Odhlásit se' />
-                </button>
+                <StyledUserMenu
+                    name={user ? `${user.FirstName} ${user.LastName}` : ''}
+                    detail={[user?.UserName, roleLabel].filter(Boolean).join(' · ')}
+                    settingsLink='/auth/settings'
+                    onLogout={handleLogout}
+                />
             </div>
         </div>
     );
