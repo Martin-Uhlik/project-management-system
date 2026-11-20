@@ -14,6 +14,7 @@ export { StyledSubTab, StyledSubTabs } from './StyledSubTabs';
 export { StyledToggle } from './StyledToggle';
 export { StyledFileInput } from './StyledFileInput';
 export { StyledAddButton } from './StyledAddButton';
+export { StyledCount } from './StyledCount';
 export { StyledSearchInput } from './StyledSearchInput';
 export { useSearch } from './useSearch';
 export { chartColors, chartTooltip, graphColors } from './theme';
