@@ -16,7 +16,7 @@ export { StyledFileInput } from './StyledFileInput';
 export { StyledAddButton } from './StyledAddButton';
 export { StyledSearchInput } from './StyledSearchInput';
 export { useSearch } from './useSearch';
-export { chartColors, graphColors } from './theme';
+export { chartColors, chartTooltip, graphColors } from './theme';
 export { useColorMode } from './useColorMode';
 export { useChartColors, useGraphColors } from './useChartColors';
 export { StyledUserMenu } from './StyledUserMenu';

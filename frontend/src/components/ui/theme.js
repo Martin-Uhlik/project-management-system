@@ -56,13 +56,15 @@ export const chartColors = {
         text: '#666666',
         grid: 'rgba(0, 0, 0, 0.1)',
         workTime: { border: 'rgb(255, 99, 132)', background: 'rgba(255, 99, 132, 0.5)' },
-        workPlan: { border: 'rgb(53, 162, 235)', background: 'rgba(53, 162, 235, 0.5)' },
+        workPlan: { border: 'rgb(53, 162, 235)', background: 'rgba(53, 162, 235, 0.5)', hover: 'rgba(53, 162, 235, 0.8)' },
+        tooltip: { background: '#ffffff', title: '#212529', body: '#495057', border: 'rgba(0, 0, 0, 0.15)' },
     },
     dark: {
         text: '#adb5bd',
         grid: 'rgba(255, 255, 255, 0.12)',
         workTime: { border: 'rgb(255, 120, 150)', background: 'rgba(255, 99, 132, 0.45)' },
-        workPlan: { border: 'rgb(90, 180, 245)', background: 'rgba(53, 162, 235, 0.45)' },
+        workPlan: { border: 'rgb(90, 180, 245)', background: 'rgba(53, 162, 235, 0.45)', hover: 'rgba(90, 180, 245, 0.75)' },
+        tooltip: { background: '#2b3035', title: '#f1f3f5', body: '#ced4da', border: 'rgba(255, 255, 255, 0.15)' },
     },
 };
 
@@ -71,3 +73,18 @@ export const graphColors = {
     light: { label: '#000000', labelBackground: '#ffffff', edge: '#cccccc' },
     dark: { label: '#f1f3f5', labelBackground: '#2b3035', edge: '#6c757d' },
 };
+
+// The look of a chart.js tooltip in the given chart colours (useChartColors), so every chart's tooltip matches the theme
+export const chartTooltip = (colors) => ({
+    backgroundColor: colors.tooltip.background,
+    titleColor: colors.tooltip.title,
+    bodyColor: colors.tooltip.body,
+    borderColor: colors.tooltip.border,
+    borderWidth: 1,
+    padding: 10,
+    cornerRadius: 6,
+    displayColors: false,
+    titleFont: { size: 14, weight: 'bold' },
+    bodyFont: { size: 13 },
+    bodySpacing: 4,
+});

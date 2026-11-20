@@ -1,6 +1,6 @@
 import { Bar } from 'react-chartjs-2';
 import { BarElement, CategoryScale, Chart as ChartJS, LinearScale, Tooltip } from 'chart.js';
-import { useChartColors } from '../ui';
+import { chartTooltip, useChartColors } from '../ui';
 
 export const WorkTimeChart = (props) => {
     const colors = useChartColors();
@@ -21,6 +21,7 @@ export const WorkTimeChart = (props) => {
                 grid: { color: colors.grid },
             },
         },
+        plugins: { tooltip: chartTooltip(colors) },
         indexAxis: 'x',
         elements: {
             bar: {

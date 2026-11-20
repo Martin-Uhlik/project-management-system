@@ -59,7 +59,8 @@ export const getUser = async (req: Request, res: Response) => {
             },
             User_Task: {
                 include: {
-                    Task: true,
+                    // the project name is shown in the work plan chart's tooltip
+                    Task: { include: { Project: { select: { Name: true } } } },
                 },
             },
         },
