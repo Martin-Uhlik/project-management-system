@@ -24,12 +24,24 @@ export const allowedOrigins = () =>
         .map((origin) => origin.trim().replace(/\/$/, ''))
         .filter(Boolean);
 
-export type AppOptions = { loginLimits?: LoginLimiterOptions };
+// DEMO_MODE=true: the public demo, where visitors share the seeded accounts. Only an admin may then change a
+// password, so one visitor can't lock the others out of a shared account until the nightly reset.
+const demoModeFromEnv = () => process.env.DEMO_MODE === 'true';
+
+// the largest task file upload in MB (UPLOAD_LIMIT_MB); keep it in step with client_max_body_size in the nginx in front
+const uploadLimitFromEnv = () => {
+    const value = Number(process.env.UPLOAD_LIMIT_MB);
+    return Number.isFinite(value) && value > 0 ? value : 200;
+};
+
+export type AppOptions = { loginLimits?: LoginLimiterOptions; demoMode?: boolean; uploadLimitMb?: number };
 
 export const createApp = (options: AppOptions = {}) => {
     const app = express();
     const origins = allowedOrigins();
     const loginLimiter = createLoginLimiter(options.loginLimits ?? defaultLoginLimits);
+    const demoMode = options.demoMode ?? demoModeFromEnv();
+    const uploadLimitMb = options.uploadLimitMb ?? uploadLimitFromEnv();
 
     app.disable('x-powered-by');
     // behind a reverse proxy, set TRUST_PROXY (e.g. 1) so the login limit sees the client's IP
@@ -44,10 +56,12 @@ export const createApp = (options: AppOptions = {}) => {
         next();
     });
     app.use(express.json({ limit: '1mb' }));
-    app.use(fileUpload({ limits: { fileSize: 200 * 1024 * 1024 }, abortOnLimit: true }));
+    app.use(fileUpload({ limits: { fileSize: uploadLimitMb * 1024 * 1024 }, abortOnLimit: true }));
 
     const ADMIN = requireRole('ADMIN');
     const MANAGER = requireRole('ADMIN', 'MANAGER');
+    // in the demo, password changes are for admins only (see DEMO_MODE above)
+    const PASSWORD_CHANGE = demoMode ? ADMIN : (req: Request, res: Response, next: NextFunction) => next();
 
     // live(...): after a change, the browsers that show the changed data are told to load it again (see live.ts)
     const USERS = live(topic('users'));
@@ -71,7 +85,7 @@ export const createApp = (options: AppOptions = {}) => {
     app.get('/auth/:userID/tasks', tasks.getUserTasks);
 
     app.post('/auth/users/timer/:userID', USER, users.logTime);
-    app.patch('/auth/users/password/:userID', resync('userID'), utilities.setPassword);
+    app.patch('/auth/users/password/:userID', PASSWORD_CHANGE, resync('userID'), utilities.setPassword);
 
     // user management
     app.get('/auth/users', users.getUsers);

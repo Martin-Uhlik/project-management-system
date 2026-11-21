@@ -15,4 +15,7 @@ RUN npm run build
 # Phase 2) serve it
 FROM nginx:1.31-alpine AS runner
 COPY --from=builder /app/build/ /usr/share/nginx/html
-COPY ./nginx.conf /etc/nginx/conf.d/default.conf
+# a template: the nginx image fills in the settings below on start (see nginx.conf)
+COPY ./nginx.conf /etc/nginx/templates/default.conf.template
+ENV API_UPSTREAM=http://project-management-system-backend:4000
+ENV MAX_UPLOAD_SIZE=200m

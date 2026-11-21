@@ -31,8 +31,9 @@ COPY --from=builder /app/package.json ./
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 # the migrations, applied to the database on every start (prisma migrate deploy only runs the ones not applied yet)
-COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/prisma.config.ts ./
+# (owned by node, so they're readable however strict the file modes on the build machine are)
+COPY --from=builder --chown=node:node /app/prisma ./prisma
+COPY --from=builder --chown=node:node /app/prisma.config.ts ./
 # uploaded task files live here (bind-mounted from the host in docker-compose.yml)
 RUN mkdir -p data && chown node:node data
 
