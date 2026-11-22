@@ -1,4 +1,7 @@
-import { Outlet } from 'react-router';
+import { useEffect, useState } from 'react';
+import { Outlet, useNavigate } from 'react-router';
+import axios from 'axios';
+import { getBackendAddress } from './config';
 import Navigation from './components/Navigation';
 import { Header } from './components/Header';
 import { Provider } from 'jotai';
@@ -19,7 +22,27 @@ export const getUserID = () => {
     return Cookies.get('user_id');
 };
 
+// Everything under /auth is for signed-in users only: nothing of it shows until the backend confirms the session.
+// Without one (or when the server can't be reached) the browser goes to the sign-in page.
+const useSession = () => {
+    const navigate = useNavigate();
+    const [signedIn, setSignedIn] = useState(false);
+    useEffect(() => {
+        let active = true;
+        axios
+            .get(getBackendAddress('/auth/me'))
+            .then(() => active && setSignedIn(true))
+            .catch(() => active && navigate('/', { replace: true }));
+        return () => {
+            active = false;
+        };
+    }, [navigate]);
+    return signedIn;
+};
+
 export const Auth = () => {
+    const signedIn = useSession();
+    if (!signedIn) return null;
     return (
         <Provider>
             <div className='wrapper'>

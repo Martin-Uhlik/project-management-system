@@ -50,6 +50,24 @@ describe('reading users', () => {
         }
     });
 
+    it("sends the work time of the week asked for (weekStart), this week's by default", async () => {
+        const lastWeek = new Date();
+        lastWeek.setDate(lastWeek.getDate() - 7);
+        const start = new Date(lastWeek.getTime() - 60 * 60 * 1000);
+        await prisma.workTime.create({ data: { UserID: s.user.user.ID, StartTime: start, StopTime: lastWeek } });
+        // Monday 0:00 of last week (server time)
+        const monday = new Date(start);
+        monday.setHours(0, 0, 0, 0);
+        monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7));
+
+        const now = await s.user.agent.get(`/auth/users/${s.user.user.ID}`);
+        expect(now.body.WorkTime).toHaveLength(0);
+        const then = await s.user.agent.get(`/auth/users/${s.user.user.ID}`).query({ weekStart: monday.toISOString() });
+        expect(then.status).toBe(200);
+        expect(then.body.WorkTime).toHaveLength(1);
+        expect((await s.user.agent.get(`/auth/users/${s.user.user.ID}`).query({ weekStart: 'soon' })).status).toBe(400);
+    });
+
     it('answers 404 for a missing user and 400 for a bad ID', async () => {
         expect((await s.user.agent.get('/auth/users/9999')).status).toBe(404);
         expect((await s.user.agent.get('/auth/users/abc')).status).toBe(400);

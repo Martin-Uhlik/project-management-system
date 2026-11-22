@@ -15,15 +15,15 @@ const formatDuration = (task) => {
     return parts.join(' ') || '0 min';
 };
 
-// This week's tasks as floating bars (one row per weekday, start to finish hour); hovering a bar shows the task's details,
-// clicking it opens the task
+// A week's tasks as floating bars (one row per weekday, start to finish hour); hovering a bar shows the task's details,
+// clicking it opens the task. week: a dayjs of any day in the week (default: this week); labels: the rows' names
+// (default: the weekdays)
 export const WorkPlanChart = (props) => {
     const colors = useChartColors();
     const navigate = useNavigate();
 
-    const currentWeekTasks = props.tasks?.filter(
-        (task) => dayjs(task.FinishDate).isAfter(dayjs().startOf('isoWeek')) && dayjs(task.FinishDate).isBefore(dayjs().endOf('isoWeek')),
-    );
+    const week = (props.week ?? dayjs()).startOf('isoWeek');
+    const currentWeekTasks = props.tasks?.filter((task) => !dayjs(task.FinishDate).isBefore(week) && dayjs(task.FinishDate).isBefore(week.add(1, 'week')));
     const datasets = (currentWeekTasks || []).map((task) => {
         const data = [null, null, null, null, null, null, null];
         const finishDate = dayjs(task.FinishDate);
@@ -104,7 +104,7 @@ export const WorkPlanChart = (props) => {
     };
 
     const data = {
-        labels: ['Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek', 'Sobota', 'Neděle'],
+        labels: props.labels ?? ['Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek', 'Sobota', 'Neděle'],
         datasets,
     };
 

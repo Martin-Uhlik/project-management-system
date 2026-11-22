@@ -2,6 +2,7 @@
 export { StyledAlert } from './StyledAlert';
 export { StyledButton } from './StyledButton';
 export { StyledCheckbox } from './StyledCheckbox';
+export { StyledSwitch } from './StyledSwitch';
 export { StyledDateTimePicker } from './StyledDateTimePicker';
 export { StyledDialog } from './StyledDialog';
 export { StyledInput } from './StyledInput';
@@ -39,6 +40,8 @@ export { formatMinutes } from './formatMinutes';
 export { StyledToast, StyledToastStack } from './StyledToast';
 export { fileType, fileExtension, formatBytes } from './fileTypes';
 export { StyledMonthPicker } from './StyledMonthPicker';
+export { StyledWeekPicker } from './StyledWeekPicker';
+export { StyledIconButton } from './StyledIconButton';
 export { StyledSection } from './StyledSection';
 export { StyledTimeDifference, StyledTimeUsage, timeUsage } from './StyledTimeComparison';
 export {

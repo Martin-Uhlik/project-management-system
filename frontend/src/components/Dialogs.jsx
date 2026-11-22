@@ -14,6 +14,7 @@ import { SelectDependency } from './dialogs/SelectDependency';
 import { RemoveDependency } from './dialogs/RemoveDependency';
 import { EditMaterial } from './dialogs/EditMaterial';
 import { EditMaterialRequirement } from './dialogs/EditMaterialRequirement';
+import { TaskFilters } from './dialogs/TaskFilters';
 
 export const Dialogs = () => {
     const dialog = useAtomValue(dialogAtom);
@@ -32,6 +33,7 @@ export const Dialogs = () => {
         RemoveDependency: <RemoveDependency />,
         EditMaterial: <EditMaterial />,
         EditMaterialRequirement: <EditMaterialRequirement />,
+        TaskFilters: <TaskFilters />,
     };
     return `${dialog?.type}` in dialogs ? dialogs[dialog?.type] : <div></div>;
 };

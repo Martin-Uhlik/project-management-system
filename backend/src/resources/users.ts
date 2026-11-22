@@ -43,6 +43,8 @@ export const createUser = async (req: Request, res: Response) => {
     return res.status(200).send();
 };
 
+const weekQuerySchema = z.object({ weekStart: date.optional() });
+
 // Anyone may see a worker's public details; their work time and tasks only the worker, their managers and admins
 // (the same people as for the statistics)
 export const getUser = async (req: Request, res: Response) => {
@@ -51,8 +53,11 @@ export const getUser = async (req: Request, res: Response) => {
         const user = await prisma.user.findUniqueOrThrow({ where: { ID: userID }, select: publicUserSelect });
         return res.status(200).send(user);
     }
-    const start = dayjs().startOf('isoWeek');
-    const stop = dayjs().endOf('isoWeek');
+    // the week of work time to send: from weekStart (the browser sends its local Monday 0:00) for 7 days, or this week
+    const parsed = weekQuerySchema.safeParse(req.query);
+    if (!parsed.success) throw badRequest('Neplatný začátek týdne.');
+    const start = parsed.data.weekStart ? dayjs(parsed.data.weekStart) : dayjs().startOf('isoWeek');
+    const stop = start.add(1, 'week');
     const user = await prisma.user.findUniqueOrThrow({
         where: {
             ID: userID,

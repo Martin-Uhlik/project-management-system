@@ -425,6 +425,22 @@ button {
     display: none;
 }
 
+/* the gear in the top right corner of the sign-in page: the look (theme, font size) */
+.login_look.MuiIconButton-root {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    z-index: 1;
+    /* on the dark column (phones); on wider screens it sits on the page background, see below */
+    color: #fff;
+}
+
+@media only screen and (min-width: 768px) {
+    .login_look.MuiIconButton-root {
+        color: var(--mui-palette-text-primary);
+    }
+}
+
 .bottom-left,
 .bottom-right {
     border: none !important;

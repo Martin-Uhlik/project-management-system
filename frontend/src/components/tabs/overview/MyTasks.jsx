@@ -8,6 +8,8 @@ import { handleAxiosError } from '../../../errorHandler';
 import { getBackendAddress } from '../../../config';
 import { getAuthHeader, getUserID } from '../../../Auth';
 import dayjs from '../../../dayjs';
+import { filterTasks, useTaskFilters } from '../../../state/taskFilters';
+import { TaskFiltersButton } from '../../utils/TaskFiltersButton';
 import { FormStack, StyledButton, StyledAddButton, StyledTable, useSearch } from '../../ui';
 
 export const MyTasks = () => {
@@ -62,7 +64,9 @@ export const MyTasks = () => {
             });
     };
 
-    const search = useSearch(tasks, (task) => [task.Name, task.Description, dayjs(task.FinishDate).format('L')]);
+    const { filters } = useTaskFilters();
+    const shown = React.useMemo(() => filterTasks(tasks, filters), [tasks, filters]);
+    const search = useSearch(shown, (task) => [task.Name, task.Description, dayjs(task.FinishDate).format('L')]);
 
     return (
         <FormStack>
@@ -73,6 +77,7 @@ export const MyTasks = () => {
                         Smazat dokončené
                     </StyledButton>
                     <StyledAddButton label='Přidat vlastní úkol' onClick={handleAddMyTask} />
+                    <TaskFiltersButton />
                 </div>
             </div>
             <StyledTable columns={[{ label: 'Název' }, { label: 'Dokončení' }, { label: 'Popis' }]} search={search}>
