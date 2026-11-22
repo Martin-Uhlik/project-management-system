@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useLocation, useOutletContext, useParams, useSearchParams } from 'react-router';
 import { useAtom, useSetAtom } from 'jotai';
 import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
 import { notificationsAtom, tickAtom } from '../../../state/atoms';
-import { useLive } from '../../../state/live';
+import { useApi } from '../../../state/query';
 import { FileTable } from '../../utils/tables/FileTable';
 import axios from 'axios';
 import { getBackendAddress } from '../../../config';
@@ -13,6 +13,8 @@ import dayjs from '../../../dayjs';
 import { handleAxiosError } from '../../../errorHandler';
 import { StyledDropzone } from '../../ui';
 import { FileDetail } from './files/FileDetail';
+
+const noFiles = [];
 
 // A task's input or output files (kind: 'input-files' or 'output-files'): the list, a drop area to upload more, and
 // next to the list the detail (with a preview) of the file that was clicked, kept in the address as ?file=<name>
@@ -28,23 +30,10 @@ export const TaskFiles = ({ kind, title }) => {
     const setTick = useSetAtom(tickAtom);
     const projectID = useParams().project;
     const taskID = useParams().task;
+    const filesPath = `/auth/projects/${projectID}/tasks/${taskID}/${kind}`;
+    const filesAddress = getBackendAddress(filesPath);
     // reloaded when someone changes this data (live updates) or after a change made here
-    const tick = useLive(`project:${projectID}`);
-    const filesAddress = getBackendAddress(`/auth/projects/${projectID}/tasks/${taskID}/${kind}`);
-
-    const [files, setFiles] = useState([]);
-
-    useEffect(() => {
-        axios
-            .get(filesAddress, getAuthHeader())
-            .then((response) => {
-                setFiles(response.data);
-            })
-            .catch((error) => {
-                handleAxiosError(error, [notifications, setNotifications]);
-            });
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [tick, kind]);
+    const { data: files = noFiles } = useApi(filesPath, { topics: [`project:${projectID}`] });
 
     // the files dropped or chosen are uploaded one after another (the server takes one file per request)
     const [upload, setUpload] = useState(null);

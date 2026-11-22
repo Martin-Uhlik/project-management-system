@@ -1,8 +1,8 @@
 import { useAtom, useSetAtom } from 'jotai';
 import { dialogAtom, notificationsAtom, selectedTabAtom, tickAtom } from '../../state/atoms';
-import { useLive } from '../../state/live';
+import { useApi } from '../../state/query';
 import React, { useEffect } from 'react';
-import { Link, Outlet, useNavigate } from 'react-router';
+import { Link, Outlet, useNavigate, useParams } from 'react-router';
 import axios from 'axios';
 import { getBackendAddress } from '../../config';
 import { getAuthHeader } from '../../Auth';
@@ -11,36 +11,26 @@ import dayjs from '../../dayjs';
 import { RestrictedComponent } from '../utils/RestrictedComponent';
 import { StyledSubTab, StyledSubTabs } from '../ui';
 
+const noMachines = [];
+
 export const Machines = () => {
     const navigate = useNavigate();
     const setDialog = useSetAtom(dialogAtom);
     const setTab = useSetAtom(selectedTabAtom);
     const [selectedMachine, setSelectedMachine] = React.useState(null);
-    const [machines, setMachines] = React.useState([]);
     // reloaded when someone changes this data (live updates) or after a change made here
-    const tick = useLive('machines');
+    const { data: machines = noMachines } = useApi('/auth/machines', { topics: ['machines'] });
     const setTick = useSetAtom(tickAtom);
     const [notifications, setNotifications] = useAtom(notificationsAtom);
     React.useEffect(() => {
         setTab('Stroje');
     }, [setTab]);
 
+    // no machine chosen in the address: open the first one
+    const opened = useParams().machine;
     useEffect(() => {
-        axios
-            .get(getBackendAddress(`/auth/machines`), getAuthHeader())
-            .then((response) => {
-                setMachines(response.data);
-                if (!selectedMachine) {
-                    if (response.data.length > 0) {
-                        navigate(response.data[0].ID.toString());
-                    }
-                }
-            })
-            .catch((error) => {
-                handleAxiosError(error, [notifications, setNotifications]);
-            });
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [tick]);
+        if (!opened && machines.length > 0) navigate(machines[0].ID.toString());
+    }, [opened, machines, navigate]);
 
     const addMachine = (name) => {
         axios

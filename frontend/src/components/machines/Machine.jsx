@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useOutletContext, useParams } from 'react-router';
 import { WorkPlanChart } from '../utils/WorkPlanChart';
 import axios from 'axios';
@@ -7,7 +7,7 @@ import { getAuthHeader } from '../../Auth';
 import { handleAxiosError } from '../../errorHandler';
 import { useAtom, useSetAtom } from 'jotai';
 import { notificationsAtom, tickAtom } from '../../state/atoms';
-import { useLive } from '../../state/live';
+import { useApi } from '../../state/query';
 import { pushNotification } from '../Notifications';
 import dayjs from '../../dayjs';
 import { AssignedTasks } from '../tabs/overview/AssignedTasks';
@@ -27,26 +27,17 @@ export const Machine = () => {
 
     const [notifications, setNotifications] = useAtom(notificationsAtom);
     // reloaded when someone changes this data (live updates) or after a change made here
-    const tick = useLive('machines');
     const setTick = useSetAtom(tickAtom);
 
-    const [currentMachine, setCurrentMachine] = useState(null);
+    const currentMachine = useApi(`/auth/machines/${machine}`, { topics: ['machines'] }).data ?? null;
     const [description, setDescription] = useState(null);
 
-    useEffect(() => {
-        axios
-            .get(getBackendAddress(`/auth/machines/${machine}`), getAuthHeader())
-            .then((response) => {
-                setCurrentMachine(response.data);
-                if (disabled) {
-                    setDescription(response.data.Description);
-                }
-            })
-            .catch((error) => {
-                handleAxiosError(error, [notifications, setNotifications]);
-            });
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [tick, machine]);
+    // the description field follows the loaded machine, except while it's being edited
+    const [formMachine, setFormMachine] = useState(null);
+    if (currentMachine && disabled && currentMachine !== formMachine) {
+        setFormMachine(currentMachine);
+        setDescription(currentMachine.Description);
+    }
 
     const updateMachine = (event) => {
         event.preventDefault();

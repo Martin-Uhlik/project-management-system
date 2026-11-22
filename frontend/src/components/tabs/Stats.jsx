@@ -1,15 +1,12 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
-import { useAtom, useAtomValue, useSetAtom } from 'jotai';
-import axios from 'axios';
+import { useAtomValue, useSetAtom } from 'jotai';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import { notificationsAtom, selectedTabAtom, userAtom } from '../../state/atoms';
-import { useLive } from '../../state/live';
-import { getBackendAddress } from '../../config';
-import { getAuthHeader, getUserID } from '../../Auth';
-import { handleAxiosError } from '../../errorHandler';
+import { selectedTabAtom, userAtom } from '../../state/atoms';
+import { useApi } from '../../state/query';
+import { getUserID } from '../../Auth';
 import dayjs from '../../dayjs';
 import { WorkTimeChart } from '../utils/WorkTimeChart';
 import { PlannedActualChart } from '../utils/PlannedActualChart';
@@ -62,9 +59,6 @@ export const Stats = () => {
 
     const navigate = useNavigate();
     const me = useAtomValue(userAtom);
-    // reloaded when someone changes this data (live updates) or after a change made here
-    const tick = useLive('users', 'user:*');
-    const [notifications, setNotifications] = useAtom(notificationsAtom);
     const chartColors = useChartColors();
     const statusColors = useStatusColors();
 
@@ -83,25 +77,10 @@ export const Stats = () => {
 
     const from = month.toISOString();
     const to = month.add(1, 'month').toISOString();
-    const [people, setPeople] = useState(null);
-    const [stats, setStats] = useState(null);
-
-    useEffect(() => {
-        axios
-            .get(getBackendAddress('/auth/stats/people'), { ...getAuthHeader(), params: { from, to } })
-            .then((response) => setPeople(response.data))
-            .catch((error) => handleAxiosError(error, [notifications, setNotifications]));
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [from, tick]);
-
-    useEffect(() => {
-        if (!userID) return;
-        axios
-            .get(getBackendAddress(`/auth/stats/users/${userID}`), { ...getAuthHeader(), params: { from, to } })
-            .then((response) => setStats(response.data))
-            .catch((error) => handleAxiosError(error, [notifications, setNotifications]));
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [from, userID, tick]);
+    // reloaded when someone changes this data (live updates) or after a change made here
+    const topics = ['users', 'user:*'];
+    const people = useApi('/auth/stats/people', { params: { from, to }, topics }).data ?? null;
+    const stats = useApi(`/auth/stats/users/${userID}`, { params: { from, to }, topics, enabled: !!userID }).data;
 
     const shown = stats?.User.ID === userID ? stats : null;
     const days = useMemo(() => minutesByDay(shown?.WorkTime, month), [shown, month]);

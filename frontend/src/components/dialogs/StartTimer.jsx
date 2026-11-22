@@ -1,10 +1,8 @@
-import React, { useEffect } from 'react';
-import axios from 'axios';
+import React, { useMemo } from 'react';
 import { useAtom } from 'jotai';
-import { dialogAtom, notificationsAtom } from '../../state/atoms';
-import { getBackendAddress } from '../../config';
-import { getAuthHeader, getUserID } from '../../Auth';
-import { handleAxiosError } from '../../errorHandler';
+import { dialogAtom } from '../../state/atoms';
+import { getUserID } from '../../Auth';
+import { useApi } from '../../state/query';
 import { ButtonRow, FormStack, StyledButton, StyledDialog, StyledSelect } from '../ui';
 
 // no task: the time is only logged as work time
@@ -13,23 +11,13 @@ const NO_TASK = '';
 // Starting the timer: which of my unfinished tasks I am going to work on (or none)
 export const StartTimer = () => {
     const [dialog, setDialog] = useAtom(dialogAtom);
-    const [notifications, setNotifications] = useAtom(notificationsAtom);
-    const [tasks, setTasks] = React.useState([]);
-    const [taskID, setTaskID] = React.useState(NO_TASK);
+    const [chosenTask, setTaskID] = React.useState(null);
 
-    useEffect(() => {
-        axios
-            .get(getBackendAddress(`/auth/${getUserID()}/tasks`), getAuthHeader())
-            .then((response) => {
-                const open = response.data.map((row) => row.Task).filter((task) => !task.Finished);
-                setTasks(open);
-                if (open.length > 0) setTaskID(open[0].ID);
-            })
-            .catch((error) => {
-                handleAxiosError(error, [notifications, setNotifications]);
-            });
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    // the same list as the overview's assigned tasks, usually loaded already
+    const { data } = useApi(`/auth/${getUserID()}/tasks`, { topics: [`user:${getUserID()}`] });
+    const tasks = useMemo(() => (data ?? []).map((row) => row.Task).filter((task) => !task.Finished), [data]);
+    // the task picked, else the first open one
+    const taskID = chosenTask ?? tasks[0]?.ID ?? NO_TASK;
 
     const handleCancel = (event) => {
         event.preventDefault();

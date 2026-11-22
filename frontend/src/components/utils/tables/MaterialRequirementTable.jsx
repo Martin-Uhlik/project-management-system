@@ -1,36 +1,15 @@
 import { StyledTable, useSearch } from '../../ui';
-import { useEffect, useState } from 'react';
+import { useMemo } from 'react';
 import { MaterialRequirementRow } from './rows/MaterialRequirementRow';
-import { useAtom } from 'jotai';
-import { notificationsAtom } from '../../../state/atoms';
-import { useLive } from '../../../state/live';
-import axios from 'axios';
-import { getBackendAddress } from '../../../config';
-import { getAuthHeader } from '../../../Auth';
-import { handleAxiosError } from '../../../errorHandler';
+import { useApi } from '../../../state/query';
 
 export const MaterialRequirementTable = ({ taskID }) => {
     // reloaded when someone changes this data (live updates) or after a change made here
-    const tick = useLive('material');
-    const [notifications, setNotifications] = useAtom(notificationsAtom);
-
-    const [materialRequests, setMaterialRequests] = useState(null);
-
-    useEffect(() => {
-        axios
-            .get(getBackendAddress(`/auth/materialRequirements`), getAuthHeader())
-            .then((response) => {
-                if (taskID) {
-                    setMaterialRequests(response.data.filter((requirement) => requirement.TargetTaskID === +taskID));
-                } else {
-                    setMaterialRequests(response.data);
-                }
-            })
-            .catch((error) => {
-                handleAxiosError(error, [notifications, setNotifications]);
-            });
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [tick]);
+    const { data } = useApi('/auth/materialRequirements', { topics: ['material'] });
+    const materialRequests = useMemo(
+        () => (data && taskID ? data.filter((requirement) => requirement.TargetTaskID === +taskID) : (data ?? null)),
+        [data, taskID],
+    );
 
     const search = useSearch(materialRequests, (row) => [
         row.Name,

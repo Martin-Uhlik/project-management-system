@@ -3,6 +3,9 @@ import axios from 'axios';
 import { afterEach, vi } from 'vitest';
 import { App } from './App';
 
+// jsdom has no canvas: the charts (chart.js) can't draw, and fail when the cached data makes them draw again
+vi.mock('react-chartjs-2', () => ({ Bar: () => null }));
+
 afterEach(() => {
     vi.restoreAllMocks();
 });

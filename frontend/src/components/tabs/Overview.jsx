@@ -1,15 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { AssignedTasks } from './overview/AssignedTasks';
 import { MyTasks } from './overview/MyTasks';
-import { useAtom, useSetAtom } from 'jotai';
-import { notificationsAtom, selectedTabAtom } from '../../state/atoms';
-import { useLive } from '../../state/live';
+import { useSetAtom } from 'jotai';
+import { selectedTabAtom } from '../../state/atoms';
+import { useApi } from '../../state/query';
 import { WorkTimeChart } from '../utils/WorkTimeChart';
 import { WorkPlanChart } from '../utils/WorkPlanChart';
-import { getAuthHeader, getUserID } from '../../Auth';
-import axios from 'axios';
-import { getBackendAddress } from '../../config';
-import { handleAxiosError } from '../../errorHandler';
+import { getUserID } from '../../Auth';
 import dayjs from '../../dayjs';
 import { StyledToggle, StyledWeekPicker } from '../ui';
 import { filterTasks, useTaskFilters } from '../../state/taskFilters';
@@ -26,43 +23,23 @@ export const Overview = () => {
         setTab('Přehled');
     });
 
-    // reloaded when someone changes this data (live updates) or after a change made here
-    const tick = useLive(`user:${getUserID()}`, `personal-tasks:${getUserID()}`);
-    const [notifications, setNotifications] = useAtom(notificationsAtom);
-    const [user, setUser] = useState(null);
     // the weeks the two charts show (their Mondays); each has its own picker
     const [planWeek, setPlanWeek] = useState(() => dayjs().startOf('isoWeek'));
     const [workWeek, setWorkWeek] = useState(() => dayjs().startOf('isoWeek'));
 
-    useEffect(() => {
-        axios
-            .get(getBackendAddress(`/auth/users/${getUserID()}`), { ...getAuthHeader(), params: { weekStart: workWeek.toISOString() } })
-            .then((response) => {
-                setUser(response.data);
-            })
-            .catch((error) => {
-                handleAxiosError(error, [notifications, setNotifications]);
-            });
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [tick, workWeek]);
+    // reloaded when someone changes this data (live updates) or after a change made here
+    const userID = getUserID();
+    const user = useApi(`/auth/users/${userID}`, {
+        params: { weekStart: workWeek.toISOString() },
+        topics: [`user:${userID}`, `personal-tasks:${userID}`],
+    }).data;
 
-    // how many tasks each toggle button's list shows (after the task filters), shown on the button
+    // how many tasks each toggle button's list shows (after the task filters), shown on the button; the same lists as
+    // the tables below, so they are loaded once
     const { filters } = useTaskFilters();
-    const [taskLists, setTaskLists] = useState(null);
-    useEffect(() => {
-        const userID = getUserID();
-        Promise.all([
-            axios.get(getBackendAddress(`/auth/${userID}/tasks`), getAuthHeader()),
-            axios.get(getBackendAddress(`/auth/${userID}/personal-tasks`), getAuthHeader()),
-        ])
-            .then(([assigned, personal]) => setTaskLists([assigned.data.map((item) => item.Task), personal.data]))
-            .catch((error) => {
-                handleAxiosError(error, [notifications, setNotifications]);
-            });
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [tick]);
-
-    const taskCounts = taskLists ? taskLists.map((tasks) => filterTasks(tasks, filters).length) : [null, null];
+    const assigned = useApi(`/auth/${userID}/tasks`, { topics: [`user:${userID}`] }).data;
+    const personal = useApi(`/auth/${userID}/personal-tasks`, { topics: [`personal-tasks:${userID}`] }).data;
+    const taskCounts = assigned && personal ? [assigned.map((item) => item.Task), personal].map((tasks) => filterTasks(tasks, filters).length) : [null, null];
 
     // minutes worked on each day of the chosen week (Monday first)
     const workTimeMinutes = [0, 0, 0, 0, 0, 0, 0];

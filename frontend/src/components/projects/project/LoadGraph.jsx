@@ -1,13 +1,7 @@
 import { useLoadGraph } from '@react-sigma/core';
 import { useEffect } from 'react';
 import Graph from 'graphology';
-import { useAtom } from 'jotai';
-import { notificationsAtom } from '../../../state/atoms';
-import { useLive } from '../../../state/live';
-import axios from 'axios';
-import { getBackendAddress } from '../../../config';
-import { getAuthHeader } from '../../../Auth';
-import { handleAxiosError } from '../../../errorHandler';
+import { useApi } from '../../../state/query';
 import { useParams } from 'react-router';
 import { taskStatus, useGraphColors } from '../../ui';
 
@@ -15,9 +9,8 @@ export const LoadGraph = () => {
     const loadGraph = useLoadGraph();
 
     const project = useParams().project;
-    const [notifications, setNotifications] = useAtom(notificationsAtom);
     // reloaded when someone changes this data (live updates) or after a change made here
-    const tick = useLive(`project:${project}`);
+    const { data } = useApi(`/auth/projects/${project}/tasks`, { topics: [`project:${project}`] });
 
     // node colours: finished green, in progress orange, todo blue, blocked red (taskStatus), in the light or dark look
     const colors = useGraphColors();
@@ -38,25 +31,13 @@ export const LoadGraph = () => {
     };
 
     useEffect(() => {
-        axios
-            .get(getBackendAddress(`/auth/projects/${project}/tasks`), getAuthHeader())
-            .then((response) => {
-                const graph = new Graph();
-                response.data.tasks.map((task) => {
-                    createNode(task, graph);
-                    return null;
-                });
-                response.data.dependencies.map((dependency) => {
-                    createEdge(dependency, graph);
-                    return null;
-                });
-                loadGraph(graph);
-            })
-            .catch((error) => {
-                handleAxiosError(error, [notifications, setNotifications]);
-            });
+        if (!data) return;
+        const graph = new Graph();
+        data.tasks.forEach((task) => createNode(task, graph));
+        data.dependencies.forEach((dependency) => createEdge(dependency, graph));
+        loadGraph(graph);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [tick, colors]);
+    }, [data, colors, loadGraph]);
 
     return null;
 };

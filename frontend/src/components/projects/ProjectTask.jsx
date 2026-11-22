@@ -1,12 +1,8 @@
-import { useAtom, useSetAtom } from 'jotai';
-import { notificationsAtom, selectedTabAtom } from '../../state/atoms';
-import { useLive } from '../../state/live';
-import React, { useEffect, useState } from 'react';
+import { useSetAtom } from 'jotai';
+import { selectedTabAtom } from '../../state/atoms';
+import { useApi } from '../../state/query';
+import React from 'react';
 import { Outlet, useParams } from 'react-router';
-import axios from 'axios';
-import { getBackendAddress } from '../../config';
-import { getAuthHeader } from '../../Auth';
-import { handleAxiosError } from '../../errorHandler';
 import dayjs from '../../dayjs';
 import { AccountIcon, CalendarIcon, ClockOutlineIcon, StyledPageHeader, StyledPageHeaderFact, formatMinutes, taskStatus } from '../ui';
 
@@ -27,28 +23,10 @@ export const ProjectTask = () => {
     const [selectedSubTab, setSelectedSubTab] = React.useState(null);
 
     const { project: projectID, task: taskID } = useParams();
-    const [project, setProject] = useState(null);
-    const [task, setTask] = useState(null);
+    // only the name for the breadcrumb: someone assigned to just this task may not open the project (quiet)
+    const project = useApi(`/auth/projects/${projectID}`, { topics: ['projects', `project:${projectID}`], quiet: true }).data;
     // reloaded when someone changes this data (live updates) or after a change made here
-    const tick = useLive(`project:${projectID}`);
-    const [notifications, setNotifications] = useAtom(notificationsAtom);
-
-    useEffect(() => {
-        axios
-            .get(getBackendAddress(`/auth/projects/${projectID}`), getAuthHeader())
-            .then((response) => setProject(response.data))
-            .catch(() => {
-                // only the name for the breadcrumb: someone assigned to just this task may not open the project
-            });
-    }, [projectID]);
-
-    useEffect(() => {
-        axios
-            .get(getBackendAddress(`/auth/projects/${projectID}/tasks/${taskID}`), getAuthHeader())
-            .then((response) => setTask(response.data))
-            .catch((error) => handleAxiosError(error, [notifications, setNotifications]));
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [projectID, taskID, tick]);
+    const task = useApi(`/auth/projects/${projectID}/tasks/${taskID}`, { topics: [`project:${projectID}`] }).data ?? null;
 
     const status = task ? taskStatus(task) : null;
     const deadline = task?.FinishDate ? dayjs(task.FinishDate) : null;

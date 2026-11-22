@@ -1,8 +1,8 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { Navigate } from 'react-router';
 import { dialogAtom, notificationsAtom, selectedTabAtom, tickAtom, userAtom } from '../../state/atoms';
-import { useLive } from '../../state/live';
+import { useApi } from '../../state/query';
 import { UserSettings } from './users/UserSettings';
 import axios from 'axios';
 import { getBackendAddress } from '../../config';
@@ -11,6 +11,8 @@ import { handleAxiosError } from '../../errorHandler';
 import dayjs from '../../dayjs';
 import { StyledAddButton } from '../ui';
 import { UserTable } from '../utils/tables/UserTable';
+
+const noUsers = [];
 
 // Managing the workers' accounts: admins only (the backend allows the changes to admins only too). The workers' work time
 // and tasks are in Statistiky.
@@ -21,29 +23,15 @@ export const Users = () => {
     React.useEffect(() => {
         setTab('Pracovníci');
     });
-    // reloaded when someone changes this data (live updates) or after a change made here
-    const tick = useLive('users');
     const setTick = useSetAtom(tickAtom);
     const [notifications, setNotifications] = useAtom(notificationsAtom);
-    const [users, setUsers] = React.useState([]);
-    const [selectedUser, setSelectedUser] = React.useState(null);
 
     const isAdmin = me?.UserType === 'ADMIN';
-    useEffect(() => {
-        if (!isAdmin) return;
-        axios
-            .get(getBackendAddress(`/auth/users`), getAuthHeader())
-            .then((response) => {
-                setUsers(response.data);
-                if (!selectedUser) {
-                    setSelectedUser(response.data[0]);
-                }
-            })
-            .catch((error) => {
-                handleAxiosError(error, [notifications, setNotifications]);
-            });
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [tick, isAdmin]);
+    // reloaded when someone changes this data (live updates) or after a change made here
+    const { data: users = noUsers } = useApi('/auth/users', { topics: ['users'], enabled: isAdmin });
+    // the user clicked in the list, else the first one
+    const [chosenUser, setSelectedUser] = React.useState(null);
+    const selectedUser = chosenUser ?? users[0] ?? null;
 
     const addUser = (user) => {
         axios

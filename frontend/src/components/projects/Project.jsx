@@ -1,11 +1,7 @@
 import { useNavigate, useParams, useSearchParams } from 'react-router';
-import { useAtom, useSetAtom } from 'jotai';
-import axios from 'axios';
-import { notificationsAtom, selectedTabAtom } from '../../state/atoms';
-import { useLive } from '../../state/live';
-import { getBackendAddress } from '../../config';
-import { getAuthHeader } from '../../Auth';
-import { handleAxiosError } from '../../errorHandler';
+import { useSetAtom } from 'jotai';
+import { selectedTabAtom } from '../../state/atoms';
+import { useApi } from '../../state/query';
 import React, { useState } from 'react';
 import Box from '@mui/material/Box';
 import { GraphEvents } from './project/GraphEvents';
@@ -57,26 +53,13 @@ export const Project = () => {
     const [addNode, setAddNode] = useState(false);
 
     const projectID = useParams().project;
-    const [project, setProject] = useState(null);
     // the open tab lives in the address (?tab=tasks, ?tab=stats), so it survives a reload and can be linked to
     const [searchParams, setSearchParams] = useSearchParams();
     const tab = tabs.some((item) => item.value === searchParams.get('tab')) ? searchParams.get('tab') : 'graph';
     const selectTab = (value) => setSearchParams(value === 'graph' ? {} : { tab: value }, { replace: true });
-    const [notifications, setNotifications] = useAtom(notificationsAtom);
     // reloaded on tick too, so the status follows timers started and stopped in this browser
     // reloaded when someone changes this data (live updates) or after a change made here
-    const tick = useLive('projects', `project:${projectID}`);
-    React.useEffect(() => {
-        axios
-            .get(getBackendAddress(`/auth/projects/${projectID}`), getAuthHeader())
-            .then((response) => {
-                setProject(response.data);
-            })
-            .catch((error) => {
-                handleAxiosError(error, [notifications, setNotifications]);
-            });
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [projectID, tick]);
+    const project = useApi(`/auth/projects/${projectID}`, { topics: ['projects', `project:${projectID}`] }).data ?? null;
 
     // finished green, orange with how long work has been running while someone works on one of its tasks, otherwise blue
     const status = project ? projectStatus(project) : null;

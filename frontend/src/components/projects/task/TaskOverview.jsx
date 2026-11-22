@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useLocation, useNavigate, useOutletContext, useParams } from 'react-router';
 import { AssignedTasks } from '../../tabs/overview/AssignedTasks';
 import { RemoveButton } from '../../utils/RemoveButton';
@@ -8,7 +8,7 @@ import { getAuthHeader } from '../../../Auth';
 import { handleAxiosError } from '../../../errorHandler';
 import { useAtom, useSetAtom } from 'jotai';
 import { dialogAtom, notificationsAtom, tickAtom } from '../../../state/atoms';
-import { useLive } from '../../../state/live';
+import { useApi } from '../../../state/query';
 import { UserMultiSelect } from '../../utils/UserMultiSelect';
 import { UserSingleSelect } from '../../utils/UserSingleSelect';
 import dayjs from '../../../dayjs';
@@ -16,6 +16,8 @@ import Divider from '@mui/material/Divider';
 import { ButtonRow, FormStack, StyledCheckbox, StyledDateTimePicker, StyledInput, StyledAddButton } from '../../ui';
 import { EditButtons } from '../../utils/EditButtons';
 import { RestrictedComponent } from '../../utils/RestrictedComponent';
+
+const noUsers = [];
 
 export const TaskOverview = () => {
     const navigate = useNavigate();
@@ -32,39 +34,23 @@ export const TaskOverview = () => {
     const projectID = useParams().project;
     const taskID = useParams().task;
     // reloaded when someone changes this data (live updates) or after a change made here
-    const tick = useLive(`project:${projectID}`, 'users');
-    const [task, setTask] = useState(null);
-    const [users, setUsers] = React.useState([]);
+    const task = useApi(`/auth/projects/${projectID}/tasks/${taskID}`, { topics: [`project:${projectID}`, 'users'] }).data ?? null;
+    const { data: users = noUsers } = useApi('/auth/users', { topics: ['users'] });
     const [finishDate, setFinishDate] = useState(null);
     const [finished, setFinished] = useState(false);
 
     const [selectedUsers, setSelectedUsers] = React.useState([]);
     const [descriptionValue, setDescriptionValue] = useState('');
 
-    useEffect(() => {
-        axios
-            .get(getBackendAddress(`/auth/projects/${projectID}/tasks/${taskID}`), getAuthHeader())
-            .then((response) => {
-                setTask(response.data);
-                setFinishDate(response.data.FinishDate);
-                setFinished(response.data.Finished);
-                setSelectedUsers(response.data.User_Task.map((user) => user.User.ID));
-                setDescriptionValue(response.data.Description);
-            })
-            .catch((error) => {
-                handleAxiosError(error, [notifications, setNotifications]);
-            });
-
-        axios
-            .get(getBackendAddress(`/auth/users`), getAuthHeader())
-            .then((response) => {
-                setUsers(response.data);
-            })
-            .catch((error) => {
-                handleAxiosError(error, [notifications, setNotifications]);
-            });
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [tick]);
+    // the form follows the loaded task
+    const [formTask, setFormTask] = useState(null);
+    if (task && task !== formTask) {
+        setFormTask(task);
+        setFinishDate(task.FinishDate);
+        setFinished(task.Finished);
+        setSelectedUsers(task.User_Task.map((user) => user.User.ID));
+        setDescriptionValue(task.Description);
+    }
 
     const handleSubmit = (event) => {
         event.preventDefault();

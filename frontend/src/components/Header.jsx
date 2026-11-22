@@ -1,13 +1,12 @@
 import { useNavigate } from 'react-router';
 import { useEffect } from 'react';
 import { useAtom, useSetAtom } from 'jotai';
-import { dialogAtom, notificationsAtom, showNavAtom, userAtom } from '../state/atoms';
-import { useLive } from '../state/live';
+import { dialogAtom, showNavAtom, userAtom } from '../state/atoms';
+import { useApi } from '../state/query';
 import { Timer } from './Timer';
 import axios from 'axios';
 import { getAuthHeader, getUserID } from '../Auth';
 import { getBackendAddress } from '../config';
-import { handleAxiosError } from '../errorHandler';
 import { StyledUserMenu } from './ui';
 import { userRoleOptions } from './dialogs/AddUser';
 import { ChatButton } from './chat/ChatButton';
@@ -17,21 +16,11 @@ export const Header = () => {
     const [showNav, setShowNav] = useAtom(showNavAtom);
     const navigate = useNavigate();
     const setDialog = useSetAtom(dialogAtom);
-    const [notifications, setNotifications] = useAtom(notificationsAtom);
     // reloaded when the user's account or timer changes elsewhere (another tab or device, an admin)
-    const live = useLive(`user:${getUserID()}`);
-
+    const { data: me } = useApi(`/auth/users/${getUserID()}`, { topics: [`user:${getUserID()}`] });
     useEffect(() => {
-        axios
-            .get(getBackendAddress(`/auth/users/${getUserID()}`), getAuthHeader())
-            .then((response) => {
-                setUser(response.data);
-            })
-            .catch((error) => {
-                handleAxiosError(error, [notifications, setNotifications]);
-            });
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [live]);
+        if (me) setUser(me);
+    }, [me, setUser]);
 
     const logout = () => {
         axios.post(getBackendAddress('/auth/logout'), {}, getAuthHeader()).then(() => {

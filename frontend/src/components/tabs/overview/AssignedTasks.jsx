@@ -1,12 +1,6 @@
 import { AssignedTask } from '../../utils/AssignedTask';
-import { useEffect, useMemo, useState } from 'react';
-import axios from 'axios';
-import { getBackendAddress } from '../../../config';
-import { getAuthHeader } from '../../../Auth';
-import { handleAxiosError } from '../../../errorHandler';
-import { useAtom } from 'jotai';
-import { notificationsAtom } from '../../../state/atoms';
-import { useLive } from '../../../state/live';
+import { useMemo } from 'react';
+import { useApi } from '../../../state/query';
 import { FormStack, StyledTable, useSearch } from '../../ui';
 import dayjs from '../../../dayjs';
 import { filterTasks, useTaskFilters } from '../../../state/taskFilters';
@@ -16,24 +10,8 @@ import { TaskFiltersButton } from '../../utils/TaskFiltersButton';
 // to the title picks whether finished and locked tasks are shown (the overview)
 export const AssignedTasks = ({ showHeader, userID, machineTasks = [], searchable = true, filterable = false }) => {
     // reloaded when someone changes this data (live updates) or after a change made here
-    const tick = useLive(`user:${userID}`);
-    const [notifications, setNotifications] = useAtom(notificationsAtom);
-
-    const [tasks, setTasks] = useState([]);
-
-    useEffect(() => {
-        if (userID) {
-            axios
-                .get(getBackendAddress(`/auth/${userID}/tasks`), getAuthHeader())
-                .then((response) => {
-                    setTasks(response.data.map((task) => task.Task));
-                })
-                .catch((error) => {
-                    handleAxiosError(error, [notifications, setNotifications]);
-                });
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [tick, userID]);
+    const { data } = useApi(`/auth/${userID}/tasks`, { topics: [`user:${userID}`], enabled: !!userID });
+    const tasks = useMemo(() => (data ?? []).map((task) => task.Task), [data]);
 
     const { filters } = useTaskFilters();
     const allTasks = userID ? tasks : machineTasks;

@@ -1,14 +1,16 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { atom, useAtomValue, useSetAtom } from 'jotai';
 import axios from 'axios';
 import { io } from 'socket.io-client';
 import dayjs from '../dayjs';
 import { getBackendAddress } from '../config';
 import { tickAtom } from './atoms';
+import { invalidateAll, invalidateTopics } from './query';
 
 // Live updates: the backend tells this browser which data other people changed (topics such as "projects",
-// "project:12" or "user:5", see backend/src/live.ts), and the screens showing it load it again over REST.
-// Changes made in this browser still reload the screen through tickAtom.
+// "project:12" or "user:5", see backend/src/live.ts). The cached REST answers that depend on them go stale
+// (state/query.js), so the screens showing them load them again. Changes made in this browser still reload through
+// tickAtom, which makes all cached data stale.
 
 // how many times each topic changed since the page was opened; "user:*" counts every "user:<id>"
 const liveVersionsAtom = atom({});
@@ -58,6 +60,7 @@ export const LiveUpdates = () => {
                 const topics = [...pending];
                 pending.clear();
                 flushTimer = null;
+                invalidateTopics(topics);
                 setVersions((versions) => bump(versions, topics));
             }, BATCH_MS);
         });
@@ -89,11 +92,19 @@ export const LiveUpdates = () => {
         };
     }, [setVersions, setTick]);
 
+    // a change made in this browser (setTick), or the connection is back: everything cached loads again when shown
+    const tick = useAtomValue(tickAtom);
+    const firstTick = useRef(tick);
+    useEffect(() => {
+        if (tick !== firstTick.current) invalidateAll();
+    }, [tick]);
+
     return null;
 };
 
 // A value for a useEffect's dependencies that changes whenever one of the topics changes (or the screen should reload
-// after a change made in this browser, see tickAtom)
+// after a change made in this browser, see tickAtom). Only for what isn't loaded with useApi (state/query.js), which
+// stays fresh by itself.
 export const useLive = (...topics) => {
     const tick = useAtomValue(tickAtom);
     const versions = useAtomValue(liveVersionsAtom);

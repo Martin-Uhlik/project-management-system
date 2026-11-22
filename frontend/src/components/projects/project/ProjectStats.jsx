@@ -1,14 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router';
-import { useAtom } from 'jotai';
-import axios from 'axios';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import { notificationsAtom } from '../../../state/atoms';
-import { useLive } from '../../../state/live';
-import { getBackendAddress } from '../../../config';
-import { getAuthHeader } from '../../../Auth';
-import { handleAxiosError } from '../../../errorHandler';
+import { useApi } from '../../../state/query';
 import { PlannedActualChart } from '../../utils/PlannedActualChart';
 import {
     StyledSection,
@@ -30,20 +24,8 @@ import {
 // for the whole project, per worker and per task
 export const useProjectStats = () => {
     const projectID = useParams().project;
-    const [stats, setStats] = useState(null);
     // reloaded when someone changes this data (live updates) or after a change made here
-    const tick = useLive(`project:${projectID}`);
-    const [notifications, setNotifications] = useAtom(notificationsAtom);
-
-    useEffect(() => {
-        axios
-            .get(getBackendAddress(`/auth/projects/${projectID}/stats`), getAuthHeader())
-            .then((response) => setStats(response.data))
-            .catch((error) => handleAxiosError(error, [notifications, setNotifications]));
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [projectID, tick]);
-
-    return stats;
+    return useApi(`/auth/projects/${projectID}/stats`, { topics: [`project:${projectID}`] }).data ?? null;
 };
 
 export const ProjectStats = () => {

@@ -10,6 +10,7 @@ import { Dialogs } from './components/Dialogs';
 import Cookies from 'js-cookie';
 import { LiveUpdates } from './state/live';
 import { SettleFields } from './components/ui';
+import { clearCache, prefetchStart } from './state/query';
 
 // The session lives in an httpOnly cookie that the backend sets on sign-in and the browser sends with every request
 // (axios.defaults.withCredentials, see index.jsx); scripts on the page can't read it.
@@ -22,6 +23,17 @@ export const getUserID = () => {
     return Cookies.get('user_id');
 };
 
+// The cached data (state/query.js) belongs to one signed-in user. This check runs again on every page change, so the
+// cache starts only when someone else signed in: it's emptied (nobody sees the previous user's data in this tab) and
+// the data most pages show starts loading, once.
+let cacheUserID = null;
+const startCache = (userID) => {
+    if (userID === cacheUserID) return;
+    cacheUserID = userID;
+    clearCache();
+    prefetchStart(userID);
+};
+
 // Everything under /auth is for signed-in users only: nothing of it shows until the backend confirms the session.
 // Without one (or when the server can't be reached) the browser goes to the sign-in page.
 const useSession = () => {
@@ -31,7 +43,11 @@ const useSession = () => {
         let active = true;
         axios
             .get(getBackendAddress('/auth/me'))
-            .then(() => active && setSignedIn(true))
+            .then(() => {
+                if (!active) return;
+                startCache(getUserID());
+                setSignedIn(true);
+            })
             .catch(() => active && navigate('/', { replace: true }));
         return () => {
             active = false;

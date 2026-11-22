@@ -1,7 +1,7 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useAtom, useSetAtom } from 'jotai';
 import { dialogAtom, notificationsAtom, tickAtom } from '../../../state/atoms';
-import { useLive } from '../../../state/live';
+import { useApi } from '../../../state/query';
 import { MyTask } from '../../utils/MyTask';
 import axios from 'axios';
 import { handleAxiosError } from '../../../errorHandler';
@@ -12,25 +12,14 @@ import { filterTasks, useTaskFilters } from '../../../state/taskFilters';
 import { TaskFiltersButton } from '../../utils/TaskFiltersButton';
 import { FormStack, StyledButton, StyledAddButton, StyledTable, useSearch } from '../../ui';
 
+const noTasks = [];
+
 export const MyTasks = () => {
     const setDialog = useSetAtom(dialogAtom);
     const [notifications, setNotifications] = useAtom(notificationsAtom);
-    const [tasks, setTasks] = React.useState([]);
     // reloaded when someone changes this data (live updates) or after a change made here
-    const tick = useLive(`personal-tasks:${getUserID()}`);
+    const { data: tasks = noTasks } = useApi(`/auth/${getUserID()}/personal-tasks`, { topics: [`personal-tasks:${getUserID()}`] });
     const setTick = useSetAtom(tickAtom);
-
-    useEffect(() => {
-        axios
-            .get(getBackendAddress(`/auth/${getUserID()}/personal-tasks`), getAuthHeader())
-            .then((response) => {
-                setTasks(response.data);
-            })
-            .catch((error) => {
-                handleAxiosError(error, [notifications, setNotifications]);
-            });
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [tick]);
 
     const createTask = (task) => {
         axios

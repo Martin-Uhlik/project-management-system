@@ -85,6 +85,11 @@ export const StyledPageHeader = ({ breadcrumbs = [], title, status, statusLabel,
                     <Stack direction='row' sx={{ columnGap: 3, rowGap: 0.5, flexWrap: 'wrap', alignItems: 'center' }}>
                         {facts}
                     </Stack>
+                ) : title === null || title === undefined ? (
+                    // still loading: a placeholder line as tall as the facts, so the header doesn't grow when they arrive
+                    <Typography variant='body2'>
+                        <Skeleton width='20rem' sx={{ maxWidth: '100%', borderRadius: 0, bgcolor: onDark.skeleton }} />
+                    </Typography>
                 ) : null}
             </Stack>
             {tabs ? (

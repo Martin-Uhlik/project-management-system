@@ -1,6 +1,6 @@
 import { useAtom, useSetAtom } from 'jotai';
 import { dialogAtom, notificationsAtom, selectedTabAtom, tickAtom } from '../../state/atoms';
-import { useLive } from '../../state/live';
+import { useApi } from '../../state/query';
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { RemoveButton } from '../utils/RemoveButton';
@@ -18,6 +18,8 @@ import { ProjectTable } from '../utils/tables/ProjectTable';
 import { RestrictedComponent } from '../utils/RestrictedComponent';
 import { EditButtons } from '../utils/EditButtons';
 
+const none = [];
+
 export const Projects = () => {
     const setTab = useSetAtom(selectedTabAtom);
     const setDialog = useSetAtom(dialogAtom);
@@ -27,59 +29,29 @@ export const Projects = () => {
 
     const [disabled, setDisabled] = useState(true);
     const [notifications, setNotifications] = useAtom(notificationsAtom);
-    // reloaded when someone changes this data (live updates) or after a change made here
-    const tick = useLive('projects', 'users');
     const setTick = useSetAtom(tickAtom);
-    const [projects, setProjects] = useState([]);
-    const [selectedProject, setSelectedProject] = useState(null);
-    const [project, setProject] = useState(null);
-    const [users, setUsers] = React.useState([]);
+    // reloaded when someone changes this data (live updates) or after a change made here
+    const { data: projects = none } = useApi('/auth/projects', { topics: ['projects', 'users'] });
+    const { data: users = none } = useApi('/auth/users', { topics: ['users'] });
+    // the project clicked in the list, else the first one
+    const [chosenProject, setSelectedProject] = useState(null);
+    const selectedProject = chosenProject ?? projects[0]?.ID ?? null;
+    const project =
+        useApi(`/auth/projects/${selectedProject}`, { topics: ['projects', 'users', `project:${selectedProject}`], enabled: !!selectedProject }).data ?? null;
     const [selectedUsers, setSelectedUsers] = React.useState([]);
     const [finishDate, setFinishDate] = useState(null);
     const [descriptionValue, setDescriptionValue] = useState('');
     const [finished, setFinished] = useState(false);
 
-    useEffect(() => {
-        axios
-            .get(getBackendAddress(`/auth/projects`), getAuthHeader())
-            .then((response) => {
-                setProjects(response.data);
-                if (!selectedProject && response.data.length > 0) {
-                    setSelectedProject(response.data[0].ID);
-                }
-            })
-            .catch((error) => {
-                handleAxiosError(error, [notifications, setNotifications]);
-            });
-
-        axios
-            .get(getBackendAddress(`/auth/users`), getAuthHeader())
-            .then((response) => {
-                setUsers(response.data);
-            })
-            .catch((error) => {
-                handleAxiosError(error, [notifications, setNotifications]);
-            });
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [tick]);
-
-    useEffect(() => {
-        if (selectedProject && disabled) {
-            axios
-                .get(getBackendAddress(`/auth/projects/${selectedProject}`), getAuthHeader())
-                .then((response) => {
-                    setProject(response.data);
-                    setFinishDate(response.data.FinishDate);
-                    setSelectedUsers(response.data.Member.map((user) => user.User.ID));
-                    setDescriptionValue(response.data.Description);
-                    setFinished(response.data.Finished);
-                })
-                .catch((error) => {
-                    handleAxiosError(error, [notifications, setNotifications]);
-                });
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [tick, selectedProject]);
+    // the form follows the loaded project, except while it's being edited
+    const [formProject, setFormProject] = useState(null);
+    if (project && disabled && project !== formProject) {
+        setFormProject(project);
+        setFinishDate(project.FinishDate);
+        setSelectedUsers(project.Member.map((user) => user.User.ID));
+        setDescriptionValue(project.Description);
+        setFinished(project.Finished);
+    }
 
     const handleUpdateProject = (event) => {
         event.preventDefault();
