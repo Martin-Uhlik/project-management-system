@@ -82,7 +82,7 @@ export const deleteUserSessions = async (userID: number, keepToken?: string) => 
 
 // Cookies are SameSite=Lax: other sites can't send them with their requests (no CSRF), and the frontend works as
 // long as it is opened on the same host name as VITE_BACKEND. COOKIE_SECURE=true adds Secure (needs HTTPS).
-const cookieOptions = () => ({
+export const cookieOptions = () => ({
     path: '/',
     sameSite: 'lax' as const,
     secure: process.env.COOKIE_SECURE === 'true',
@@ -98,7 +98,7 @@ export const clearSessionCookies = (res: Response) => {
     res.clearCookie(USER_ID_COOKIE, cookieOptions());
 };
 
-const readCookie = (headers: IncomingHttpHeaders, name: string) => {
+export const readCookie = (headers: IncomingHttpHeaders, name: string) => {
     const header = headers.cookie;
     if (!header) return undefined;
     for (const part of header.split(';')) {

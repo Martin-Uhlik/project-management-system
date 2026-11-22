@@ -14,6 +14,7 @@ import * as materialRequirements from './resources/materialRequirements.ts';
 import * as personalTasks from './resources/personalTasks.ts';
 import * as stats from './resources/stats.ts';
 import * as chat from './resources/chat.ts';
+import { formOrigins, ssoRoutes, ssoSettingsFromEnv, type SsoSettings } from './sso.ts';
 import { live, personalTaskTopics, projectTopics, resync, topic, userTopics } from './live.ts';
 
 // The addresses the frontend is opened from (FRONTEND_ORIGIN, comma separated). Only they may call the API from a
@@ -34,7 +35,7 @@ const uploadLimitFromEnv = () => {
     return Number.isFinite(value) && value > 0 ? value : 200;
 };
 
-export type AppOptions = { loginLimits?: LoginLimiterOptions; demoMode?: boolean; uploadLimitMb?: number };
+export type AppOptions = { loginLimits?: LoginLimiterOptions; demoMode?: boolean; uploadLimitMb?: number; sso?: SsoSettings | null };
 
 export const createApp = (options: AppOptions = {}) => {
     const app = express();
@@ -42,6 +43,8 @@ export const createApp = (options: AppOptions = {}) => {
     const loginLimiter = createLoginLimiter(options.loginLimits ?? defaultLoginLimits);
     const demoMode = options.demoMode ?? demoModeFromEnv();
     const uploadLimitMb = options.uploadLimitMb ?? uploadLimitFromEnv();
+    // sign-in handoff from martin-uhlik.cz (see sso.ts); null = off
+    const sso = options.sso !== undefined ? options.sso : ssoSettingsFromEnv(origins[0] ?? '');
 
     app.disable('x-powered-by');
     // behind a reverse proxy, set TRUST_PROXY (e.g. 1) so the login limit sees the client's IP
@@ -50,7 +53,9 @@ export const createApp = (options: AppOptions = {}) => {
     app.use(cors({ origin: origins, credentials: true }));
     app.use((req: Request, res: Response, next: NextFunction) => {
         const origin = req.headers.origin;
-        if (origin && !['GET', 'HEAD', 'OPTIONS'].includes(req.method) && !origins.includes(origin)) {
+        // the sign-in handoff is the one request another site may send: a form posted from the issuer's page
+        const handoffFromIssuer = req.path === '/sso' && !!sso && !!origin && formOrigins(sso).includes(origin);
+        if (origin && !['GET', 'HEAD', 'OPTIONS'].includes(req.method) && !origins.includes(origin) && !handoffFromIssuer) {
             throw new HttpError(403, 'Požadavek z nepovolené adresy.');
         }
         next();
@@ -77,6 +82,11 @@ export const createApp = (options: AppOptions = {}) => {
 
     // sign-in; everything under /auth needs a valid session
     app.post('/login', utilities.login(loginLimiter));
+    // sign-in handoff from martin-uhlik.cz and the demo accounts it unlocks (sso.ts)
+    const demo = ssoRoutes(sso, origins[0] ?? '');
+    app.post('/sso', express.urlencoded({ extended: false, limit: '8kb' }), demo.handoff);
+    app.get('/demo-accounts', demo.accounts);
+    app.post('/demo-login', demo.login);
     app.use('/auth', requireSession);
 
     // the signed-in user

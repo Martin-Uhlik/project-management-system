@@ -46,6 +46,11 @@ services:
             BACKEND_PORT: 4000
             FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost}
             COOKIE_SECURE: ${COOKIE_SECURE:-false}
+            # sign-in handoff from martin-uhlik.cz, see .env.example
+            SSO_PUBLIC_KEY: ${SSO_PUBLIC_KEY:-}
+            SSO_ISSUER: ${SSO_ISSUER:-}
+            SSO_DEMO_WORKER: ${SSO_DEMO_WORKER:-tsvoboda}
+            SSO_DEMO_MANAGER: ${SSO_DEMO_MANAGER:-jnovak}
             DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@database:5432/${POSTGRES_DB}
         volumes:
             # uploaded task files; the container runs as uid 1000 (node), so the folder must be writable for it
