@@ -1,5 +1,5 @@
 import prisma from './client.ts';
-import { isManager, type SessionUser } from './auth.ts';
+import { hasRole, isManager, type SessionUser } from './auth.ts';
 import { forbidden, notFound } from './errors.ts';
 
 // Who may open a project (its task graph, tasks and files): admins and managers, the project's owner and members,
@@ -19,6 +19,13 @@ const findProject = async (projectID: number) => {
     const project = await prisma.project.findFirst({ where: { ID: projectID, Deleted: false }, select: { ID: true } });
     if (!project) throw notFound();
     return project;
+};
+
+// Who may change a project's details or delete it (its Nastavení tab): admins and the project's owner
+export const requireProjectOwnerOrAdmin = async (user: SessionUser, projectID: number) => {
+    const project = await prisma.project.findFirst({ where: { ID: projectID, Deleted: false }, select: { OwnerID: true } });
+    if (!project) throw notFound();
+    if (!hasRole(user, 'ADMIN') && project.OwnerID !== user.ID) throw forbidden();
 };
 
 export const requireProjectAccess = async (user: SessionUser, projectID: number) => {

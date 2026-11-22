@@ -63,9 +63,22 @@ export const StyledTable = ({ columns, search, children }) => {
 //   working green, disabled grey); hover keeps the usual highlight
 // disabled: greyed out and struck through, e.g. a disabled worker
 // selected: the row whose detail is open next to the table (highlighted, with a red line on the right)
-// actions: icon buttons on the right instead of the arrow, shown on hover: [{ label, icon, onClick, color }]
+// actions: grey icon buttons on the right instead of the arrow, shown on hover: [{ label, icon, onClick }]
 //   (e.g. edit, finish, delete); clicking one doesn't also click the row
-export const StyledTableRow = ({ onClick, status, disabled, selected, showArrow = true, actions, children }) => {
+// onArrowClick: the arrow becomes a button of its own (e.g. the row shows a preview, the arrow opens the detail page);
+//   arrowLabel: what it does; arrowDisabled: greyed out and does nothing (e.g. no access to the detail)
+export const StyledTableRow = ({
+    onClick,
+    status,
+    disabled,
+    selected,
+    showArrow = true,
+    actions,
+    onArrowClick,
+    arrowLabel = 'Otevřít',
+    arrowDisabled = false,
+    children,
+}) => {
     const statusColors = useStatusColors();
     const statusColor = status && statusColors[status];
     const clickable = Boolean(onClick);
@@ -135,15 +148,14 @@ export const StyledTableRow = ({ onClick, status, disabled, selected, showArrow 
             }}
         >
             {children}
-            <TableCell padding='none' align='right' sx={actions ? { ...arrowCellSx, width: 'auto', whiteSpace: 'nowrap' } : arrowCellSx}>
+            <TableCell padding='none' align='right' sx={actions || onArrowClick ? { ...arrowCellSx, width: 'auto', whiteSpace: 'nowrap' } : arrowCellSx}>
                 {actions ? (
                     <span className='row-actions'>
                         {actions.map((action) => (
                             <Tooltip key={action.label} title={action.label}>
                                 <IconButton
-                                    size='small'
-                                    color={action.color ?? 'default'}
                                     aria-label={action.label}
+                                    sx={{ color: 'text.secondary', '& svg': { fontSize: '1.5rem' } }}
                                     onClick={(event) => {
                                         event.stopPropagation();
                                         action.onClick(event);
@@ -155,8 +167,25 @@ export const StyledTableRow = ({ onClick, status, disabled, selected, showArrow 
                             </Tooltip>
                         ))}
                     </span>
+                ) : onArrowClick ? (
+                    <Tooltip title={arrowDisabled ? '' : arrowLabel}>
+                        <span className='row-arrow' style={{ display: 'inline-flex' }}>
+                            <IconButton
+                                aria-label={arrowLabel}
+                                disabled={arrowDisabled}
+                                sx={{ color: 'text.secondary', '& svg': { fontSize: '1.5rem' } }}
+                                onClick={(event) => {
+                                    event.stopPropagation();
+                                    onArrowClick(event);
+                                }}
+                                onKeyDown={(event) => event.stopPropagation()}
+                            >
+                                <ChevronRightIcon />
+                            </IconButton>
+                        </span>
+                    </Tooltip>
                 ) : clickable && showArrow ? (
-                    <ChevronRightIcon className='row-arrow' fontSize='small' sx={{ color: 'text.secondary', verticalAlign: 'middle' }} />
+                    <ChevronRightIcon className='row-arrow' sx={{ color: 'text.secondary', verticalAlign: 'middle', fontSize: '1.5rem' }} />
                 ) : null}
             </TableCell>
         </TableRow>

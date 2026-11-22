@@ -72,16 +72,62 @@ export const seedDemoData = async () => {
         },
     });
 
+    // each machine with the person who looks after it and its services: done (days ago) and planned (days ahead)
     const machineList = [
-        { Name: 'Laser Trumpf', Description: 'Vláknový laser 6 kW, plechy do 20 mm.' },
-        { Name: 'Ohraňovací lis', Description: 'Ohraňovací lis 135 t, délka ohybu 3 m.' },
-        { Name: 'CNC frézka', Description: 'Pětiosé obráběcí centrum.' },
-        { Name: 'Svařovací robot', Description: 'Robotické pracoviště MIG/MAG.' },
-        { Name: 'Lakovací box', Description: 'Práškové lakování, vypalovací pec do 200 °C.' },
+        {
+            Name: 'Laser Trumpf',
+            Description: 'Vláknový laser 6 kW, plechy do 20 mm.',
+            responsible: 'okucera',
+            services: [
+                { days: -170, Title: 'Výměna ochranného skla a čištění optiky', Done: true },
+                { days: -40, Title: 'Servisní prohlídka Trumpf', Done: true },
+                { days: 20, Title: 'Kontrola chladicí jednotky', Done: false },
+            ],
+        },
+        {
+            Name: 'Ohraňovací lis',
+            Description: 'Ohraňovací lis 135 t, délka ohybu 3 m.',
+            responsible: 'lprochazka',
+            services: [
+                { days: -380, Title: 'Roční prohlídka hydrauliky', Done: true },
+                { days: -5, Title: 'Roční prohlídka hydrauliky', Done: false },
+            ],
+        },
+        {
+            Name: 'CNC frézka',
+            Description: 'Pětiosé obráběcí centrum.',
+            responsible: 'okucera',
+            services: [
+                { days: -60, Title: 'Výměna řezné kapaliny', Done: true },
+                { days: 45, Title: 'Kalibrace os', Done: false },
+            ],
+        },
+        {
+            Name: 'Svařovací robot',
+            Description: 'Robotické pracoviště MIG/MAG.',
+            responsible: 'lprochazka',
+            services: [{ days: -90, Title: 'Kontrola podavače drátu', Done: true }],
+        },
+        {
+            Name: 'Lakovací box',
+            Description: 'Práškové lakování, vypalovací pec do 200 °C.',
+            responsible: 'kvesela',
+            services: [{ days: 10, Title: 'Výměna filtrů', Done: false }],
+        },
     ];
     const machines: Record<string, number> = {};
-    for (const machine of machineList) {
-        machines[machine.Name] = (await prisma.machine.create({ data: machine })).ID;
+    for (const { responsible, services, ...machine } of machineList) {
+        machines[machine.Name] = (
+            await prisma.machine.create({
+                data: {
+                    ...machine,
+                    ResponsibleID: users[responsible],
+                    Services: {
+                        create: services.map(({ days, ...service }) => ({ ...service, Date: inDays(days, 8), CreatedByID: users.jnovak })),
+                    },
+                },
+            })
+        ).ID;
     }
 
     const projects: DemoProject[] = [

@@ -5,7 +5,7 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import Skeleton from '@mui/material/Skeleton';
 import { StyledSubTab, StyledSubTabs } from './StyledSubTabs';
-import { ChevronRightIcon } from './icons';
+import { ArrowLeftIcon, ChevronRightIcon } from './icons';
 import { StyledChip } from './StyledChip';
 import { taskStatusColors } from './theme';
 import { statusLabels } from './taskStatus';
@@ -16,15 +16,18 @@ const onDark = {
     quiet: 'rgba(255, 255, 255, 0.5)',
     skeleton: 'rgba(255, 255, 255, 0.12)',
     error: '#ff8787',
+    warning: '#ffc078',
 };
 
 // The top of a detail page (a project, a task): where it sits (breadcrumbs back up), its title with a status, a line of
 // facts about it (StyledPageHeaderFact), buttons on the right, and the page's tabs along the bottom edge.
 // breadcrumbs: [{ label, to }] (links, relative to the page); title: null while loading shows a placeholder;
-// tabs may carry a count (e.g. unread chat messages), shown as a small red number after the label;
+// tabs may carry a count (e.g. unread chat messages), shown as a small red number after the label, or a total (how many
+// items the tab holds), shown as a quiet number;
 // status: a task status ('finished', 'inProgress', 'todo', 'blocked') shown as a label next to the title, statusLabel: its text if not
-// the usual one; tabs: [{ label, to, value }] (links) with active = the open tab's value; or tabs: [{ label, value }] with onSelect(value)
-export const StyledPageHeader = ({ breadcrumbs = [], title, status, statusLabel, facts, actions, tabs, active, onSelect }) => {
+// the usual one; tabs: [{ label, to, value }] (links) with active = the open tab's value; or tabs: [{ label, value }] with onSelect(value);
+// back: { to, label } a red arrow in front of the tabs that goes up a level (label: where to, for the tooltip and screen readers)
+export const StyledPageHeader = ({ breadcrumbs = [], title, status, statusLabel, facts, actions, tabs, active, onSelect, back }) => {
     return (
         <Box
             component='header'
@@ -94,13 +97,18 @@ export const StyledPageHeader = ({ breadcrumbs = [], title, status, statusLabel,
             </Stack>
             {tabs ? (
                 <StyledSubTabs sx={{ px: { xs: 0.5, md: 1.5 }, backgroundColor: 'transparent' }}>
+                    {back ? (
+                        <StyledSubTab back component={Link} to={back.to} role='link' aria-label={back.label} title={back.label}>
+                            <ArrowLeftIcon />
+                        </StyledSubTab>
+                    ) : null}
                     {tabs.map((tab) =>
                         tab.to !== undefined ? (
-                            <StyledSubTab key={tab.value} component={Link} to={tab.to} active={active === tab.value} count={tab.count}>
+                            <StyledSubTab key={tab.value} component={Link} to={tab.to} active={active === tab.value} count={tab.count} total={tab.total}>
                                 {tab.label}
                             </StyledSubTab>
                         ) : (
-                            <StyledSubTab key={tab.value} active={active === tab.value} count={tab.count} onClick={() => onSelect(tab.value)}>
+                            <StyledSubTab key={tab.value} active={active === tab.value} count={tab.count} total={tab.total} onClick={() => onSelect(tab.value)}>
                                 {tab.label}
                             </StyledSubTab>
                         ),

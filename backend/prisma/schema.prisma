@@ -54,6 +54,9 @@ model User {
   WorkTime          WorkTime[]            @relation(name: "HasTime")
   PrivateTask       PrivateTask[]         @relation(name: "HasPrivateTask")
   UploadedFiles     TaskFile[]            @relation(name: "FileUploader")
+  ResponsibleMachines Machine[]           @relation(name: "MachineResponsible")
+  MachineServices   MachineService[]      @relation(name: "MachineServiceCreator")
+  MachineFiles      MachineFile[]         @relation(name: "MachineFileUploader")
   SentMessages      ChatMessage[]         @relation(name: "ChatSender")
   ReceivedMessages  ChatMessage[]         @relation(name: "ChatRecipient")
   ChatReads         ChatRead[]            @relation(name: "ChatReader")
@@ -165,6 +168,38 @@ model Machine {
   Description       String?
   Deleted           Boolean               @default(false)
   Task              Task[]                @relation(name: "AssignedMachines")
+  // the person who looks after the machine (its services, documentation)
+  Responsible       User?                 @relation(name: "MachineResponsible", fields: [ResponsibleID], references: [ID], onDelete: SetNull)
+  ResponsibleID     Int?
+  Services          MachineService[]      @relation(name: "MachineServices")
+  Files             MachineFile[]         @relation(name: "MachineFiles")
+}
+
+// A service of a machine: done (Done, on Date) or planned for Date
+model MachineService {
+  ID                Int                   @id @default(autoincrement())
+  Machine           Machine               @relation(name: "MachineServices", fields: [MachineID], references: [ID])
+  MachineID         Int
+  Date              DateTime
+  Done              Boolean               @default(false)
+  Title             String
+  Note              String?
+  CreatedAt         DateTime              @default(now())
+  CreatedBy         User?                 @relation(name: "MachineServiceCreator", fields: [CreatedByID], references: [ID], onDelete: SetNull)
+  CreatedByID       Int?
+}
+
+// Who uploaded each machine file (documentation, manuals...) and when; the files are in <DATA_DIR>/machines/<machine>
+model MachineFile {
+  ID                Int                   @id @default(autoincrement())
+  Machine           Machine               @relation(name: "MachineFiles", fields: [MachineID], references: [ID])
+  MachineID         Int
+  Name              String
+  UploadedAt        DateTime              @default(now())
+  UploadedBy        User?                 @relation(name: "MachineFileUploader", fields: [UploadedByID], references: [ID], onDelete: SetNull)
+  UploadedByID      Int?
+
+  @@unique([MachineID, Name])
 }
 
 model MaterialRequest {

@@ -2,8 +2,9 @@ import type { Request, Response } from 'express';
 import { z } from 'zod';
 import prisma from '../client.ts';
 import { currentUser } from '../auth.ts';
-import { projectWork, projectWorkSelect, publicUserSelect, requireProjectAccess, taskProgressCount } from '../access.ts';
+import { projectWork, projectWorkSelect, publicUserSelect, requireProjectAccess, requireProjectOwnerOrAdmin, taskProgressCount } from '../access.ts';
 import { notFound } from '../errors.ts';
+import { listTaskFiles } from './tasks.ts';
 import { date, id, idParam, parseBody, requiredText, text } from '../validation.ts';
 
 const projectFields = {
@@ -28,7 +29,9 @@ export const createProject = async (req: Request, res: Response) => {
     return res.status(200).send();
 };
 
+// Every project, each with Mine: whether the signed-in user owns it or is one of its members (the list can hide the others)
 export const getProjects = async (req: Request, res: Response) => {
+    const me = currentUser(res);
     const projects = await prisma.project.findMany({
         where: {
             Deleted: false,
@@ -39,13 +42,15 @@ export const getProjects = async (req: Request, res: Response) => {
             Customer: true,
             FinishDate: true,
             Finished: true,
+            OwnerID: true,
+            Member: { where: { UserID: me.ID }, select: { ID: true } },
             ...projectWorkSelect,
         },
         orderBy: {
             Name: 'asc',
         },
     });
-    return res.status(200).send(projects.map(projectWork));
+    return res.status(200).send(projects.map(({ OwnerID, Member, ...project }) => ({ ...projectWork(project), Mine: OwnerID === me.ID || Member.length > 0 })));
 };
 
 export const getProject = async (req: Request, res: Response) => {
@@ -82,8 +87,10 @@ const updateProjectSchema = z.object({
 });
 
 // ADMIN and MANAGER (see app.ts)
+// the project's owner and admins (see app.ts)
 export const updateProject = async (req: Request, res: Response) => {
     const projectID = idParam(req, 'projectID');
+    await requireProjectOwnerOrAdmin(currentUser(res), projectID);
     const { Members, ...data } = parseBody(updateProjectSchema, req.body);
     await prisma.project.update({
         where: {
@@ -106,7 +113,9 @@ export const updateProject = async (req: Request, res: Response) => {
 };
 
 // ADMIN only (see app.ts)
+// the project's owner and admins
 export const removeProject = async (req: Request, res: Response) => {
+    await requireProjectOwnerOrAdmin(currentUser(res), idParam(req, 'projectID'));
     await prisma.project.update({
         where: {
             ID: idParam(req, 'projectID'),
@@ -199,4 +208,19 @@ export const getProjectStats = async (req: Request, res: Response) => {
         Workers: workerStats,
         Tasks: taskStats,
     });
+};
+
+// Every input and output file of the project's tasks, newest first, each with its kind ('input' or 'output') and task.
+// Anyone who may open the project.
+export const getProjectFiles = async (req: Request, res: Response) => {
+    const projectID = idParam(req, 'projectID');
+    await requireProjectAccess(currentUser(res), projectID);
+    const tasks = await prisma.task.findMany({ where: { ProjectID: projectID }, select: { ID: true, Name: true } });
+    const lists = await Promise.all(
+        tasks.flatMap((task) =>
+            (['input', 'output'] as const).map(async (Kind) => (await listTaskFiles(projectID, task.ID, Kind)).map((file) => ({ ...file, Kind, Task: task }))),
+        ),
+    );
+    const files = lists.flat().sort((a, b) => new Date(b.details).getTime() - new Date(a.details).getTime());
+    return res.status(200).send(files);
 };

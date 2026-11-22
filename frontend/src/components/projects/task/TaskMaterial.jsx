@@ -11,7 +11,7 @@ import { MaterialTable } from '../../utils/tables/MaterialTable';
 import { MaterialRequirementTable } from '../../utils/tables/MaterialRequirementTable';
 import { TaskMaterialTable } from '../../utils/tables/TaskMaterialTable';
 import { RestrictedComponent } from '../../utils/RestrictedComponent';
-import { StyledAddButton } from '../../ui';
+import { StyledAddButton, StyledBoxHeader } from '../../ui';
 
 export const TaskMaterial = () => {
     const props = useOutletContext();
@@ -77,12 +77,14 @@ export const TaskMaterial = () => {
             </div>
             <div className='content-box'>
                 <div className='content-box_content'>
-                    <div className='content-box_header'>
-                        <h1>Požadavky na materiál</h1>
-                        <RestrictedComponent types={['ADMIN', 'MANAGER']}>
-                            <StyledAddButton label='Přidat požadavek na materiál' onClick={handleAddMaterialRequirement} />
-                        </RestrictedComponent>
-                    </div>
+                    <StyledBoxHeader
+                        title='Požadavky na materiál'
+                        add={
+                            <RestrictedComponent types={['ADMIN', 'MANAGER']}>
+                                <StyledAddButton label='Přidat požadavek na materiál' onClick={handleAddMaterialRequirement} />
+                            </RestrictedComponent>
+                        }
+                    />
                     <MaterialRequirementTable taskID={taskID} />
                 </div>
             </div>

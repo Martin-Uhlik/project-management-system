@@ -112,8 +112,10 @@ export const createApp = (options: AppOptions = {}) => {
     app.post('/auth/projects', MANAGER, PROJECTS, projects.createProject);
     app.get('/auth/projects/:projectID', projects.getProject);
     app.get('/auth/projects/:projectID/stats', projects.getProjectStats);
-    app.patch('/auth/projects/:projectID', MANAGER, PROJECT, projects.updateProject);
-    app.delete('/auth/projects/:projectID', ADMIN, PROJECT, projects.removeProject);
+    // the project's owner and admins (checked in the handlers)
+    app.patch('/auth/projects/:projectID', PROJECT, projects.updateProject);
+    app.delete('/auth/projects/:projectID', PROJECT, projects.removeProject);
+    app.get('/auth/projects/:projectID/files', projects.getProjectFiles);
 
     // task management
     app.get('/auth/projects/:projectID/tasks', tasks.getProjectTasks);
@@ -159,8 +161,16 @@ export const createApp = (options: AppOptions = {}) => {
     app.get('/auth/machines', machines.getMachines);
     app.post('/auth/machines', ADMIN, MACHINES, machines.createMachine);
     app.get('/auth/machines/:machineID', machines.getMachine);
-    app.patch('/auth/machines/:machineID', MANAGER, MACHINES, machines.updateMachine);
+    // admins, managers and the machine's responsible person (checked in the handlers)
+    app.patch('/auth/machines/:machineID', MACHINES, machines.updateMachine);
     app.delete('/auth/machines/:machineID', ADMIN, MACHINES, machines.removeMachine);
+    app.post('/auth/machines/:machineID/services', MACHINES, machines.createService);
+    app.patch('/auth/machines/:machineID/services/:serviceID', MACHINES, machines.updateService);
+    app.delete('/auth/machines/:machineID/services/:serviceID', MACHINES, machines.removeService);
+    app.get('/auth/machines/:machineID/files', machines.getMachineFiles);
+    app.post('/auth/machines/:machineID/files', MACHINES, machines.uploadMachineFile);
+    app.get('/auth/machines/:machineID/files/:fileName', machines.downloadMachineFile);
+    app.delete('/auth/machines/:machineID/files/:fileName', MACHINES, machines.removeMachineFile);
 
     // chat: direct messages and project group chats (who may use which: see chat.ts)
     app.get('/auth/chat', chat.getConversations);

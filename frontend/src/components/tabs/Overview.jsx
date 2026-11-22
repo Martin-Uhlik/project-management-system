@@ -54,7 +54,7 @@ export const Overview = () => {
                 <div className='content-box'>
                     <StyledToggle options={['Přidělené úkoly', 'Vlastní úkoly']} value={selectedButton} onChange={setSelectedButton} counts={taskCounts} />
                     <div className='content-box_content'>
-                        {selectedButton === 0 ? <AssignedTasks showHeader={true} filterable userID={getUserID()} /> : <MyTasks />}
+                        {selectedButton === 0 ? <AssignedTasks showHeader={true} filterList='tasks' userID={getUserID()} /> : <MyTasks />}
                     </div>
                 </div>
                 <div className='content-2-row'>

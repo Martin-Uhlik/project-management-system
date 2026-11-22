@@ -11,10 +11,9 @@ import { AddMachineDialog } from './dialogs/AddMachineDialog';
 import { AddProject } from './dialogs/AddProject';
 import { AddTask } from './dialogs/AddTask';
 import { SelectDependency } from './dialogs/SelectDependency';
-import { RemoveDependency } from './dialogs/RemoveDependency';
 import { EditMaterial } from './dialogs/EditMaterial';
 import { EditMaterialRequirement } from './dialogs/EditMaterialRequirement';
-import { TaskFilters } from './dialogs/TaskFilters';
+import { ListFilters } from './dialogs/ListFilters';
 
 export const Dialogs = () => {
     const dialog = useAtomValue(dialogAtom);
@@ -30,10 +29,9 @@ export const Dialogs = () => {
         AddProject: <AddProject />,
         AddTask: <AddTask />,
         SelectDependency: <SelectDependency />,
-        RemoveDependency: <RemoveDependency />,
         EditMaterial: <EditMaterial />,
         EditMaterialRequirement: <EditMaterialRequirement />,
-        TaskFilters: <TaskFilters />,
+        ListFilters: <ListFilters />,
     };
     return `${dialog?.type}` in dialogs ? dialogs[dialog?.type] : <div></div>;
 };

@@ -13,6 +13,8 @@ export const StyledCount = ({ total, label }) => (
             minWidth: '1.75em',
             fontSize: '0.85em',
             fontWeight: 'bold',
+            // a pill: fully rounded ends
+            borderRadius: '999px',
             color: 'inherit',
             bgcolor: 'rgba(255, 255, 255, 0.22)',
             pointerEvents: 'none',

@@ -57,9 +57,8 @@ export const App = () => {
                         </Route>
                         <Route path='inventory' element={<Inventory />} />
                         <Route path='settings' element={<Settings />} />
-                        <Route path='machines' element={<Machines />}>
-                            <Route path=':machine' element={<Machine />} />
-                        </Route>
+                        <Route path='machines' element={<Machines />} />
+                        <Route path='machines/:machine' element={<Machine />} />
                         <Route path='users' element={<Users />} />
                         <Route path='chat' element={<ChatPage />} />
                     </Route>

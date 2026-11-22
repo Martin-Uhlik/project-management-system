@@ -15,6 +15,7 @@ export { StyledSubTab, StyledSubTabs } from './StyledSubTabs';
 export { StyledToggle } from './StyledToggle';
 export { StyledFileInput } from './StyledFileInput';
 export { StyledAddButton } from './StyledAddButton';
+export { StyledBoxHeader } from './StyledBoxHeader';
 export { StyledCount } from './StyledCount';
 export { StyledSearchInput } from './StyledSearchInput';
 export { useSearch } from './useSearch';

@@ -9,7 +9,7 @@ import { getAuthHeader } from '../../Auth';
 import dayjs from '../../dayjs';
 import { handleAxiosError } from '../../errorHandler';
 import { RestrictedComponent } from '../utils/RestrictedComponent';
-import { StyledAddButton } from '../ui';
+import { StyledAddButton, StyledBoxHeader } from '../ui';
 
 export const Inventory = () => {
     const setTab = useSetAtom(selectedTabAtom);
@@ -85,21 +85,23 @@ export const Inventory = () => {
             <div className='content-2-column'>
                 <div className='content-box'>
                     <div className='content-box_content'>
-                        <div className='content-box_header'>
-                            <h1>Dostupný materiál</h1>
-                            <RestrictedComponent types={['ADMIN', 'MANAGER']}>
-                                <StyledAddButton label='Přidat materiál' onClick={handleAddMaterial} />
-                            </RestrictedComponent>
-                        </div>
+                        <StyledBoxHeader
+                            title='Dostupný materiál'
+                            add={
+                                <RestrictedComponent types={['ADMIN', 'MANAGER']}>
+                                    <StyledAddButton label='Přidat materiál' onClick={handleAddMaterial} />
+                                </RestrictedComponent>
+                            }
+                        />
                         <MaterialTable />
                     </div>
                 </div>
                 <div className='content-box'>
                     <div className='content-box_content'>
-                        <div className='content-box_header'>
-                            <h1>Požadavky na materiál</h1>
-                            <StyledAddButton label='Přidat požadavek na materiál' onClick={handleAddMaterialRequirement} />
-                        </div>
+                        <StyledBoxHeader
+                            title='Požadavky na materiál'
+                            add={<StyledAddButton label='Přidat požadavek na materiál' onClick={handleAddMaterialRequirement} />}
+                        />
                         <MaterialRequirementTable />
                     </div>
                 </div>

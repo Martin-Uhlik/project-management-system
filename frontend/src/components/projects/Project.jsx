@@ -13,6 +13,8 @@ import { TaskSearch } from './project/TaskSearch';
 import { RestrictedComponent } from '../utils/RestrictedComponent';
 import { ProjectStats } from './project/ProjectStats';
 import { ProjectTaskList } from './project/ProjectTaskList';
+import { ProjectFiles } from './project/ProjectFiles';
+import { ProjectSettings } from './project/ProjectSettings';
 import dayjs from '../../dayjs';
 import { reloadChatOverview, useChatUnread } from '../../state/chat';
 import { ChatConversation } from '../chat/ChatConversation';
@@ -31,9 +33,12 @@ import {
 const tabs = [
     { label: 'Graf úkolů', value: 'graph' },
     { label: 'Seznam úkolů', value: 'tasks' },
+    { label: 'Soubory', value: 'files' },
     { label: 'Statistiky', value: 'stats' },
     { label: 'Chat', value: 'chat' },
+    { label: 'Nastavení', value: 'settings' },
 ];
+const noFiles = [];
 
 export const Project = () => {
     const setTab = useSetAtom(selectedTabAtom);
@@ -69,11 +74,14 @@ export const Project = () => {
     const overdue = deadline && !project.Finished && deadline.isBefore(dayjs());
     // the project's group chat (the "Chat" tab), with its unread messages on the tab
     const chatUnread = useChatUnread('project', projectID);
+    // all files of the project's tasks (the "Soubory" tab, their number on it)
+    const files = useApi(`/auth/projects/${projectID}/files`, { topics: [`project:${projectID}`] }).data;
 
     return (
         <>
             <StyledPageHeader
                 breadcrumbs={[{ label: 'Projekty', to: '/auth/projects' }]}
+                back={{ to: '/auth/projects', label: 'Zpět na projekty' }}
                 title={project?.Name ?? null}
                 status={status}
                 statusLabel={statusLabel}
@@ -92,27 +100,28 @@ export const Project = () => {
                         </>
                     ) : null
                 }
-                tabs={tabs.map((item) => (item.value === 'chat' ? { ...item, count: chatUnread } : item))}
+                tabs={tabs.map((item) =>
+                    item.value === 'chat' ? { ...item, count: chatUnread } : item.value === 'files' ? { ...item, total: files?.length } : item,
+                )}
                 active={tab}
                 onSelect={selectTab}
             />
             {tab === 'chat' ? (
-                // the project's group chat fills the page under the header
-                <Box
-                    sx={{
-                        flex: 1,
-                        minHeight: 0,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        bgcolor: 'background.paper',
-                        boxShadow: 'var(--shadow-small-inset)',
-                    }}
-                >
-                    <ChatConversation key={projectID} conversation={{ kind: 'project', id: Number(projectID) }} onRead={reloadChatOverview} />
-                </Box>
+                // the project's group chat in a box on the page, like the other tabs (it scrolls inside)
+                <div className='content-wrap_inner'>
+                    <Box className='content-box' sx={{ display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}>
+                        <ChatConversation key={projectID} conversation={{ kind: 'project', id: Number(projectID) }} onRead={reloadChatOverview} />
+                    </Box>
+                </div>
             ) : (
                 <div className='content-wrap_inner'>
-                    {tab === 'stats' ? (
+                    {tab === 'settings' ? (
+                        project ? (
+                            <ProjectSettings project={project} />
+                        ) : null
+                    ) : tab === 'files' ? (
+                        <ProjectFiles files={files ?? noFiles} />
+                    ) : tab === 'stats' ? (
                         <ProjectStats />
                     ) : tab === 'tasks' ? (
                         <ProjectTaskList />

@@ -6,14 +6,15 @@ import axios from 'axios';
 import { getBackendAddress } from '../../../config';
 import { getAuthHeader } from '../../../Auth';
 import { handleAxiosError } from '../../../errorHandler';
-import { useAtom, useSetAtom } from 'jotai';
-import { dialogAtom, notificationsAtom, tickAtom } from '../../../state/atoms';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { dialogAtom, notificationsAtom, tickAtom, userAtom } from '../../../state/atoms';
 import { useApi } from '../../../state/query';
 import { UserMultiSelect } from '../../utils/UserMultiSelect';
 import { UserSingleSelect } from '../../utils/UserSingleSelect';
 import dayjs from '../../../dayjs';
 import Divider from '@mui/material/Divider';
-import { ButtonRow, FormStack, StyledCheckbox, StyledDateTimePicker, StyledInput, StyledAddButton } from '../../ui';
+import { ButtonRow, FormStack, StyledCheckbox, StyledDateTimePicker, StyledInput, StyledAddButton, StyledBoxHeader, LinkOffIcon } from '../../ui';
+import { ListFiltersButton } from '../../utils/ListFiltersButton';
 import { EditButtons } from '../../utils/EditButtons';
 import { RestrictedComponent } from '../../utils/RestrictedComponent';
 
@@ -24,6 +25,7 @@ export const TaskOverview = () => {
     const props = useOutletContext();
     const subTab = useLocation().pathname.split('/')[5];
     const setDialog = useSetAtom(dialogAtom);
+    const me = useAtomValue(userAtom);
     React.useEffect(() => {
         props(subTab);
     });
@@ -141,17 +143,12 @@ export const TaskOverview = () => {
             });
     };
 
-    const handleRemoveDependency = (dependencyType, nodes) => {
-        setDialog({
-            type: 'RemoveDependency',
-            data: {
-                dependencyType: dependencyType,
-                nodes: nodes,
-                handleSubmit: removeDependency,
-                handleCancel: () => {},
-            },
-        });
-    };
+    // the hover buttons on a previous / next task: detach it (admins and managers only, like the backend)
+    const canEdit = me?.UserType === 'ADMIN' || me?.UserType === 'MANAGER';
+    const detachActions = (dependencyType) =>
+        canEdit
+            ? (dependency) => [{ label: 'Odpojit úkol', icon: <LinkOffIcon />, onClick: () => removeDependency(dependency.ID, dependencyType) }]
+            : undefined;
 
     return (
         <div className='content-2-column'>
@@ -196,56 +193,46 @@ export const TaskOverview = () => {
             <div className='content-2-row'>
                 <div className='content-box'>
                     <div className='content-box_content'>
-                        <div className='content-box_header'>
-                            <h1>Předchozí úkoly</h1>
-                            <RestrictedComponent types={['ADMIN', 'MANAGER']}>
-                                <div className='content-box_header'>
-                                    <StyledAddButton
-                                        label='Odebrat předchozí úkol'
-                                        onClick={() =>
-                                            handleRemoveDependency(
-                                                'predecessor',
-                                                task?.Successors?.map((task) => task.Predecessor),
-                                            )
-                                        }
-                                    >
-                                        -
-                                    </StyledAddButton>
+                        <StyledBoxHeader
+                            title='Předchozí úkoly'
+                            add={
+                                <RestrictedComponent types={['ADMIN', 'MANAGER']}>
                                     <StyledAddButton label='Přidat předchozí úkol' onClick={() => handleAddDependency('predecessor')} />
-                                </div>
-                            </RestrictedComponent>
-                        </div>
+                                </RestrictedComponent>
+                            }
+                            settings={<ListFiltersButton list='dependencies' />}
+                        />
                         <div className='content-box_chart-wrapper-outer'>
                             <div className='content-box_chart-wrapper-inner'>
-                                <AssignedTasks searchable={false} machineTasks={task?.Successors?.map((task) => task.Predecessor)} />
+                                <AssignedTasks
+                                    searchable={false}
+                                    filterList='dependencies'
+                                    rowActions={detachActions('predecessor')}
+                                    machineTasks={task?.Successors?.map((task) => task.Predecessor)}
+                                />
                             </div>
                         </div>
                     </div>
                 </div>
                 <div className='content-box'>
                     <div className='content-box_content'>
-                        <div className='content-box_header'>
-                            <h1>Následující úkoly</h1>
-                            <RestrictedComponent types={['ADMIN', 'MANAGER']}>
-                                <div className='content-box_header'>
-                                    <StyledAddButton
-                                        label='Odebrat navazující úkol'
-                                        onClick={() =>
-                                            handleRemoveDependency(
-                                                'successor',
-                                                task?.Predecessors?.map((task) => task.Successor),
-                                            )
-                                        }
-                                    >
-                                        -
-                                    </StyledAddButton>
+                        <StyledBoxHeader
+                            title='Následující úkoly'
+                            add={
+                                <RestrictedComponent types={['ADMIN', 'MANAGER']}>
                                     <StyledAddButton label='Přidat navazující úkol' onClick={() => handleAddDependency('successor')} />
-                                </div>
-                            </RestrictedComponent>
-                        </div>
+                                </RestrictedComponent>
+                            }
+                            settings={<ListFiltersButton list='dependencies' />}
+                        />
                         <div className='content-box_chart-wrapper-outer'>
                             <div className='content-box_chart-wrapper-inner'>
-                                <AssignedTasks searchable={false} machineTasks={task?.Predecessors?.map((task) => task.Successor)} />
+                                <AssignedTasks
+                                    searchable={false}
+                                    filterList='dependencies'
+                                    rowActions={detachActions('successor')}
+                                    machineTasks={task?.Predecessors?.map((task) => task.Successor)}
+                                />
                             </div>
                         </div>
                     </div>

@@ -9,8 +9,10 @@ import { getBackendAddress } from '../../config';
 import { getAuthHeader } from '../../Auth';
 import { handleAxiosError } from '../../errorHandler';
 import dayjs from '../../dayjs';
-import { StyledAddButton } from '../ui';
+import { StyledAddButton, StyledBoxHeader } from '../ui';
 import { UserTable } from '../utils/tables/UserTable';
+import { ListFiltersButton } from '../utils/ListFiltersButton';
+import { useListFilters } from '../../state/listFilters';
 
 const noUsers = [];
 
@@ -29,9 +31,12 @@ export const Users = () => {
     const isAdmin = me?.UserType === 'ADMIN';
     // reloaded when someone changes this data (live updates) or after a change made here
     const { data: users = noUsers } = useApi('/auth/users', { topics: ['users'], enabled: isAdmin });
-    // the user clicked in the list, else the first one
+    // the gear picks whether deactivated accounts are listed
+    const { filters } = useListFilters('users');
+    const shownUsers = React.useMemo(() => (filters.showDisabled ? users : users.filter((user) => user.Enabled)), [users, filters]);
+    // the user clicked in the list, else the first one listed
     const [chosenUser, setSelectedUser] = React.useState(null);
-    const selectedUser = chosenUser ?? users[0] ?? null;
+    const selectedUser = chosenUser ?? shownUsers[0] ?? null;
 
     const addUser = (user) => {
         axios
@@ -64,11 +69,12 @@ export const Users = () => {
             <div className='content-2-column'>
                 <div className='content-box'>
                     <div className='content-box_content'>
-                        <div className='content-box_header'>
-                            <h1>Pracovníci</h1>
-                            <StyledAddButton label='Přidat pracovníka' onClick={handleAddUser} />
-                        </div>
-                        <UserTable users={users} setSelectedUser={setSelectedUser} />
+                        <StyledBoxHeader
+                            title='Pracovníci'
+                            add={<StyledAddButton label='Přidat pracovníka' onClick={handleAddUser} />}
+                            settings={<ListFiltersButton list='users' />}
+                        />
+                        <UserTable users={shownUsers} allUsers={users} setSelectedUser={setSelectedUser} />
                     </div>
                 </div>
 

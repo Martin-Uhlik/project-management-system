@@ -8,10 +8,10 @@ import { AccountIcon, CalendarIcon, ClockOutlineIcon, StyledPageHeader, StyledPa
 
 const subTabs = [
     { label: 'Přehled', value: 'overview' },
-    { label: 'Vstupní soubory', value: 'input-files' },
-    { label: 'Výstupní soubory', value: 'output-files' },
-    { label: 'Stroje', value: 'machines' },
-    { label: 'Materiál', value: 'material' },
+    { label: 'Vstupní soubory', value: 'input-files', counted: 'InputFiles' },
+    { label: 'Výstupní soubory', value: 'output-files', counted: 'OutputFiles' },
+    { label: 'Stroje', value: 'machines', counted: 'Machines' },
+    { label: 'Materiál', value: 'material', counted: 'Material' },
 ];
 
 // A task's page: the header (where the task sits, its status, deadline, estimate and workers) with its sections as tabs
@@ -37,6 +37,7 @@ export const ProjectTask = () => {
     return (
         <>
             <StyledPageHeader
+                back={{ to: `/auth/projects/${projectID}`, label: 'Zpět na projekt' }}
                 breadcrumbs={[
                     { label: 'Projekty', to: '/auth/projects' },
                     { label: project?.Name ?? 'Projekt', to: `/auth/projects/${projectID}` },
@@ -58,7 +59,8 @@ export const ProjectTask = () => {
                         </>
                     ) : null
                 }
-                tabs={subTabs.map((tab) => ({ ...tab, to: tab.value }))}
+                // each section's tab says how many items it holds (task.Counts)
+                tabs={subTabs.map((tab) => ({ ...tab, to: tab.value, total: tab.counted && task?.Counts ? task.Counts[tab.counted] : undefined }))}
                 active={selectedSubTab}
             />
             <div className='content-wrap_inner'>

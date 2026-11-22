@@ -1,3 +1,5 @@
+import { rm } from 'node:fs/promises';
+import path from 'node:path';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createProject, createTask, makeApp, prisma, resetDb, signInAll } from './helpers.ts';
 
@@ -29,8 +31,16 @@ describe('projects', () => {
         expect(project.Finished).toBe(false);
     });
 
-    it('are updated by admins and managers, including members', async () => {
+    it('are updated by their owner and admins only, including members', async () => {
         const project = await createProject(s.manager.user.ID);
+        // a manager who doesn't own it may not
+        const otherProject = await createProject(s.admin.user.ID);
+        expect((await s.manager.agent.patch(`/auth/projects/${otherProject.ID}`).send({ Name: 'x' })).status).toBe(403);
+        expect((await s.admin.agent.patch(`/auth/projects/${otherProject.ID}`).send({ Name: 'Admin' })).status).toBe(200);
+        // a worker who owns one may
+        const ownProject = await createProject(s.user.user.ID);
+        expect((await s.user.agent.patch(`/auth/projects/${ownProject.ID}`).send({ Name: 'Mine' })).status).toBe(200);
+
         const update = { Name: 'Renamed', Finished: true, Members: [{ UserID: s.user.user.ID }, { UserID: s.user.user.ID }] };
         expect((await s.user.agent.patch(`/auth/projects/${project.ID}`).send(update)).status).toBe(403);
         expect((await s.manager.agent.patch(`/auth/projects/${project.ID}`).send(update)).status).toBe(200);
@@ -44,14 +54,25 @@ describe('projects', () => {
         expect(await prisma.user_Project.count()).toBe(1);
     });
 
-    it('are deleted by admins only', async () => {
-        const project = await createProject(s.manager.user.ID);
-        expect((await s.user.agent.delete(`/auth/projects/${project.ID}`)).status).toBe(403);
+    it('are deleted by their owner and admins only', async () => {
+        const owned = await createProject(s.manager.user.ID, [s.user.user.ID]);
+        expect((await s.user.agent.delete(`/auth/projects/${owned.ID}`)).status).toBe(403);
+        expect((await s.manager.agent.delete(`/auth/projects/${owned.ID}`)).status).toBe(200);
+
+        const project = await createProject(s.user.user.ID);
         expect((await s.manager.agent.delete(`/auth/projects/${project.ID}`)).status).toBe(403);
         expect((await s.admin.agent.delete(`/auth/projects/${project.ID}`)).status).toBe(200);
         expect((await prisma.project.findUniqueOrThrow({ where: { ID: project.ID } })).Deleted).toBe(true);
         expect((await s.admin.agent.get('/auth/projects')).body).toHaveLength(0);
         expect((await s.admin.agent.get(`/auth/projects/${project.ID}`)).status).toBe(404);
+    });
+
+    it('say in the list whether the signed-in user owns or is a member of each (Mine)', async () => {
+        const project = await createProject(s.manager.user.ID, [s.user.user.ID]);
+        const mine = async (who: typeof s.user) => (await who.agent.get('/auth/projects')).body.find((p: { ID: number }) => p.ID === project.ID).Mine;
+        expect(await mine(s.manager)).toBe(true);
+        expect(await mine(s.user)).toBe(true);
+        expect(await mine(s.admin)).toBe(false);
     });
 
     it('send their members without password hashes', async () => {
@@ -194,6 +215,27 @@ describe('task files', () => {
         expect((await s.other.agent.get(`${base}/input-files`)).status).toBe(403);
         expect((await s.other.agent.post(`${base}/output-files`).attach('file', Buffer.from('x'), 'x.txt')).status).toBe(403);
         expect((await s.user.agent.post(`${base}/output-files`)).status).toBe(400);
+    });
+
+    it('are listed for the whole project with their kind and task, and counted on the task', async () => {
+        const project = await createProject(s.manager.user.ID, [s.user.user.ID]);
+        const task = await createTask(project.ID, s.manager.user.ID);
+        // the database starts again from ID 1 in every test, the files folder doesn't: drop files left by earlier tests
+        await rm(path.join(process.env.DATA_DIR!, String(project.ID)), { recursive: true, force: true });
+        const base = `/auth/projects/${project.ID}/tasks/${task.ID}`;
+        expect((await s.user.agent.post(`${base}/input-files`).attach('file', Buffer.from('a'), 'in.txt')).status).toBe(200);
+        expect((await s.user.agent.post(`${base}/output-files`).attach('file', Buffer.from('b'), 'out.txt')).status).toBe(200);
+
+        const files = await s.user.agent.get(`/auth/projects/${project.ID}/files`);
+        expect(files.status).toBe(200);
+        expect(files.body.map((file: { file: string; Kind: string; Task: { ID: number } }) => [file.file, file.Kind, file.Task.ID]).sort()).toEqual([
+            ['in.txt', 'input', task.ID],
+            ['out.txt', 'output', task.ID],
+        ]);
+        expect((await s.other.agent.get(`/auth/projects/${project.ID}/files`)).status).toBe(403);
+
+        const detail = await s.user.agent.get(base);
+        expect(detail.body.Counts).toEqual({ InputFiles: 1, OutputFiles: 1, Machines: 0, Material: 0 });
     });
 
     it('record who uploaded them and can be downloaded, only as a download', async () => {

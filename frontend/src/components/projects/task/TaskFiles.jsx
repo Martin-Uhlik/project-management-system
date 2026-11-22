@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useLocation, useOutletContext, useParams, useSearchParams } from 'react-router';
 import { useAtom, useSetAtom } from 'jotai';
-import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
 import { notificationsAtom, tickAtom } from '../../../state/atoms';
 import { useApi } from '../../../state/query';
@@ -13,6 +12,7 @@ import dayjs from '../../../dayjs';
 import { handleAxiosError } from '../../../errorHandler';
 import { StyledDropzone } from '../../ui';
 import { FileDetail } from './files/FileDetail';
+import { FilesLayout } from './files/FilesLayout';
 
 const noFiles = [];
 
@@ -67,44 +67,28 @@ export const TaskFiles = ({ kind, title }) => {
     const selected = files.find((file) => file.file === selectedName) ?? null;
     const selectFile = (file) => setSearchParams(file && file.file !== selectedName ? { file: file.file } : {}, { replace: true });
 
-    const list = (
-        <div className='content-box' style={{ height: 'auto', flexBasis: 'auto', flexGrow: 0 }}>
-            <div className='content-box_content' style={{ overflow: 'visible' }}>
-                <div className='content-box_header'>
-                    <h1>{title}</h1>
-                </div>
-                <Divider />
-                <StyledDropzone onFiles={handleUploadFiles} busy={upload !== null} progress={upload?.progress} />
-                <FileTable files={files} selected={selectedName} onSelect={selectFile} />
-            </div>
-        </div>
-    );
-
     return (
-        <Box
-            sx={{
-                display: 'grid',
-                gap: 2,
-                alignItems: 'start',
-                mx: 'auto',
-                width: selected ? 'min(100rem, 100%)' : 'min(50rem, 100%)',
-                gridTemplateColumns: {
-                    xs: 'minmax(0, 1fr)',
-                    lg: selected ? 'minmax(0, 1fr) minmax(0, 1.25fr)' : 'minmax(0, 1fr)',
-                },
-            }}
-        >
-            {list}
-            {selected ? (
-                <Box className='content-box' sx={{ height: 'auto', p: 2, position: { lg: 'sticky' }, top: 0 }}>
+        <FilesLayout
+            list={
+                <>
+                    <div className='content-box_header'>
+                        <h1>{title}</h1>
+                    </div>
+                    <Divider />
+                    <StyledDropzone onFiles={handleUploadFiles} busy={upload !== null} progress={upload?.progress} />
+                    <FileTable files={files} selected={selectedName} onSelect={selectFile} />
+                </>
+            }
+            detail={
+                selected ? (
                     <FileDetail
                         key={selected.file}
                         file={selected}
                         address={`${filesAddress}/${encodeURIComponent(selected.file)}`}
                         onClose={() => selectFile(null)}
                     />
-                </Box>
-            ) : null}
-        </Box>
+                ) : null
+            }
+        />
     );
 };

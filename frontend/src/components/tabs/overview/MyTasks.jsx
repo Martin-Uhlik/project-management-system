@@ -9,8 +9,8 @@ import { getBackendAddress } from '../../../config';
 import { getAuthHeader, getUserID } from '../../../Auth';
 import dayjs from '../../../dayjs';
 import { filterTasks, useTaskFilters } from '../../../state/taskFilters';
-import { TaskFiltersButton } from '../../utils/TaskFiltersButton';
-import { FormStack, StyledButton, StyledAddButton, StyledTable, useSearch } from '../../ui';
+import { ListFiltersButton } from '../../utils/ListFiltersButton';
+import { FormStack, StyledButton, StyledAddButton, StyledBoxHeader, StyledTable, useSearch } from '../../ui';
 
 const noTasks = [];
 
@@ -59,16 +59,15 @@ export const MyTasks = () => {
 
     return (
         <FormStack>
-            <div className='content-box_header'>
-                <h1>Moje úkoly</h1>
-                <div className='content-box_subheader'>
-                    <StyledButton variant='outlined' onClick={handleRemoveFinishedTasks}>
-                        Smazat dokončené
-                    </StyledButton>
-                    <StyledAddButton label='Přidat vlastní úkol' onClick={handleAddMyTask} />
-                    <TaskFiltersButton />
-                </div>
-            </div>
+            <StyledBoxHeader
+                title='Moje úkoly'
+                add={<StyledAddButton label='Přidat vlastní úkol' onClick={handleAddMyTask} />}
+                settings={<ListFiltersButton list='tasks' />}
+            >
+                <StyledButton variant='outlined' onClick={handleRemoveFinishedTasks}>
+                    Smazat dokončené
+                </StyledButton>
+            </StyledBoxHeader>
             <StyledTable columns={[{ label: 'Název' }, { label: 'Dokončení' }, { label: 'Popis' }]} search={search}>
                 {[...search.results]
                     .sort((a, b) => (a.Finished > b.Finished ? 1 : -1))

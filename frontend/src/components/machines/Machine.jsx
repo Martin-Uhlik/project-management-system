@@ -1,133 +1,88 @@
-import React, { useState } from 'react';
-import { useNavigate, useOutletContext, useParams } from 'react-router';
-import { WorkPlanChart } from '../utils/WorkPlanChart';
-import axios from 'axios';
-import { getBackendAddress } from '../../config';
-import { getAuthHeader } from '../../Auth';
-import { handleAxiosError } from '../../errorHandler';
-import { useAtom, useSetAtom } from 'jotai';
-import { notificationsAtom, tickAtom } from '../../state/atoms';
+import { useEffect } from 'react';
+import { useParams, useSearchParams } from 'react-router';
+import { useAtomValue, useSetAtom } from 'jotai';
+import { selectedTabAtom, userAtom } from '../../state/atoms';
 import { useApi } from '../../state/query';
-import { pushNotification } from '../Notifications';
 import dayjs from '../../dayjs';
-import { AssignedTasks } from '../tabs/overview/AssignedTasks';
-import { RemoveButton } from '../utils/RemoveButton';
-import { RestrictedComponent } from '../utils/RestrictedComponent';
-import { EditButtons } from '../utils/EditButtons';
-import { ButtonRow, FormStack, StyledInput } from '../ui';
+import { AccountIcon, CalendarIcon, ClockOutlineIcon, StyledPageHeader, StyledPageHeaderFact } from '../ui';
+import { serviceState } from './ServiceDate';
+import { MachineTasks } from './MachineTasks';
+import { MachineServices } from './MachineServices';
+import { MachineFiles } from './MachineFiles';
+import { MachineSettings } from './MachineSettings';
 
+const tabs = [
+    { label: 'Úkoly', value: 'tasks' },
+    { label: 'Servis', value: 'services' },
+    { label: 'Soubory', value: 'files' },
+    { label: 'Nastavení', value: 'settings' },
+];
+
+const fullName = (user) => (user ? `${user.FirstName} ${user.LastName}` : null);
+
+// A machine's page: its header (responsible person, last and next service) with the tabs Úkoly (the production queue
+// and plan), Servis, Soubory (documentation...) and Nastavení; the open tab is kept in the address (?tab=services)
 export const Machine = () => {
-    const navigate = useNavigate();
-    const props = useOutletContext();
-    const { machine } = useParams();
-    React.useEffect(() => {
-        props(machine);
-    });
-    const [disabled, setDisabled] = useState(true);
-
-    const [notifications, setNotifications] = useAtom(notificationsAtom);
+    const setTab = useSetAtom(selectedTabAtom);
+    useEffect(() => {
+        setTab('Stroje');
+    }, [setTab]);
+    const machineID = useParams().machine;
+    const me = useAtomValue(userAtom);
     // reloaded when someone changes this data (live updates) or after a change made here
-    const setTick = useSetAtom(tickAtom);
+    const machine = useApi(`/auth/machines/${machineID}`, { topics: ['machines', 'users'] }).data ?? null;
+    // the machine's details, services and files are changed by admins, managers and its responsible person
+    const canEdit = !!me && !!machine && (me.UserType === 'ADMIN' || me.UserType === 'MANAGER' || me.ID === machine.ResponsibleID);
 
-    const currentMachine = useApi(`/auth/machines/${machine}`, { topics: ['machines'] }).data ?? null;
-    const [description, setDescription] = useState(null);
+    const [searchParams, setSearchParams] = useSearchParams();
+    const tab = tabs.some((item) => item.value === searchParams.get('tab')) ? searchParams.get('tab') : 'tasks';
+    const selectTab = (value) => setSearchParams(value === 'tasks' ? {} : { tab: value }, { replace: true });
 
-    // the description field follows the loaded machine, except while it's being edited
-    const [formMachine, setFormMachine] = useState(null);
-    if (currentMachine && disabled && currentMachine !== formMachine) {
-        setFormMachine(currentMachine);
-        setDescription(currentMachine.Description);
-    }
-
-    const updateMachine = (event) => {
-        event.preventDefault();
-        axios
-            .patch(
-                getBackendAddress(`/auth/machines/${machine}`),
-                {
-                    Description: event.target.description.value,
-                },
-                getAuthHeader(),
-            )
-            .then(() => {
-                pushNotification({
-                    notification: { text: 'Nastavení úspěšně změněno.', type: 'notification__success' },
-                    notifications: notifications,
-                    setNotifications: setNotifications,
-                });
-                setDisabled(true);
-                setTick(dayjs());
-            })
-            .catch((error) => {
-                handleAxiosError(error, [notifications, setNotifications]);
-            });
-    };
-
-    const removeMachine = () => {
-        axios
-            .delete(getBackendAddress(`/auth/machines/${machine}`), getAuthHeader())
-            .then(() => {
-                pushNotification({
-                    notification: { text: 'Nastavení úspěšně změněno.', type: 'notification__success' },
-                    notifications: notifications,
-                    setNotifications: setNotifications,
-                });
-                setTick(dayjs());
-                navigate('/auth/machines');
-            })
-            .catch((error) => {
-                handleAxiosError(error, [notifications, setNotifications]);
-            });
-    };
+    const openTasks = machine?.Task.filter((task) => !task.Finished).length;
+    const totals = { tasks: openTasks, services: machine?.Services.length, files: machine?.FileCount };
+    const next = machine?.NextService;
+    const nextState = serviceState(next);
 
     return (
-        <div className='content-2-column'>
-            <div className='content-box'>
-                <div className='content-box_content'>
-                    <div className='content-box_header'>
-                        <h1>Fronta výroby</h1>
-                        <RestrictedComponent types={['ADMIN']}>
-                            <RemoveButton handleSuccess={removeMachine} />
-                        </RestrictedComponent>
-                    </div>
-                    <AssignedTasks showHeader={false} machineTasks={currentMachine?.Task} />
-                </div>
+        <>
+            <StyledPageHeader
+                breadcrumbs={[{ label: 'Stroje', to: '/auth/machines' }]}
+                back={{ to: '/auth/machines', label: 'Zpět na stroje' }}
+                title={machine?.Name ?? null}
+                facts={
+                    machine ? (
+                        <>
+                            <StyledPageHeaderFact icon={AccountIcon} label='Zodpovědný pracovník'>
+                                {fullName(machine.Responsible) ?? 'nepřiřazen'}
+                            </StyledPageHeaderFact>
+                            <StyledPageHeaderFact icon={ClockOutlineIcon} label='Poslední servis'>
+                                {machine.LastService ? dayjs(machine.LastService.Date).format('LL') : 'žádný'}
+                            </StyledPageHeaderFact>
+                            <StyledPageHeaderFact
+                                icon={CalendarIcon}
+                                label='Příští servis'
+                                color={nextState === 'overdue' ? 'error' : nextState === 'soon' ? 'warning' : undefined}
+                            >
+                                {next ? dayjs(next.Date).format('LL') : 'neplánován'}
+                            </StyledPageHeaderFact>
+                        </>
+                    ) : null
+                }
+                tabs={tabs.map((item) => ({ ...item, total: totals[item.value] }))}
+                active={tab}
+                onSelect={selectTab}
+            />
+            <div className='content-wrap_inner'>
+                {!machine ? null : tab === 'services' ? (
+                    <MachineServices machine={machine} canEdit={canEdit} />
+                ) : tab === 'files' ? (
+                    <MachineFiles machine={machine} canEdit={canEdit} />
+                ) : tab === 'settings' ? (
+                    <MachineSettings machine={machine} canEdit={canEdit} />
+                ) : (
+                    <MachineTasks machine={machine} />
+                )}
             </div>
-            <div className='content-2-row'>
-                <div className='content-box'>
-                    <div className='content-box_content'>
-                        <h1>Harmonogram výroby</h1>
-                        <div className='content-box_chart-wrapper-outer'>
-                            <div className='content-box_chart-wrapper-inner'>
-                                <WorkPlanChart tasks={currentMachine?.Task} />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div className='content-box'>
-                    <div className='content-box_content'>
-                        <FormStack component='form' sx={{ height: '100%' }} onSubmit={updateMachine}>
-                            <div className='content-box_header'>
-                                <h1>Popis</h1>
-                                <RestrictedComponent types={['ADMIN', 'MANAGER']}>
-                                    <ButtonRow className='content-box_subheader'>
-                                        <EditButtons editing={!disabled} setEditing={(editing) => setDisabled(!editing)} />
-                                    </ButtonRow>
-                                </RestrictedComponent>
-                            </div>
-                            <StyledInput
-                                id='description'
-                                label='Popis'
-                                multiline
-                                minRows={8}
-                                value={description || ''}
-                                onChange={(event) => setDescription(event.target.value)}
-                                disabled={disabled}
-                            />
-                        </FormStack>
-                    </div>
-                </div>
-            </div>
-        </div>
+        </>
     );
 };

@@ -10,10 +10,10 @@ import { TaskFileKind } from '../generated/prisma/client.ts';
 import { date, id, idParam, parseBody, requiredText, sentKeys, text } from '../validation.ts';
 
 // Uploaded task files: <DATA_DIR>/<project>/<task>/inputFiles|outputFiles
-const dataDir = () => process.env.DATA_DIR || './data';
+export const dataDir = () => process.env.DATA_DIR || './data';
 
 // Stores the uploaded "file" field into dir and returns its name; only the base name is kept, so a crafted name can't leave dir
-const saveUploadedFile = async (req: Request, dir: string) => {
+export const saveUploadedFile = async (req: Request, dir: string) => {
     const upload = req.files?.file;
     const file = Array.isArray(upload) ? upload[0] : upload;
     if (!file) throw badRequest('Chybí soubor.');
@@ -27,8 +27,11 @@ const saveUploadedFile = async (req: Request, dir: string) => {
 // The files in dir with their size and who uploaded them when (TaskFile); files without a record (uploaded before
 // uploads were recorded) give the time of the file on disk and no uploader. size: MB as text (kept for older clients)
 const listFiles = async (dir: string, taskID: number, kind: TaskFileKind) => {
-    await fs.promises.mkdir(dir, { recursive: true });
-    const names = await fs.promises.readdir(dir);
+    // no folder yet: nothing uploaded
+    const names = await fs.promises.readdir(dir).catch((error) => {
+        if (error.code === 'ENOENT') return [] as string[];
+        throw error;
+    });
     const records = await prisma.taskFile.findMany({
         where: { TaskID: taskID, Kind: kind },
         select: { Name: true, UploadedAt: true, UploadedBy: { select: { ID: true, FirstName: true, LastName: true } } },
@@ -178,10 +181,26 @@ export const getTask = async (req: Request, res: Response) => {
                     Predecessor: linkedTaskInclude,
                 },
             },
+            _count: {
+                select: {
+                    ...taskProgressCount._count.select,
+                    MaterialEvent: true,
+                    MaterialRequest: true,
+                },
+            },
         },
     });
+    if (!task) throw notFound();
 
-    return res.status(200).send(task);
+    // how many items each of the task's tabs holds (shown on the tabs)
+    const [inputFiles, outputFiles] = await Promise.all([listTaskFiles(projectID, taskID, 'input'), listTaskFiles(projectID, taskID, 'output')]);
+    const Counts = {
+        InputFiles: inputFiles.length,
+        OutputFiles: outputFiles.length,
+        Machines: task.MachineID ? 1 : 0,
+        Material: task._count.MaterialEvent + task._count.MaterialRequest,
+    };
+    return res.status(200).send({ ...task, Counts });
 };
 
 const updateTaskSchema = z.object({
@@ -331,6 +350,10 @@ const fileKinds = {
     output: { dir: 'outputFiles', kind: TaskFileKind.OUTPUT },
 } as const;
 
+// A task's input or output files (see listFiles), for lists that span tasks (the project's files) and for counts
+export const listTaskFiles = (projectID: number, taskID: number, which: keyof typeof fileKinds) =>
+    listFiles(path.join(dataDir(), String(projectID), String(taskID), fileKinds[which].dir), taskID, fileKinds[which].kind);
+
 // GET .../input-files or .../output-files: the list
 const getFiles = (which: keyof typeof fileKinds) => async (req: Request, res: Response) => {
     await withTaskAccess(req, res);
@@ -357,7 +380,12 @@ const uploadFile = (which: keyof typeof fileKinds) => async (req: Request, res: 
 // downloaded data); nosniff and a sandbox CSP, so an uploaded HTML or SVG file never runs as a page of the API
 const downloadFile = (which: keyof typeof fileKinds) => async (req: Request, res: Response) => {
     await withTaskAccess(req, res);
-    const dir = path.resolve(taskDir(req, fileKinds[which].dir));
+    return sendDownload(req, res, taskDir(req, fileKinds[which].dir));
+};
+
+// Sends the file named in :fileName from dir, always as a download (see downloadFile); also for machine files
+export const sendDownload = async (req: Request, res: Response, folder: string) => {
+    const dir = path.resolve(folder);
     const name = String(req.params.fileName ?? '');
     if (!name || path.basename(name) !== name || name === '.' || name === '..') throw badRequest('Neplatný název souboru.');
     const file = path.join(dir, name);

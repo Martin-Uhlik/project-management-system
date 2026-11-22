@@ -42,11 +42,11 @@ export const MyTask = ({ task }) => {
 
     const status = taskStatus(task);
     const actions = [
-        { label: 'Upravit', icon: <PencilIcon fontSize='small' />, onClick: handleEdit },
+        { label: 'Upravit', icon: <PencilIcon />, onClick: handleEdit },
         task.Finished
-            ? { label: 'Vrátit mezi nedokončené', icon: <UndoIcon fontSize='small' />, onClick: () => update({ Finished: false }) }
-            : { label: 'Dokončit', icon: <CheckIcon fontSize='small' />, onClick: () => update({ Finished: true }), color: 'success' },
-        { label: 'Smazat', icon: <TrashIcon fontSize='small' />, onClick: handleDelete, color: 'error' },
+            ? { label: 'Vrátit mezi nedokončené', icon: <UndoIcon />, onClick: () => update({ Finished: false }) }
+            : { label: 'Dokončit', icon: <CheckIcon />, onClick: () => update({ Finished: true }) },
+        { label: 'Smazat', icon: <TrashIcon />, onClick: handleDelete },
     ];
     return (
         <StyledTableRow status={status} onClick={handleEdit} actions={actions}>

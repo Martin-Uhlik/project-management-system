@@ -11,8 +11,8 @@ import Typography from '@mui/material/Typography';
 import { AccountGroupIcon, ArrowLeftIcon, ChatIcon, SendIcon } from './icons';
 
 // The chat's building blocks: the header button with the unread badge, the page layout, a conversation in the list, a
-// message and the field to write one. Sharp corners like the rest of the app; colours from the theme, so they work in
-// light and dark mode.
+// message and the field to write one. Messages and the avatars are rounded, the message field like every other field (Marty's choice
+// for the chat); colours from the theme, so they work in light and dark mode.
 
 const initials = (name = '') =>
     name
@@ -22,8 +22,8 @@ const initials = (name = '') =>
         .map((part) => part[0].toUpperCase())
         .join('');
 
-// a small red count, square like everything else
-const badgeSx = { '& .MuiBadge-badge': { borderRadius: 0, fontWeight: 'bold', minWidth: '1.25rem', height: '1.25rem', px: 0.5 } };
+// a small red count, a pill like the other badges
+const badgeSx = { '& .MuiBadge-badge': { borderRadius: '999px', fontWeight: 'bold', minWidth: '1.25rem', height: '1.25rem', px: 0.5 } };
 
 // The chat icon in the top bar, with how many messages are unread. onClick opens the panel.
 export const StyledChatButton = ({ unread = 0, onClick, active }) => {
@@ -36,7 +36,8 @@ export const StyledChatButton = ({ unread = 0, onClick, active }) => {
                 aria-current={active ? 'page' : undefined}
                 sx={{
                     color: 'var(--icons-primary)',
-                    borderRadius: 0,
+                    // rounded like the user menu next to it
+                    borderRadius: '0.5rem',
                     width: { xs: '2.25rem', md: '2.75rem' },
                     height: { xs: '2.25rem', md: '2.75rem' },
                     backgroundColor: active ? 'rgba(255, 255, 255, 0.12)' : 'transparent',
@@ -51,29 +52,42 @@ export const StyledChatButton = ({ unread = 0, onClick, active }) => {
     );
 };
 
-// The chat page, like a messenger: the conversation list on the left, the open conversation filling the rest. On a
-// phone only one of them shows: the list, or the conversation once one is open (showConversation).
+// The chat page laid out like the other pages: two boxes on the page background, the conversation list on the left
+// and the open conversation in a much wider box on the right. On a phone only one of them shows: the list, or the
+// conversation once one is open (showConversation).
+const chatBoxSx = {
+    display: 'flex',
+    flexDirection: 'column',
+    minHeight: 0,
+    minWidth: 0,
+    bgcolor: 'var(--content-box-background)',
+    boxShadow: 'var(--shadow-small)',
+    overflow: 'hidden',
+};
 export const StyledChatLayout = ({ list, conversation, showConversation }) => (
-    <Box sx={{ flex: 1, minHeight: 0, display: 'flex', bgcolor: 'background.paper', boxShadow: 'var(--shadow-small-inset)' }}>
+    <Box
+        sx={{
+            flex: 1,
+            minHeight: 0,
+            display: 'flex',
+            gap: { xs: '1rem', md: '2rem' },
+            p: { xs: '1rem', md: '2rem' },
+            boxShadow: 'var(--shadow-small-inset)',
+        }}
+    >
         <Box
             component='aside'
             aria-label='Konverzace'
             sx={{
-                width: { xs: '100%', md: '22rem', lg: '24rem' },
+                ...chatBoxSx,
+                width: { xs: '100%', md: '20rem', lg: '22rem' },
                 flexShrink: 0,
                 display: { xs: showConversation ? 'none' : 'flex', md: 'flex' },
-                flexDirection: 'column',
-                minHeight: 0,
-                borderRight: { md: 1 },
-                borderColor: { md: 'divider' },
             }}
         >
             {list}
         </Box>
-        <Box
-            component='section'
-            sx={{ flex: 1, minWidth: 0, minHeight: 0, display: { xs: showConversation ? 'flex' : 'none', md: 'flex' }, flexDirection: 'column' }}
-        >
+        <Box component='section' sx={{ ...chatBoxSx, flex: 1, display: { xs: showConversation ? 'flex' : 'none', md: 'flex' } }}>
             {conversation}
         </Box>
     </Box>
@@ -84,7 +98,7 @@ export const StyledChatLayout = ({ list, conversation, showConversation }) => (
 export const StyledChatHeader = ({ name, group, subtitle, onBack }) => (
     <Stack direction='row' sx={{ alignItems: 'center', gap: 1.5, px: 2, minHeight: '4rem', flexShrink: 0, borderBottom: 1, borderColor: 'divider' }}>
         {onBack ? (
-            <IconButton onClick={onBack} aria-label='Zpět na seznam konverzací' sx={{ borderRadius: 0, display: { md: 'none' }, ml: -1 }}>
+            <IconButton onClick={onBack} aria-label='Zpět na seznam konverzací' sx={{ borderRadius: '0.5rem', display: { md: 'none' }, ml: -1 }}>
                 <ArrowLeftIcon />
             </IconButton>
         ) : null}
@@ -112,7 +126,6 @@ export const StyledChatEmpty = ({ children }) => (
 
 const ChatAvatar = ({ name, group, muted }) => (
     <Avatar
-        variant='square'
         sx={{
             width: 40,
             height: 40,
@@ -137,7 +150,7 @@ export const StyledChatListHeading = ({ children }) => (
     </Typography>
 );
 
-// One conversation in the list: a square avatar (initials, or a group icon for a project), the name, the last message
+// One conversation in the list: a round avatar (initials, or a group icon for a project), the name, the last message
 // and its time, and how many messages are unread (bold while some are). muted: a disabled user or a finished project.
 export const StyledChatConversation = ({ name, group, preview, time, unread = 0, muted, selected, onClick }) => (
     <Box
@@ -196,6 +209,7 @@ export const StyledChatConversation = ({ name, group, preview, time, unread = 0,
                             textAlign: 'center',
                             fontSize: '0.75rem',
                             fontWeight: 'bold',
+                            borderRadius: '999px',
                             bgcolor: 'primary.main',
                             color: '#ffffff',
                         }}
@@ -230,7 +244,9 @@ export const StyledChatMessage = ({ own, author, time, note, children }) => (
                     maxWidth: 'min(85%, 40rem)',
                     px: 1.5,
                     py: 0.75,
-                    borderRadius: 0,
+                    borderRadius: '1rem',
+                    // the corner towards the sender is less rounded, like a speech bubble
+                    ...(own ? { borderBottomRightRadius: '0.25rem' } : { borderBottomLeftRadius: '0.25rem' }),
                     whiteSpace: 'pre-wrap',
                     overflowWrap: 'anywhere',
                     ...(own ? { bgcolor: 'primary.main', color: '#ffffff' } : { bgcolor: 'action.selected', color: 'text.primary' }),
@@ -278,13 +294,13 @@ export const StyledChatComposer = ({ onSend, maxLength = 4000, placeholder = 'Na
                     }
                 }}
                 placeholder={placeholder}
-                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 0, pr: 0.5 } }}
+                sx={{ '& .MuiOutlinedInput-root': { pr: 0.5 } }}
                 slotProps={{
                     htmlInput: { maxLength, 'aria-label': 'Zpráva' },
                     input: {
                         endAdornment: (
                             <InputAdornment position='end' sx={{ alignSelf: 'flex-end', mb: 1.5 }}>
-                                <IconButton onClick={send} disabled={empty || sending} aria-label='Odeslat' color='primary' sx={{ borderRadius: 0 }}>
+                                <IconButton onClick={send} disabled={empty || sending} aria-label='Odeslat' color='primary'>
                                     <SendIcon />
                                 </IconButton>
                             </InputAdornment>

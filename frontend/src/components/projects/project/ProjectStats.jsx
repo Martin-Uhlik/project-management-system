@@ -22,16 +22,19 @@ import {
 
 // The project's statistics (useProjectStats loads them, also for the task list): planned time (the tasks' estimates) against the time the workers logged on its tasks,
 // for the whole project, per worker and per task
-export const useProjectStats = () => {
-    const projectID = useParams().project;
+export const useProjectStats = (id) => {
+    const routeProjectID = useParams().project;
+    const projectID = id ?? routeProjectID;
     // reloaded when someone changes this data (live updates) or after a change made here
     return useApi(`/auth/projects/${projectID}/stats`, { topics: [`project:${projectID}`] }).data ?? null;
 };
 
-export const ProjectStats = () => {
-    const projectID = useParams().project;
+// projectID: the project to show (the one in the address by default)
+export const ProjectStats = ({ projectID: id }) => {
+    const routeProjectID = useParams().project;
+    const projectID = id ?? routeProjectID;
     const navigate = useNavigate();
-    const stats = useProjectStats();
+    const stats = useProjectStats(projectID);
     const statusColors = useStatusColors();
     const chartColors = useChartColors();
 

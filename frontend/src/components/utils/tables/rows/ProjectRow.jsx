@@ -4,10 +4,18 @@ import dayjs from '../../../../dayjs';
 
 // A project: finished green, orange with a running timer while someone works on one of its tasks, otherwise blue
 // (the same colours and icons as tasks, see projectStatus)
-export const ProjectRow = ({ project, setSelectedProject }) => {
+// onOpen: opens the project's page from the row's arrow (null: no access, the arrow is greyed out)
+export const ProjectRow = ({ project, setSelectedProject, selected, onOpen }) => {
     const status = projectStatus(project);
     return (
-        <StyledTableRow status={status} onClick={() => setSelectedProject(project.ID)}>
+        <StyledTableRow
+            status={status}
+            selected={selected}
+            onClick={() => setSelectedProject(project.ID)}
+            onArrowClick={onOpen ?? (() => {})}
+            arrowDisabled={!onOpen}
+            arrowLabel='Přejít na projekt'
+        >
             <StyledTableCell>
                 <Box component='span' sx={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
                     <StyledStatus status={status} label={projectStatusLabels[status]}>

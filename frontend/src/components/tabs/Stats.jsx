@@ -1,256 +1,126 @@
 import { useEffect, useMemo } from 'react';
-import { useNavigate, useSearchParams } from 'react-router';
+import { useSearchParams } from 'react-router';
 import { useAtomValue, useSetAtom } from 'jotai';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { selectedTabAtom, userAtom } from '../../state/atoms';
 import { useApi } from '../../state/query';
-import { getUserID } from '../../Auth';
 import dayjs from '../../dayjs';
-import { WorkTimeChart } from '../utils/WorkTimeChart';
-import { PlannedActualChart } from '../utils/PlannedActualChart';
+import { PersonStats, fullName, statsPeriod } from '../stats/PersonStats';
+import { ProjectStats } from '../projects/project/ProjectStats';
 import {
+    ArrowLeftIcon,
+    StyledButton,
     StyledMonthPicker,
+    StyledWeekPicker,
+    StyledSegmentedSelect,
+    StyledPageHeader,
     StyledSection,
     StyledSelect,
     StyledStatTile,
-    StyledStatus,
     StyledTable,
     StyledTableCell,
     StyledTableRow,
-    StyledTimeDifference,
     StyledTimeUsage,
     formatMinutes,
-    taskStatus,
     timeUsage,
     useChartColors,
     useStatusColors,
 } from '../ui';
 
-const fullName = (user) => (user ? `${user.FirstName} ${user.LastName}` : '');
+const none = [];
 
-// Czech plural: 1 den, 2–4 dny, 5 dní
-const plural = (count, one, few, many) => `${count} ${count === 1 ? one : count >= 2 && count <= 4 ? few : many}`;
+// The top line of a tab's content: a title on the left, controls (the week or month) on the right
+const Toolbar = ({ title, subtitle, children }) => (
+    <Stack direction='row' sx={{ alignItems: 'center', justifyContent: 'space-between', gap: 2, flexWrap: 'wrap' }}>
+        <Box sx={{ minWidth: 0 }}>
+            <h1 style={{ margin: 0 }}>{title}</h1>
+            {subtitle ? (
+                <Typography variant='body2' sx={{ color: 'text.secondary' }}>
+                    {subtitle}
+                </Typography>
+            ) : null}
+        </Box>
+        <Stack direction='row' sx={{ alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+            {children}
+        </Stack>
+    </Stack>
+);
 
-// Minutes worked on each day of the month (local time; a period over midnight counts on both days)
-const minutesByDay = (workTime, month) => {
-    const days = Array(month.daysInMonth()).fill(0);
-    for (const period of workTime ?? []) {
-        let start = dayjs(period.StartTime);
-        const stop = dayjs(period.StopTime);
-        while (start.isBefore(stop)) {
-            const dayEnd = start.add(1, 'day').startOf('day');
-            const end = stop.isBefore(dayEnd) ? stop : dayEnd;
-            if (start.isSame(month, 'month')) days[start.date() - 1] += end.diff(start, 'minute', true);
-            start = end;
-        }
-    }
-    return days;
-};
-
-// Worked time, the tasks worked on and planned against actual time for one month: your own, and for a manager also the
-// people under them, for an admin everyone's (the backend decides who sees whom). ?month=2026-11&user=12 in the address.
-export const Stats = () => {
-    const setTab = useSetAtom(selectedTabAtom);
-    useEffect(() => {
-        setTab('Statistiky');
-    });
-
-    const navigate = useNavigate();
+// "Týmové statistiky": the period's totals of the people under a manager (all people for an admin) and a table of them;
+// a row opens that person's own statistics (?user=ID), with a way back to the team
+const TeamStats = ({ period, periodPicker, userID, setUser }) => {
     const me = useAtomValue(userAtom);
     const chartColors = useChartColors();
     const statusColors = useStatusColors();
+    const from = period.start.toISOString();
+    const to = period.end.toISOString();
+    const people = useApi('/auth/stats/people', { params: { from, to }, topics: ['users', 'user:*'] }).data ?? null;
+    // a manager's team are the people under them; an admin's team is everyone
+    const team = useMemo(() => (people ?? none).filter((person) => me?.UserType === 'ADMIN' || person.User.ID !== me?.ID), [people, me]);
+    const totals = useMemo(
+        () =>
+            team.reduce(
+                (sum, person) => ({
+                    worked: sum.worked + person.WorkedMinutes,
+                    tasks: sum.tasks + person.TaskCount,
+                    finished: sum.finished + person.FinishedCount,
+                    planned: sum.planned + person.PlannedMinutes,
+                    actual: sum.actual + (person.PlannedMinutes ? person.ActualMinutes : 0),
+                    active: sum.active + (person.WorkedMinutes > 0 ? 1 : 0),
+                }),
+                { worked: 0, tasks: 0, finished: 0, planned: 0, actual: 0, active: 0 },
+            ),
+        [team],
+    );
 
-    const [searchParams, setSearchParams] = useSearchParams();
-    const monthKey =
-        /^\d{4}-\d{2}$/.test(searchParams.get('month') ?? '') && searchParams.get('month') <= dayjs().format('YYYY-MM')
-            ? searchParams.get('month')
-            : dayjs().format('YYYY-MM');
-    const month = useMemo(() => dayjs(`${monthKey}-01`).startOf('month'), [monthKey]);
-    const userID = Number(searchParams.get('user')) || Number(getUserID());
-    const update = (changes) => {
-        const next = new URLSearchParams(searchParams);
-        for (const [key, value] of Object.entries(changes)) next.set(key, value);
-        setSearchParams(next, { replace: true });
-    };
+    const member = userID ? team.find((person) => person.User.ID === userID) : null;
+    if (member) {
+        return (
+            <>
+                <Toolbar title={fullName(member.User)} subtitle={member.User.Position}>
+                    <StyledButton variant='outlined' color='inherit' startIcon={<ArrowLeftIcon />} onClick={() => setUser(null)}>
+                        Zpět na tým
+                    </StyledButton>
+                    {periodPicker}
+                </Toolbar>
+                <PersonStats userID={member.User.ID} period={period} />
+            </>
+        );
+    }
 
-    const from = month.toISOString();
-    const to = month.add(1, 'month').toISOString();
-    // reloaded when someone changes this data (live updates) or after a change made here
-    const topics = ['users', 'user:*'];
-    const people = useApi('/auth/stats/people', { params: { from, to }, topics }).data ?? null;
-    const stats = useApi(`/auth/stats/users/${userID}`, { params: { from, to }, topics, enabled: !!userID }).data;
-
-    const shown = stats?.User.ID === userID ? stats : null;
-    const days = useMemo(() => minutesByDay(shown?.WorkTime, month), [shown, month]);
-    const summary = useMemo(() => {
-        if (!shown) return null;
-        const planned = shown.Tasks.filter((task) => task.PlannedMinutes !== null);
-        return {
-            taskMinutes: shown.Tasks.reduce((sum, task) => sum + task.PeriodMinutes, 0),
-            finished: shown.Tasks.filter((task) => task.Finished).length,
-            plannedMinutes: planned.reduce((sum, task) => sum + task.PlannedMinutes, 0),
-            actualMinutes: planned.reduce((sum, task) => sum + task.TotalMinutes, 0),
-            withPlan: planned,
-            daysWorked: days.filter((minutes) => minutes > 0).length,
-        };
-    }, [shown, days]);
-
-    const isMe = userID === Number(getUserID());
-    const usage = summary ? timeUsage(summary.actualMinutes, summary.plannedMinutes) : null;
-    const showTeam = people && people.length > 1;
-
+    const usage = timeUsage(totals.actual, totals.planned);
     return (
-        <div className='content-wrap_inner'>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, maxWidth: '75rem', width: '100%', mx: 'auto' }}>
-                <Stack direction='row' sx={{ alignItems: 'center', justifyContent: 'space-between', gap: 2, flexWrap: 'wrap' }}>
-                    <Box>
-                        <h1 style={{ margin: 0 }}>{isMe ? 'Moje statistiky' : `Statistiky: ${fullName(shown?.User)}`}</h1>
-                        {!isMe && shown?.User.Position ? (
-                            <Typography variant='body2' sx={{ color: 'text.secondary' }}>
-                                {shown.User.Position}
-                            </Typography>
-                        ) : null}
+        <>
+            <Toolbar title={me?.UserType === 'ADMIN' ? 'Všichni pracovníci' : 'Můj tým'}>{periodPicker}</Toolbar>
+            {people && team.length === 0 ? <Typography sx={{ color: 'text.secondary' }}>Pod vámi zatím nikdo není.</Typography> : null}
+            {team.length > 0 ? (
+                <>
+                    <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: 'repeat(auto-fit, minmax(13rem, 1fr))' }}>
+                        <StyledStatTile
+                            label='Odpracováno týmem'
+                            value={formatMinutes(totals.worked)}
+                            accent={chartColors.actualTime}
+                            caption={`pracovalo ${totals.active} z ${team.length}`}
+                        />
+                        <StyledStatTile
+                            label={`Úkoly ${period.inThis}`}
+                            value={totals.tasks}
+                            accent={statusColors.finished}
+                            caption={`${totals.finished} z nich dokončeno`}
+                        />
+                        <StyledStatTile
+                            label='Skutečnost proti plánu'
+                            value={usage === null ? '–' : `${usage} %`}
+                            tone={usage > 100 ? 'error' : undefined}
+                            accent={chartColors.plannedTime}
+                            caption={usage === null ? 'úkoly bez odhadu' : `${formatMinutes(totals.actual)} z plánovaných ${formatMinutes(totals.planned)}`}
+                        />
                     </Box>
-                    <Stack direction='row' sx={{ alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
-                        {showTeam ? (
-                            <StyledSelect
-                                id='statsUser'
-                                label='Pracovník'
-                                size='small'
-                                fullWidth={false}
-                                sx={{ minWidth: '14rem' }}
-                                value={people.some((person) => person.User.ID === userID) ? userID : ''}
-                                onChange={(event) => update({ user: event.target.value })}
-                                options={people.map((person) => ({
-                                    value: person.User.ID,
-                                    label: person.User.ID === me?.ID ? `${fullName(person.User)} (já)` : fullName(person.User),
-                                }))}
-                            />
-                        ) : null}
-                        <StyledMonthPicker value={month} onChange={(value) => update({ month: value.format('YYYY-MM') })} />
-                    </Stack>
-                </Stack>
-
-                {summary ? (
-                    <>
-                        <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: 'repeat(auto-fit, minmax(13rem, 1fr))' }}>
-                            <StyledStatTile
-                                label='Odpracovaný čas'
-                                value={formatMinutes(shown.WorkedMinutes)}
-                                accent={chartColors.actualTime}
-                                caption={summary.daysWorked ? `${plural(summary.daysWorked, 'den', 'dny', 'dní')} s prací` : 'v tomto měsíci nic'}
-                            />
-                            <StyledStatTile
-                                label='Čas na úkolech'
-                                value={formatMinutes(summary.taskMinutes)}
-                                caption={
-                                    shown.WorkedMinutes > 0
-                                        ? `${Math.min(100, Math.round((summary.taskMinutes / shown.WorkedMinutes) * 100))} % odpracovaného času`
-                                        : 'zapsáno k úkolům'
-                                }
-                            />
-                            <StyledStatTile
-                                label='Úkoly v tomto měsíci'
-                                value={shown.Tasks.length}
-                                accent={statusColors.finished}
-                                caption={`${summary.finished} z nich dokončeno`}
-                            />
-                            <StyledStatTile
-                                label='Skutečnost proti plánu'
-                                value={usage === null ? '–' : `${usage} %`}
-                                tone={usage > 100 ? 'error' : undefined}
-                                accent={chartColors.plannedTime}
-                                caption={
-                                    usage === null
-                                        ? 'úkoly bez odhadu'
-                                        : `${formatMinutes(summary.actualMinutes)} z plánovaných ${formatMinutes(summary.plannedMinutes)}`
-                                }
-                            />
-                        </Box>
-
-                        <StyledSection title='Odpracovaný čas po dnech'>
-                            <Box sx={{ position: 'relative', height: '16rem' }}>
-                                <WorkTimeChart
-                                    minutes={days}
-                                    labels={days.map((_, index) => index + 1)}
-                                    titles={days.map((_, index) => month.date(index + 1).format('dddd D. M.'))}
-                                />
-                            </Box>
-                        </StyledSection>
-
-                        <StyledSection
-                            title='Úkoly v tomto měsíci'
-                            caption='Úkoly, na kterých pracovník v tomto měsíci zapsal čas. Plán je jeho díl z odhadu úkolu (odhad se dělí rovným dílem mezi přiřazené pracovníky), skutečnost je všechen jeho čas na úkolu.'
-                        >
-                            {shown.Tasks.length === 0 ? (
-                                <Typography sx={{ color: 'text.secondary' }}>V tomto měsíci žádný zapsaný čas na úkolech.</Typography>
-                            ) : (
-                                <>
-                                    {summary.withPlan.length > 0 ? (
-                                        <Box sx={{ position: 'relative', height: `calc(${Math.max(summary.withPlan.length, 2) * 3}rem + 4rem)` }}>
-                                            <PlannedActualChart
-                                                rows={summary.withPlan.map((task) => ({
-                                                    label: task.Name,
-                                                    planned: task.PlannedMinutes,
-                                                    actual: task.TotalMinutes,
-                                                }))}
-                                            />
-                                        </Box>
-                                    ) : null}
-                                    <StyledTable
-                                        columns={[
-                                            { label: 'Úkol' },
-                                            { label: 'Projekt' },
-                                            { label: 'Plánováno', align: 'right' },
-                                            { label: 'Tento měsíc', align: 'right' },
-                                            { label: 'Celkem', align: 'right' },
-                                            { label: 'Rozdíl', align: 'right' },
-                                            { label: 'Čerpání', align: 'right' },
-                                        ]}
-                                    >
-                                        {shown.Tasks.map((task) => {
-                                            const status = taskStatus(task);
-                                            return (
-                                                <StyledTableRow
-                                                    key={task.ID}
-                                                    status={status}
-                                                    onClick={() => navigate(`/auth/projects/${task.Project.ID}/${task.ID}`)}
-                                                >
-                                                    <StyledTableCell>
-                                                        <StyledStatus status={status}>{task.Name}</StyledStatus>
-                                                    </StyledTableCell>
-                                                    <StyledTableCell>{task.Project.Name}</StyledTableCell>
-                                                    <StyledTableCell align='right'>
-                                                        {task.PlannedMinutes ? formatMinutes(task.PlannedMinutes) : '–'}
-                                                    </StyledTableCell>
-                                                    <StyledTableCell align='right'>{formatMinutes(task.PeriodMinutes)}</StyledTableCell>
-                                                    <StyledTableCell align='right'>{formatMinutes(task.TotalMinutes)}</StyledTableCell>
-                                                    <StyledTableCell align='right'>
-                                                        {task.PlannedMinutes ? (
-                                                            <StyledTimeDifference planned={task.PlannedMinutes} actual={task.TotalMinutes} />
-                                                        ) : (
-                                                            '–'
-                                                        )}
-                                                    </StyledTableCell>
-                                                    <StyledTableCell align='right'>
-                                                        <StyledTimeUsage planned={task.PlannedMinutes} actual={task.TotalMinutes} />
-                                                    </StyledTableCell>
-                                                </StyledTableRow>
-                                            );
-                                        })}
-                                    </StyledTable>
-                                </>
-                            )}
-                        </StyledSection>
-                    </>
-                ) : null}
-
-                {showTeam ? (
                     <StyledSection
-                        title={me?.UserType === 'ADMIN' ? 'Všichni pracovníci' : 'Moji lidé'}
-                        caption='Souhrn za vybraný měsíc. Kliknutím zobrazíte statistiky pracovníka.'
+                        title='Pracovníci'
+                        caption={`Souhrn za vybraný ${period.unit === 'week' ? 'týden' : 'měsíc'}. Kliknutím zobrazíte detail pracovníka.`}
                     >
                         <StyledTable
                             columns={[
@@ -263,17 +133,9 @@ export const Stats = () => {
                                 { label: 'Čerpání', align: 'right' },
                             ]}
                         >
-                            {people.map((person) => (
-                                <StyledTableRow
-                                    key={person.User.ID}
-                                    selected={person.User.ID === userID}
-                                    disabled={!person.User.Enabled}
-                                    onClick={() => {
-                                        update({ user: person.User.ID });
-                                        document.querySelector('.content-wrap_inner')?.scrollTo({ top: 0, behavior: 'smooth' });
-                                    }}
-                                >
-                                    <StyledTableCell>{fullName(person.User)}</StyledTableCell>
+                            {team.map((person) => (
+                                <StyledTableRow key={person.User.ID} disabled={!person.User.Enabled} onClick={() => setUser(person.User.ID)}>
+                                    <StyledTableCell>{person.User.ID === me?.ID ? `${fullName(person.User)} (já)` : fullName(person.User)}</StyledTableCell>
                                     <StyledTableCell>{fullName(person.User.Manager)}</StyledTableCell>
                                     <StyledTableCell align='right'>{formatMinutes(person.WorkedMinutes)}</StyledTableCell>
                                     <StyledTableCell align='right'>
@@ -288,8 +150,154 @@ export const Stats = () => {
                             ))}
                         </StyledTable>
                     </StyledSection>
+                </>
+            ) : null}
+        </>
+    );
+};
+
+// "Projektové statistiky": a project picked from the ones the user is part of (managers and admins: all), with its
+// planned against worked time per worker and per task (?project=ID)
+const ProjectsStats = ({ projectID, setProject }) => {
+    const me = useAtomValue(userAtom);
+    const { data: projects = none } = useApi('/auth/projects', { topics: ['projects'] });
+    const manager = me?.UserType === 'ADMIN' || me?.UserType === 'MANAGER';
+    const options = useMemo(
+        () =>
+            projects
+                .filter((project) => manager || project.Mine)
+                // unfinished first, then by name
+                .sort((a, b) => Number(a.Finished) - Number(b.Finished) || a.Name.localeCompare(b.Name, 'cs')),
+        [projects, manager],
+    );
+    const chosen = options.find((project) => project.ID === projectID) ?? options.find((project) => project.Mine) ?? options[0] ?? null;
+
+    return (
+        <>
+            <Toolbar title={chosen?.Name ?? 'Projekty'} subtitle={chosen?.Customer}>
+                {options.length ? (
+                    <StyledSelect
+                        id='statsProject'
+                        label='Projekt'
+                        size='small'
+                        fullWidth={false}
+                        sx={{ minWidth: '16rem' }}
+                        value={chosen?.ID ?? ''}
+                        onChange={(event) => setProject(event.target.value)}
+                        options={options.map((project) => ({ value: project.ID, label: project.Finished ? `${project.Name} (dokončen)` : project.Name }))}
+                    />
                 ) : null}
-            </Box>
-        </div>
+            </Toolbar>
+            {chosen ? (
+                // a block around it, so the statistics take the full width
+                <div>
+                    <ProjectStats key={chosen.ID} projectID={chosen.ID} />
+                </div>
+            ) : (
+                <Typography sx={{ color: 'text.secondary' }}>Nejste v žádném projektu.</Typography>
+            )}
+        </>
+    );
+};
+
+const tabs = [
+    { label: 'Moje statistiky', value: 'me' },
+    { label: 'Projektové statistiky', value: 'projects' },
+    { label: 'Týmové statistiky', value: 'team', managers: true },
+];
+
+// The Statistiky section: tabs for your own week or month, a project's numbers and (managers and admins) your team's.
+// The address keeps the choice: ?tab=projects&project=3, ?tab=team&month=2026-11&user=12, ?period=week&week=2026-11-16.
+export const Stats = () => {
+    const setTab = useSetAtom(selectedTabAtom);
+    useEffect(() => {
+        setTab('Statistiky');
+    });
+
+    const me = useAtomValue(userAtom);
+    const manager = me?.UserType === 'ADMIN' || me?.UserType === 'MANAGER';
+    const shownTabs = tabs.filter((tab) => !tab.managers || manager);
+
+    const [searchParams, setSearchParams] = useSearchParams();
+    const tab = shownTabs.some((item) => item.value === searchParams.get('tab')) ? searchParams.get('tab') : 'me';
+    // a week (?period=week&week=<its Monday>) or a calendar month (?month=2026-11, the default), never in the future
+    const unit = searchParams.get('period') === 'week' ? 'week' : 'month';
+    const monthKey =
+        /^\d{4}-\d{2}$/.test(searchParams.get('month') ?? '') && searchParams.get('month') <= dayjs().format('YYYY-MM')
+            ? searchParams.get('month')
+            : dayjs().format('YYYY-MM');
+    const weekKey = /^\d{4}-\d{2}-\d{2}$/.test(searchParams.get('week') ?? '') ? searchParams.get('week') : null;
+    const period = useMemo(() => {
+        if (unit === 'week') {
+            const thisWeek = dayjs().startOf('isoWeek');
+            const week = weekKey && dayjs(weekKey).isValid() ? dayjs(weekKey).startOf('isoWeek') : thisWeek;
+            return statsPeriod('week', week.isAfter(thisWeek) ? thisWeek : week);
+        }
+        return statsPeriod('month', dayjs(`${monthKey}-01`).startOf('month'));
+    }, [unit, monthKey, weekKey]);
+    const update = (changes) => {
+        const next = new URLSearchParams(searchParams);
+        for (const [key, value] of Object.entries(changes)) {
+            if (value === null || value === undefined) next.delete(key);
+            else next.set(key, value);
+        }
+        setSearchParams(next, { replace: true });
+    };
+    const scrollTop = () => document.querySelector('.content-wrap_inner')?.scrollTo({ top: 0 });
+
+    const periodPicker = (
+        <>
+            <StyledSegmentedSelect
+                label='Období'
+                showLabels
+                sx={{ width: 'auto' }}
+                value={unit}
+                onChange={(value) => update({ period: value === 'week' ? 'week' : null })}
+                options={[
+                    { value: 'week', label: 'Týden' },
+                    { value: 'month', label: 'Měsíc' },
+                ]}
+            />
+            {unit === 'week' ? (
+                <StyledWeekPicker value={period.start} max={dayjs()} onChange={(value) => update({ week: value.format('YYYY-MM-DD') })} />
+            ) : (
+                <StyledMonthPicker value={period.start} onChange={(value) => update({ month: value.format('YYYY-MM') })} />
+            )}
+        </>
+    );
+
+    return (
+        <>
+            <StyledPageHeader
+                title='Statistiky'
+                tabs={shownTabs}
+                active={tab}
+                onSelect={(value) => update({ tab: value === 'me' ? null : value, user: null })}
+            />
+            <div className='content-wrap_inner'>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, maxWidth: '75rem', width: '100%', mx: 'auto' }}>
+                    {tab === 'projects' ? (
+                        <ProjectsStats projectID={Number(searchParams.get('project')) || null} setProject={(id) => update({ project: id })} />
+                    ) : tab === 'team' ? (
+                        <TeamStats
+                            period={period}
+                            periodPicker={periodPicker}
+                            userID={Number(searchParams.get('user')) || null}
+                            setUser={(id) => {
+                                update({ user: id });
+                                scrollTop();
+                            }}
+                        />
+                    ) : me ? (
+                        <>
+                            <Toolbar title={fullName(me)} subtitle={me.Position}>
+                                {periodPicker}
+                            </Toolbar>
+                            <PersonStats userID={me.ID} period={period} />
+                        </>
+                    ) : null}
+                </Box>
+            </div>
+        </>
     );
 };
