@@ -4,6 +4,7 @@ import { useAtom, useSetAtom } from 'jotai';
 import Divider from '@mui/material/Divider';
 import { notificationsAtom, tickAtom } from '../../../state/atoms';
 import { useApi } from '../../../state/query';
+import { demoUploadsOff, useDemoMode } from '../../../state/demo';
 import { FileTable } from '../../utils/tables/FileTable';
 import axios from 'axios';
 import { getBackendAddress } from '../../../config';
@@ -30,6 +31,7 @@ export const TaskFiles = ({ kind, title }: { kind: 'input-files' | 'output-files
     const [notifications, setNotifications] = useAtom(notificationsAtom);
 
     const setTick = useSetAtom(tickAtom);
+    const demoMode = useDemoMode();
     const projectID = useParams().project;
     const taskID = useParams().task;
     const filesPath = `/auth/projects/${projectID}/tasks/${taskID}/${kind}`;
@@ -77,7 +79,12 @@ export const TaskFiles = ({ kind, title }: { kind: 'input-files' | 'output-files
                         <h1>{title}</h1>
                     </div>
                     <Divider />
-                    <StyledDropzone onFiles={handleUploadFiles} busy={upload !== null} progress={upload?.progress} />
+                    <StyledDropzone
+                        onFiles={handleUploadFiles}
+                        busy={upload !== null}
+                        progress={upload?.progress}
+                        disabled={demoMode ? demoUploadsOff : undefined}
+                    />
                     <FileTable files={files} selected={selectedName} onSelect={selectFile} />
                 </>
             }

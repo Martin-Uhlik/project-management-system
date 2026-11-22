@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { vi } from 'vitest';
 import TableCell from '@mui/material/TableCell';
+import { StyledDropzone } from './StyledDropzone';
 import { StyledSearchInput } from './StyledSearchInput';
 import { StyledTable, StyledTableRow } from './StyledTable';
 import { useSearch } from './useSearch';
@@ -114,4 +115,15 @@ test('fieldValue and fieldChecked read the submitted form by field name', async 
     await user.click(screen.getByLabelText('admin'));
     await user.click(screen.getByRole('button', { name: 'Uložit' }));
     expect(submitted).toHaveBeenCalledWith('Linka 2', true, '');
+});
+
+test('a disabled drop area says why and takes no files', async () => {
+    const user = userEvent.setup();
+    const onFiles = vi.fn();
+    render(<StyledDropzone onFiles={onFiles} disabled='V ukázkové verzi nelze nahrávat soubory.' />);
+    const area = screen.getByRole('button', { name: /V ukázkové verzi nelze nahrávat soubory/ });
+    expect(area).toHaveAttribute('aria-disabled', 'true');
+    expect(screen.getByText('V ukázkové verzi nelze nahrávat soubory.')).toBeInTheDocument();
+    await user.upload(area.querySelector('input')!, new File(['x'], 'a.txt'));
+    expect(onFiles).not.toHaveBeenCalled();
 });

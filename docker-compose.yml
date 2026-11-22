@@ -56,6 +56,10 @@ services:
             SSO_ISSUER: ${SSO_ISSUER:-}
             SSO_DEMO_WORKER: ${SSO_DEMO_WORKER:-tsvoboda}
             SSO_DEMO_MANAGER: ${SSO_DEMO_MANAGER:-jnovak}
+            # the public demo (see .env.example): no uploads, a nightly reset to the demo data
+            DEMO_MODE: ${DEMO_MODE:-false}
+            DEMO_RESET_HOUR: ${DEMO_RESET_HOUR:-3}
+            DEMO_RESET_TIME_ZONE: ${DEMO_RESET_TIME_ZONE:-Europe/Prague}
             DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@database:5432/${POSTGRES_DB}
         volumes:
             # uploaded task files; the container runs as uid 1000 (node), so the folder must be writable for it

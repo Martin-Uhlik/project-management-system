@@ -131,6 +131,7 @@ cd backend && npm run db:baseline && npm run db:deploy
 - Sign-in sets an httpOnly session cookie (scripts can't read it) that expires after 20 hours; signing out, a password change or blocking the account ends the session. Sign-in attempts are limited per user name and per IP.
 - Passwords are hashed with scrypt; older accounts are upgraded the next time they sign in.
 - The API checks roles itself: admins manage users, machines and deleting projects; admins and managers manage projects, tasks, stock and material requests; users see the projects they own or belong to and the tasks assigned to them, change their own timer, password and personal tasks, and finish their assigned tasks. Every endpoint accepts only the fields it expects.
+- In the public demo (`DEMO_MODE=true`) visitors share the demo accounts: only admins may change passwords, nothing can be uploaded, and every night (`DEMO_RESET_HOUR`, 3:00 Prague time by default) the database and the files go back to the demo data, keeping the admin accounts.
 - Only `FRONTEND_ORIGIN` may call the API from a browser (CORS), and requests that change data from other origins are refused. The same goes for the live updates connection.
 
 ## The whole system, like in production

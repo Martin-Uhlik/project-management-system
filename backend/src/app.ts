@@ -26,7 +26,8 @@ export const allowedOrigins = () =>
         .filter(Boolean);
 
 // DEMO_MODE=true: the public demo, where visitors share the seeded accounts. Only an admin may then change a
-// password, so one visitor can't lock the others out of a shared account until the nightly reset.
+// password, so one visitor can't lock the others out of a shared account, nobody can upload files, and the data goes
+// back to its starting state every night (demoReset.ts).
 const demoModeFromEnv = () => process.env.DEMO_MODE === 'true';
 
 // the largest task file upload in MB (UPLOAD_LIMIT_MB); keep it in step with client_max_body_size in the nginx in front
@@ -67,6 +68,11 @@ export const createApp = (options: AppOptions = {}) => {
     const MANAGER = requireRole('ADMIN', 'MANAGER');
     // in the demo, password changes are for admins only (see DEMO_MODE above)
     const PASSWORD_CHANGE = demoMode ? ADMIN : (req: Request, res: Response, next: NextFunction) => next();
+    // in the demo nothing is uploaded (the example files come with the demo data; the frontend hides the upload area)
+    const UPLOAD = (req: Request, res: Response, next: NextFunction) => {
+        if (demoMode) throw new HttpError(403, 'V ukázkové verzi nelze nahrávat soubory.');
+        next();
+    };
 
     // live(...): after a change, the browsers that show the changed data are told to load it again (see live.ts)
     const USERS = live(topic('users'));
@@ -90,7 +96,7 @@ export const createApp = (options: AppOptions = {}) => {
     app.use('/auth', requireSession);
 
     // the signed-in user
-    app.get('/auth/me', utilities.me);
+    app.get('/auth/me', utilities.me(demoMode));
     app.post('/auth/logout', resync(), utilities.logout);
     app.get('/auth/:userID/tasks', tasks.getUserTasks);
 
@@ -131,8 +137,8 @@ export const createApp = (options: AppOptions = {}) => {
 
     app.get('/auth/projects/:projectID/tasks/:taskID/input-files', tasks.getInputFiles);
     app.get('/auth/projects/:projectID/tasks/:taskID/output-files', tasks.getOutputFiles);
-    app.post('/auth/projects/:projectID/tasks/:taskID/input-files', PROJECT, tasks.uploadInputFile);
-    app.post('/auth/projects/:projectID/tasks/:taskID/output-files', PROJECT, tasks.uploadOutputFile);
+    app.post('/auth/projects/:projectID/tasks/:taskID/input-files', UPLOAD, PROJECT, tasks.uploadInputFile);
+    app.post('/auth/projects/:projectID/tasks/:taskID/output-files', UPLOAD, PROJECT, tasks.uploadOutputFile);
     app.get('/auth/projects/:projectID/tasks/:taskID/input-files/:fileName', tasks.downloadInputFile);
     app.get('/auth/projects/:projectID/tasks/:taskID/output-files/:fileName', tasks.downloadOutputFile);
 
@@ -172,7 +178,7 @@ export const createApp = (options: AppOptions = {}) => {
     app.delete('/auth/machines/:machineID/services/:serviceID', MACHINES, machines.removeService);
     app.get('/auth/machines/:machineID/work', machines.getMachineWork);
     app.get('/auth/machines/:machineID/files', machines.getMachineFiles);
-    app.post('/auth/machines/:machineID/files', MACHINES, machines.uploadMachineFile);
+    app.post('/auth/machines/:machineID/files', UPLOAD, MACHINES, machines.uploadMachineFile);
     app.get('/auth/machines/:machineID/files/:fileName', machines.downloadMachineFile);
     app.delete('/auth/machines/:machineID/files/:fileName', MACHINES, machines.removeMachineFile);
 

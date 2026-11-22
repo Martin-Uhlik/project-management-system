@@ -94,6 +94,7 @@ export const setPassword = async (req: Request, res: Response) => {
 };
 
 // Who is signed in (lets the frontend check its session)
-export const me = async (req: Request, res: Response) => {
-    return res.status(200).send(currentUser(res));
+// The signed-in user; Demo: the public demo (DEMO_MODE), where uploads are off
+export const me = (demoMode: boolean) => async (req: Request, res: Response) => {
+    return res.status(200).send({ ...currentUser(res), Demo: demoMode });
 };

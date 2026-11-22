@@ -82,6 +82,11 @@ export const attachLive = (server: HttpServer, origins: string[]) => {
     return io;
 };
 
+// Closes every connection, e.g. after all sessions were ended (the browsers then go back to the sign-in page)
+export const disconnectAll = async () => {
+    io?.disconnectSockets(true);
+};
+
 export const closeLive = async () => {
     const server = io;
     io = null;

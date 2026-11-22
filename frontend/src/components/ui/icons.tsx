@@ -1,6 +1,8 @@
 import type React from 'react';
 import SvgIcon, { type SvgIconProps } from '@mui/material/SvgIcon';
 import type { IconType } from 'react-icons';
+// the timer's play and stop: Tabler's filled ones, which have rounded corners (Material's are sharp)
+import { TbPlayerPlayFilled, TbPlayerStopFilled } from 'react-icons/tb';
 import {
     MdAccountCircle,
     MdAdd,
@@ -42,7 +44,6 @@ import {
     MdPeople,
     MdPersonOff,
     MdPictureAsPdf,
-    MdPlayArrow,
     MdPrecisionManufacturing,
     MdRadioButtonUnchecked,
     MdRefresh,
@@ -51,7 +52,6 @@ import {
     MdSend,
     MdSettings,
     MdShoppingCart,
-    MdStop,
     MdTableChart,
     MdUndo,
     MdVideoFile,
@@ -87,8 +87,8 @@ export const CircleOutlineIcon = icon(MdRadioButtonUnchecked);
 export const TimerIcon = icon(MdOutlineTimer);
 export const AccountCancelIcon = icon(MdPersonOff);
 export const PencilIcon = icon(MdEdit);
-export const PlayIcon = icon(MdPlayArrow);
-export const StopIcon = icon(MdStop);
+export const PlayIcon = icon(TbPlayerPlayFilled);
+export const StopIcon = icon(TbPlayerStopFilled);
 export const CheckIcon = icon(MdCheck);
 export const UndoIcon = icon(MdUndo);
 export const TrashIcon = icon(MdDelete);

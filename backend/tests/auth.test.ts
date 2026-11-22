@@ -140,7 +140,7 @@ describe('sessions', () => {
     it('accepts the cookie, and a Bearer token for scripts', async () => {
         const user = await createUser('USER');
         const agent = await loginAs(app, user);
-        expect((await agent.get('/auth/me')).body).toEqual({ ID: user.ID, UserType: 'USER' });
+        expect((await agent.get('/auth/me')).body).toEqual({ ID: user.ID, UserType: 'USER', Demo: false });
 
         const res = await request(app).post('/login').send({ name: user.UserName, password: PASSWORD });
         const token = cookies(res)

@@ -6,6 +6,7 @@ import Divider from '@mui/material/Divider';
 import Typography from '@mui/material/Typography';
 import { dialogAtom, notificationsAtom, tickAtom } from '../../state/atoms';
 import { useApi } from '../../state/query';
+import { demoUploadsOff, useDemoMode } from '../../state/demo';
 import { getBackendAddress } from '../../config';
 import { getAuthHeader } from '../../Auth';
 import { handleAxiosError } from '../../errorHandler';
@@ -24,6 +25,7 @@ const fullName = (user: PublicUser | null | undefined) => (user ? `${user.FirstN
 export const MachineFiles = ({ machine, canEdit }: { machine: MachineDetail; canEdit: boolean }) => {
     const [notifications, setNotifications] = useAtom(notificationsAtom);
     const setTick = useSetAtom(tickAtom);
+    const demoMode = useDemoMode();
     const setDialog = useSetAtom(dialogAtom);
     const filesPath = `/auth/machines/${machine.ID}/files`;
     const filesAddress = getBackendAddress(filesPath);
@@ -90,7 +92,14 @@ export const MachineFiles = ({ machine, canEdit }: { machine: MachineDetail; can
                         <h1>Soubory stroje</h1>
                     </div>
                     <Divider />
-                    {canEdit ? <StyledDropzone onFiles={handleUploadFiles} busy={upload !== null} progress={upload?.progress} /> : null}
+                    {canEdit ? (
+                        <StyledDropzone
+                            onFiles={handleUploadFiles}
+                            busy={upload !== null}
+                            progress={upload?.progress}
+                            disabled={demoMode ? demoUploadsOff : undefined}
+                        />
+                    ) : null}
                     <StyledTable search={search} columns={[{ label: 'Název' }, { label: 'Velikost', align: 'right' }, { label: 'Nahráno', align: 'right' }]}>
                         {search.results.map((file) => {
                             const Icon = fileType(file.file).icon;
