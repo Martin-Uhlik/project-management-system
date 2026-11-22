@@ -2,9 +2,14 @@
 <html lang="cs">
     <head>
         <meta charset="utf-8" />
-        <link rel="icon" href="/images/favico-32x32.png" />
+        <!-- the app icon (public/favicon.svg; the PNG sizes and favicon.ico are made from it): SVG for current browsers,
+             ICO for the rest, the Apple touch icon for iOS home screens, the manifest for Android and installing -->
+        <link rel="icon" href="/favicon.ico" sizes="48x48" />
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="manifest" href="/site.webmanifest" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="theme-color" content="#000000" />
+        <meta name="theme-color" content="#212529" />
         <meta name="description" content="ADAM DESIGN project management system" />
 
         <title>ADAM DESIGN</title>
@@ -25,6 +30,6 @@
     <body>
         <noscript>You need to enable JavaScript to run this app.</noscript>
         <div id="root"></div>
-        <script type="module" src="/src/index.jsx"></script>
+        <script type="module" src="/src/index.tsx"></script>
     </body>
 </html>

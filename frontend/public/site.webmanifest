@@ -1,0 +1,15 @@
+{
+    "name": "ADAM DESIGN",
+    "short_name": "ADAM DESIGN",
+    "description": "ADAM DESIGN project management system",
+    "lang": "cs",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#212529",
+    "theme_color": "#212529",
+    "icons": [
+        { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+        { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" },
+        { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    ]
+}
