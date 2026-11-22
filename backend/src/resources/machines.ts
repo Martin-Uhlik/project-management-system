@@ -174,6 +174,38 @@ export const removeService = async (req: Request, res: Response) => {
     return res.status(200).send();
 };
 
+// --- worked time: the time people logged on the machine's tasks, to see the days the machine stood still
+
+// at most about a quarter of a year at once
+const workQuery = z
+    .object({ from: date, to: date })
+    .refine(({ from, to }) => to > from && to.getTime() - from.getTime() <= 93 * 24 * 3600 * 1000, 'Neplatné období.');
+
+// GET /auth/machines/:machineID/work?from=&to=: the work sessions on the machine's tasks that overlap the period, cut
+// to it (a running timer counts until now). The browser adds them up per day, in its own time zone.
+export const getMachineWork = async (req: Request, res: Response) => {
+    const machine = await findMachine(idParam(req, 'machineID'));
+    const { from, to } = parseBody(workQuery, req.query);
+    const now = new Date();
+    const sessions = await prisma.userTaskTime.findMany({
+        where: {
+            Task: { MachineID: machine.ID },
+            StartTime: { lt: to },
+            OR: [{ StopTime: null }, { StopTime: { gt: from } }],
+        },
+        select: { StartTime: true, StopTime: true, User: { select: personSelect }, Task: { select: { ID: true, Name: true, ProjectID: true } } },
+        orderBy: { StartTime: 'asc' },
+    });
+    const clip = (time: number) => new Date(Math.min(Math.max(time, from.getTime()), to.getTime()));
+    return res.status(200).send(
+        sessions.map((session) => ({
+            ...session,
+            StartTime: clip(session.StartTime.getTime()),
+            StopTime: clip(Math.min((session.StopTime ?? now).getTime(), now.getTime())),
+        })),
+    );
+};
+
 // --- files (documentation, manuals...): <DATA_DIR>/machines/<machine>
 
 const machineDir = (machineID: number) => path.join(dataDir(), 'machines', String(machineID));

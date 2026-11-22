@@ -6,7 +6,15 @@ import { getAuthHeader, getUserID } from '../Auth';
 import axios from 'axios';
 import { handleAxiosError } from '../errorHandler';
 import dayjs from '../dayjs';
-import { StyledButton, useElapsed } from './ui';
+import { PlayIcon, StopIcon, StyledIconButton, TimerIcon, useElapsed } from './ui';
+
+// bare play/stop icons, green and red, in the size of the other header icons
+const timerButtonSx = (color) => ({
+    p: 0.25,
+    color: `${color}.main`,
+    '& svg': { fontSize: '2.5rem' },
+    '&:hover': { color: `${color}.light` },
+});
 
 export const Timer = () => {
     const [user, setUser] = useAtom(userAtom);
@@ -89,16 +97,17 @@ export const Timer = () => {
 
     return (
         <div className='timer'>
-            <img className='menu-icon' src='/icons/timer-outline.svg' alt='Časovač' />
+            <TimerIcon className='menu-icon' titleAccess='Časovač' />
             <span className='menu-text'>{elapsed}</span>
+            {/* play starts the timer (asking for the task), stop ends it and logs the time */}
             {startTime ? (
-                <StyledButton color='error' onClick={handleTimerStop}>
-                    Zapsat
-                </StyledButton>
+                <StyledIconButton label='Zastavit a zapsat čas' onClick={handleTimerStop} sx={timerButtonSx('error')}>
+                    <StopIcon />
+                </StyledIconButton>
             ) : (
-                <StyledButton color='success' onClick={handleTimerStart}>
-                    Spustit
-                </StyledButton>
+                <StyledIconButton label='Spustit časovač' onClick={handleTimerStart} sx={timerButtonSx('success')}>
+                    <PlayIcon />
+                </StyledIconButton>
             )}
         </div>
     );

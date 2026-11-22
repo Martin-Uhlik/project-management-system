@@ -29,6 +29,11 @@ services:
             ADMIN_LOGIN: ${ADMIN_LOGIN:-admin}
             ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin}
             SEED_DEMO_DATA: ${SEED_DEMO_DATA:-false}
+        volumes:
+            # the demo data writes its example files here, the same folder the backend serves uploads from
+            - type: bind
+              source: ./backend/data
+              target: /app/data
         depends_on:
             database:
                 condition: service_healthy

@@ -217,6 +217,9 @@ model MaterialRequest {
   TargetTaskID      Int?
   TargetUser        User                  @relation(name: "Creator", fields: [TargetUserID], references: [ID])
   TargetUserID      Int
+  // the stock item it restocks (none: a new item, created when it is stocked)
+  Material          Material?             @relation(name: "Request_Material", fields: [MaterialID], references: [ID], onDelete: SetNull)
+  MaterialID        Int?
 }
 
 model MaterialEvent {
@@ -229,19 +232,31 @@ model MaterialEvent {
   Material          Material              @relation(name: "Event_Material", fields: [MaterialID], references: [ID])
   MaterialID        Int
   EventType         EventType
+  CreatedAt         DateTime              @default(now())
 }
 
 enum EventType {
   ADD
   REMOVE
   RESERVATION
+  // a reservation given back (cancelled or no longer needed)
+  RELEASE
 }
 
 model Material {
   ID                Int                   @id @default(autoincrement())
   Name              String
   Description       String?
+  // the unit it is counted in (ks, m, kg...) and its price per unit in Kč
+  Unit              String                @default("ks")
+  Price             Int                   @default(0)
+  Supplier          String?
+  // where it lies in the stock (rack, shelf)
+  Location          String?
+  // below this many available a warning shows
+  MinCount          Int                   @default(0)
   MaterialEvent     MaterialEvent[]       @relation(name: "Event_Material")
+  Requests          MaterialRequest[]     @relation(name: "Request_Material")
 }
 
 model Project {

@@ -78,18 +78,13 @@ export const EditMaterialRequirement = () => {
             });
     };
 
+    // the approved request has arrived: its items go into stock (reserved for its task, if any) and it goes away
     const handleAddMaterial = () => {
         axios
-            .post(
-                getBackendAddress(`/auth/material`),
-                {
-                    Name: requirement.Name,
-                    Count: +requirement.Count,
-                },
-                getAuthHeader(),
-            )
+            .post(getBackendAddress(`/auth/materialRequirements/${requirement.ID}/stock`), {}, getAuthHeader())
             .then(() => {
-                removeRequirement();
+                setDialog(null);
+                setTick(dayjs());
             })
             .catch((error) => {
                 handleAxiosError(error, [notifications, setNotifications]);
@@ -103,7 +98,7 @@ export const EditMaterialRequirement = () => {
                     <RestrictedComponent types={['ADMIN', 'MANAGER']}>
                         {requirement.AcceptedByID ? (
                             <StyledButton color='success' onClick={handleAddMaterial}>
-                                Přidat na sklad
+                                Naskladnit
                             </StyledButton>
                         ) : (
                             <StyledButton onClick={acceptRequirement}>Schválit</StyledButton>

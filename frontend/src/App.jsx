@@ -13,6 +13,7 @@ import { Machines } from './components/tabs/Machines';
 import { Users } from './components/tabs/Users';
 import { ChatPage } from './components/chat/ChatPage';
 import { Machine } from './components/machines/Machine';
+import { Material } from './components/inventory/Material';
 import { ProjectTask } from './components/projects/ProjectTask';
 import { TaskInputFiles } from './components/projects/task/TaskInputFiles';
 import { TaskOverview } from './components/projects/task/TaskOverview';
@@ -56,6 +57,7 @@ export const App = () => {
                             <Route path='material' element={<TaskMaterial />} />
                         </Route>
                         <Route path='inventory' element={<Inventory />} />
+                        <Route path='inventory/:material' element={<Material />} />
                         <Route path='settings' element={<Settings />} />
                         <Route path='machines' element={<Machines />} />
                         <Route path='machines/:machine' element={<Machine />} />

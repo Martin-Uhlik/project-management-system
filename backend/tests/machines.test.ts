@@ -1,7 +1,7 @@
 import { rm } from 'node:fs/promises';
 import path from 'node:path';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { makeApp, prisma, resetDb, signInAll } from './helpers.ts';
+import { createProject, createTask, makeApp, prisma, resetDb, signInAll } from './helpers.ts';
 
 const app = makeApp();
 let s: Awaited<ReturnType<typeof signInAll>>;
@@ -80,5 +80,31 @@ describe('machine files', () => {
         expect((await s.manager.agent.delete(`${base}/manual.pdf`)).status).toBe(200);
         expect((await s.manager.agent.delete(`${base}/manual.pdf`)).status).toBe(404);
         expect((await s.other.agent.get(base)).body).toEqual([]);
+    });
+});
+
+describe('machine worked time', () => {
+    it('lists the time logged on its tasks in the period, cut to it', async () => {
+        const machine = await prisma.machine.create({ data: { Name: 'Laser' } });
+        const project = await createProject(s.manager.user.ID, [s.user.user.ID]);
+        const task = await createTask(project.ID, s.manager.user.ID, [s.user.user.ID]);
+        const other = await createTask(project.ID, s.manager.user.ID, [s.user.user.ID]);
+        await prisma.task.update({ where: { ID: task.ID }, data: { MachineID: machine.ID } });
+        const at = (text: string) => new Date(text);
+        await prisma.userTaskTime.createMany({
+            data: [
+                { UserID: s.user.user.ID, TaskID: task.ID, StartTime: at('2026-11-15T22:00:00Z'), StopTime: at('2026-11-16T02:00:00Z') },
+                { UserID: s.user.user.ID, TaskID: task.ID, StartTime: at('2026-11-17T08:00:00Z'), StopTime: at('2026-11-17T11:00:00Z') },
+                { UserID: s.user.user.ID, TaskID: other.ID, StartTime: at('2026-11-17T12:00:00Z'), StopTime: at('2026-11-17T13:00:00Z') },
+                { UserID: s.user.user.ID, TaskID: task.ID, StartTime: at('2026-11-30T08:00:00Z'), StopTime: at('2026-11-30T09:00:00Z') },
+            ],
+        });
+        const res = await s.other.agent.get(`/auth/machines/${machine.ID}/work`).query({ from: '2026-11-16T00:00:00Z', to: '2026-11-23T00:00:00Z' });
+        expect(res.status).toBe(200);
+        expect(res.body).toMatchObject([
+            { StartTime: '2026-11-16T00:00:00.000Z', StopTime: '2026-11-16T02:00:00.000Z', Task: { ID: task.ID }, User: { ID: s.user.user.ID } },
+            { StartTime: '2026-11-17T08:00:00.000Z', StopTime: '2026-11-17T11:00:00.000Z' },
+        ]);
+        expect((await s.other.agent.get(`/auth/machines/${machine.ID}/work`).query({ from: '2026-11-16', to: '2026-03-01' })).status).toBe(400);
     });
 });

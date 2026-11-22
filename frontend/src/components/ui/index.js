@@ -56,3 +56,5 @@ export {
     StyledChatListHeading,
     StyledChatMessage,
 } from './StyledChat';
+export { StyledFact, StyledFacts } from './StyledFact';
+export { StyledOpenButton } from './StyledOpenButton';

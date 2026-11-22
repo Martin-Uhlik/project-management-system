@@ -4,16 +4,12 @@ import { MyTasks } from './overview/MyTasks';
 import { useSetAtom } from 'jotai';
 import { selectedTabAtom } from '../../state/atoms';
 import { useApi } from '../../state/query';
-import { WorkTimeChart } from '../utils/WorkTimeChart';
+import { WorkTimeChart, weekLabels } from '../utils/WorkTimeChart';
 import { WorkPlanChart } from '../utils/WorkPlanChart';
 import { getUserID } from '../../Auth';
 import dayjs from '../../dayjs';
 import { StyledToggle, StyledWeekPicker } from '../ui';
 import { filterTasks, useTaskFilters } from '../../state/taskFilters';
-
-const weekdays = ['Po', 'Út', 'St', 'Čt', 'Pá', 'So', 'Ne'];
-// the rows / bars of a week chart: the weekday and its date ("Po 16. 11.")
-const weekLabels = (week) => weekdays.map((day, index) => `${day} ${week.add(index, 'day').format('D. M.')}`);
 
 export const Overview = () => {
     const [selectedButton, setSelectedButton] = React.useState(0);

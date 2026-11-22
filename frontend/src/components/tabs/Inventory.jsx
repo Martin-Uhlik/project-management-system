@@ -1,111 +1,69 @@
-import { useAtom, useSetAtom } from 'jotai';
-import { dialogAtom, notificationsAtom, selectedTabAtom, tickAtom } from '../../state/atoms';
-import React from 'react';
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router';
+import { useSetAtom } from 'jotai';
+import { dialogAtom, selectedTabAtom } from '../../state/atoms';
+import { useApi } from '../../state/query';
 import { MaterialTable } from '../utils/tables/MaterialTable';
-import { MaterialRequirementTable } from '../utils/tables/MaterialRequirementTable';
-import axios from 'axios';
-import { getBackendAddress } from '../../config';
-import { getAuthHeader } from '../../Auth';
-import dayjs from '../../dayjs';
-import { handleAxiosError } from '../../errorHandler';
 import { RestrictedComponent } from '../utils/RestrictedComponent';
-import { StyledAddButton, StyledBoxHeader } from '../ui';
+import { MaterialPreview } from '../inventory/MaterialPreview';
+import { ReservationsTab } from '../inventory/ReservationsTab';
+import { RequestsTab } from '../inventory/RequestsTab';
+import { StyledAddButton, StyledBoxHeader, StyledPageHeader } from '../ui';
 
-export const Inventory = () => {
-    const setTab = useSetAtom(selectedTabAtom);
+const tabs = [
+    { label: 'Dostupný materiál', value: 'material' },
+    { label: 'Rezervace', value: 'reservations' },
+    { label: 'Požadavky', value: 'requests' },
+];
+const none = [];
+
+// "Dostupný materiál": the stock items on the left, the chosen one on the right with an arrow to its page
+const MaterialTab = () => {
     const setDialog = useSetAtom(dialogAtom);
-    React.useEffect(() => {
-        setTab('Sklad');
-    });
-
-    const setTick = useSetAtom(tickAtom);
-    const [notifications, setNotifications] = useAtom(notificationsAtom);
-
-    const addMaterial = (props) => {
-        axios
-            .post(
-                getBackendAddress(`/auth/material`),
-                {
-                    Name: props.name,
-                    Count: +props.count,
-                },
-                getAuthHeader(),
-            )
-            .then(() => {
-                setTick(dayjs());
-            })
-            .catch((error) => {
-                handleAxiosError(error, [notifications, setNotifications]);
-            });
-    };
-
-    const addMaterialRequirement = (props) => {
-        axios
-            .post(
-                getBackendAddress(`/auth/materialRequirements`),
-                {
-                    Name: props.name,
-                    Description: props.description,
-                    Count: +props.count,
-                    Price: +props.price,
-                    NeededDate: props.date,
-                },
-                getAuthHeader(),
-            )
-            .then(() => {
-                setTick(dayjs());
-            })
-            .catch((error) => {
-                handleAxiosError(error, [notifications, setNotifications]);
-            });
-    };
-
-    const handleAddMaterial = () => {
-        setDialog({
-            type: 'AddMaterial',
-            data: {
-                handleSubmit: addMaterial,
-                handleCancel: () => {},
-            },
-        });
-    };
-
-    const handleAddMaterialRequirement = () => {
-        setDialog({
-            type: 'AddMaterialRequirement',
-            data: {
-                handleSubmit: addMaterialRequirement,
-                handleCancel: () => {},
-            },
-        });
-    };
-
+    const { data: materials = none } = useApi('/auth/material', { topics: ['material'] });
+    const [chosen, setChosen] = useState(null);
+    const material = materials.find((item) => item.ID === chosen) ?? materials[0] ?? null;
     return (
-        <div className='content-wrap_inner'>
-            <div className='content-2-column'>
-                <div className='content-box'>
-                    <div className='content-box_content'>
-                        <StyledBoxHeader
-                            title='Dostupný materiál'
-                            add={
-                                <RestrictedComponent types={['ADMIN', 'MANAGER']}>
-                                    <StyledAddButton label='Přidat materiál' onClick={handleAddMaterial} />
-                                </RestrictedComponent>
-                            }
-                        />
-                        <MaterialTable />
-                    </div>
-                </div>
-                <div className='content-box'>
-                    <div className='content-box_content'>
-                        <StyledBoxHeader
-                            title='Požadavky na materiál'
-                            add={<StyledAddButton label='Přidat požadavek na materiál' onClick={handleAddMaterialRequirement} />}
-                        />
-                        <MaterialRequirementTable />
-                    </div>
+        <div className='content-2-column'>
+            <div className='content-box'>
+                <div className='content-box_content'>
+                    <StyledBoxHeader
+                        title='Materiál na skladě'
+                        add={
+                            <RestrictedComponent types={['ADMIN', 'MANAGER']}>
+                                <StyledAddButton label='Přidat materiál' onClick={() => setDialog({ type: 'AddMaterial', data: { handleCancel: () => {} } })} />
+                            </RestrictedComponent>
+                        }
+                    />
+                    <MaterialTable selectedID={material?.ID} onSelect={setChosen} />
                 </div>
             </div>
+            <div className='content-box'>{material ? <MaterialPreview material={material} /> : null}</div>
         </div>
+    );
+};
+
+// The Sklad section: a header with the tabs Dostupný materiál, Rezervace and Požadavky (each a list with a preview of
+// the chosen item); the open tab is kept in the address (?tab=reservations)
+export const Inventory = () => {
+    const setTab = useSetAtom(selectedTabAtom);
+    useEffect(() => {
+        setTab('Sklad');
+    }, [setTab]);
+    const [searchParams, setSearchParams] = useSearchParams();
+    const tab = tabs.some((item) => item.value === searchParams.get('tab')) ? searchParams.get('tab') : 'material';
+    const selectTab = (value) => setSearchParams(value === 'material' ? {} : { tab: value }, { replace: true });
+
+    // the numbers on the tabs (the same lists as the tabs load)
+    const materials = useApi('/auth/material', { topics: ['material'] }).data;
+    const reservations = useApi('/auth/material/reservations', { topics: ['material'] }).data;
+    const requests = useApi('/auth/materialRequirements', { topics: ['material'] }).data;
+    const totals = { material: materials?.length, reservations: reservations?.length, requests: requests?.length };
+
+    return (
+        <>
+            <StyledPageHeader title='Sklad' tabs={tabs.map((item) => ({ ...item, total: totals[item.value] }))} active={tab} onSelect={selectTab} />
+            <div className='content-wrap_inner'>{tab === 'reservations' ? <ReservationsTab /> : tab === 'requests' ? <RequestsTab /> : <MaterialTab />}</div>
+        </>
     );
 };

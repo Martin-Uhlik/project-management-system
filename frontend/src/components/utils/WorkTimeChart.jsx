@@ -6,6 +6,10 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip);
 
 const weekdays = ['Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek', 'Sobota', 'Neděle'];
 
+// the rows / bars of a week chart: the weekday and its date ("Po 16. 11."); week: its Monday (dayjs)
+const shortWeekdays = ['Po', 'Út', 'St', 'Čt', 'Pá', 'So', 'Ne'];
+export const weekLabels = (week) => shortWeekdays.map((day, index) => `${day} ${week.add(index, 'day').format('D. M.')}`);
+
 // Worked time as bars, e.g. per day of the week. minutes: one value per label, in minutes; shown as hours and minutes
 // (the axis and the tooltips). titles: optional tooltip titles per bar (default: the label)
 export const WorkTimeChart = ({ minutes, labels = weekdays, titles }) => {

@@ -22,12 +22,17 @@ import {
     AccountIcon,
     BriefcaseIcon,
     CalendarIcon,
+    FullscreenExitIcon,
+    FullscreenIcon,
     StyledButton,
     StyledPageHeader,
     StyledPageHeaderFact,
     projectStatus,
     projectStatusLabels,
     useElapsed,
+    ZoomInIcon,
+    ZoomOutIcon,
+    ZoomResetIcon,
 } from '../ui';
 
 const tabs = [
@@ -130,8 +135,15 @@ export const Project = () => {
                             <div className='content-box_content'>
                                 <SigmaContainer>
                                     <ControlsContainer position='top-left'>
-                                        <FullScreenControl />
-                                        <ZoomControl />
+                                        <FullScreenControl labels={{ enter: 'Celá obrazovka', exit: 'Zavřít celou obrazovku' }}>
+                                            <FullscreenIcon />
+                                            <FullscreenExitIcon />
+                                        </FullScreenControl>
+                                        <ZoomControl labels={{ zoomIn: 'Přiblížit', zoomOut: 'Oddálit', reset: 'Zobrazit celý graf' }}>
+                                            <ZoomInIcon />
+                                            <ZoomOutIcon />
+                                            <ZoomResetIcon />
+                                        </ZoomControl>
                                     </ControlsContainer>
                                     <ControlsContainer position='top-right'>
                                         <TaskSearch selectNode={selectNode} />

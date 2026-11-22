@@ -56,6 +56,86 @@ describe('material', () => {
     });
 });
 
+describe('stock and reservations', () => {
+    it('keeps the details of an item and counts stock, open reservations and what is available', async () => {
+        const created = await s.manager.agent
+            .post('/auth/material')
+            .send({ Name: 'Pipe', Unit: 'm', Price: 120, Supplier: 'Ferona', Location: 'A3', MinCount: 5, Count: 10 });
+        expect(created.status).toBe(200);
+        const ID = created.body.ID;
+        const project = await createProject(s.manager.user.ID, [s.user.user.ID]);
+        const task = await createTask(project.ID, s.manager.user.ID);
+        const move = (EventType: string, Count: number, TargetTaskID: number | null = task.ID) =>
+            s.user.agent.post(`/auth/material/${ID}/event`).send({ EventType, Count, TargetTaskID });
+
+        expect((await move('RESERVATION', 4)).status).toBe(200);
+        // taking items out for the task uses its reservation up
+        expect((await move('REMOVE', 3)).status).toBe(200);
+        expect((await move('RELEASE', 2)).status).toBe(400);
+        expect((await move('REMOVE', 50)).status).toBe(400);
+        expect((await move('RESERVATION', 2, null)).status).toBe(200);
+
+        const [item] = (await s.other.agent.get('/auth/material')).body;
+        expect(item).toMatchObject({
+            Name: 'Pipe',
+            Unit: 'm',
+            Price: 120,
+            Supplier: 'Ferona',
+            Location: 'A3',
+            MinCount: 5,
+            Count: 7,
+            Reserved: 3,
+            Available: 4,
+        });
+
+        const detail = (await s.other.agent.get(`/auth/material/${ID}`)).body;
+        expect(detail.Events).toHaveLength(4);
+        expect(detail.Events[0].CreatedAt).toBeTruthy();
+        expect(detail.Reservations).toEqual(
+            expect.arrayContaining([
+                expect.objectContaining({ Task: expect.objectContaining({ ID: task.ID, Project: { Name: 'Project' } }), Reserved: 4, Taken: 3, Open: 1 }),
+                expect.objectContaining({ Task: null, Open: 2 }),
+            ]),
+        );
+
+        expect((await move('RELEASE', 1)).status).toBe(200);
+        const reservations = (await s.other.agent.get('/auth/material/reservations')).body;
+        expect(reservations).toHaveLength(1);
+        expect(reservations[0]).toMatchObject({ Material: { ID, Name: 'Pipe' }, Task: null, Open: 2, ReservedBy: [{ ID: s.user.user.ID }] });
+
+        const taskMaterial = (await s.user.agent.get(`/auth/tasks/${task.ID}/material`)).body;
+        expect(taskMaterial).toMatchObject([{ Material: { ID }, Reserved: 0, Taken: 3 }]);
+
+        expect((await s.user.agent.patch(`/auth/material/${ID}`).send({ Price: 1 })).status).toBe(403);
+        expect((await s.manager.agent.patch(`/auth/material/${ID}`).send({ Price: 130, Location: null })).status).toBe(200);
+        expect(await prisma.material.findUniqueOrThrow({ where: { ID } })).toMatchObject({ Name: 'Pipe', Price: 130, Location: null });
+        expect((await s.user.agent.get('/auth/material/9999')).status).toBe(404);
+    });
+
+    it('stocks an approved request: to its item or a new one, reserved for its task', async () => {
+        const project = await createProject(s.manager.user.ID, [s.user.user.ID]);
+        const task = await createTask(project.ID, s.manager.user.ID);
+        const existing = await prisma.material.create({ data: { Name: 'Bolt' } });
+        const request = (data: object) =>
+            prisma.materialRequest.create({ data: { Name: 'Glass', Count: 4, Price: 900, AddedDate: new Date(), TargetUserID: s.user.user.ID, ...data } });
+        const stock = (ID: number, who = s.manager) => who.agent.post(`/auth/materialRequirements/${ID}/stock`);
+
+        const waiting = await request({});
+        expect((await stock(waiting.ID)).status).toBe(400);
+        const forTask = await request({ AcceptedByID: s.manager.user.ID, TargetTaskID: task.ID });
+        expect((await stock(forTask.ID, s.user)).status).toBe(403);
+        const res = await stock(forTask.ID);
+        expect(res.status).toBe(200);
+        const glass = (await s.user.agent.get(`/auth/material/${res.body.MaterialID}`)).body;
+        expect(glass).toMatchObject({ Name: 'Glass', Price: 900, Count: 4, Reserved: 4, Available: 0 });
+        expect(await prisma.materialRequest.findUnique({ where: { ID: forTask.ID } })).toBeNull();
+
+        const restock = await request({ AcceptedByID: s.manager.user.ID, MaterialID: existing.ID });
+        expect((await stock(restock.ID)).body.MaterialID).toBe(existing.ID);
+        expect((await s.user.agent.get(`/auth/material/${existing.ID}`)).body).toMatchObject({ Count: 4, Reserved: 0 });
+    });
+});
+
 describe('material requirements', () => {
     const body = { Name: 'Glue', Description: 'strong', Count: 2, Price: 150, NeededDate: '2026-03-01T00:00:00Z' };
 

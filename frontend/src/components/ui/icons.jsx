@@ -1,102 +1,130 @@
 import SvgIcon from '@mui/material/SvgIcon';
+import {
+    MdAccountCircle,
+    MdAdd,
+    MdArrowBack,
+    MdArrowForward,
+    MdArticle,
+    MdBarChart,
+    MdBookmarkAdd,
+    MdCalendarToday,
+    MdCenterFocusStrong,
+    MdCheck,
+    MdCheckCircle,
+    MdChevronRight,
+    MdClose,
+    MdCloudUpload,
+    MdDarkMode,
+    MdDelete,
+    MdDescription,
+    MdDownload,
+    MdEdit,
+    MdExpandMore,
+    MdFolderCopy,
+    MdFullscreen,
+    MdFullscreenExit,
+    MdGroups,
+    MdHistory,
+    MdHome,
+    MdImage,
+    MdInsertDriveFile,
+    MdInventory2,
+    MdLightMode,
+    MdLinkOff,
+    MdLock,
+    MdLogout,
+    MdMonitor,
+    MdOutlineAccessTime,
+    MdOutlineChat,
+    MdOutlineTimer,
+    MdPeople,
+    MdPersonOff,
+    MdPictureAsPdf,
+    MdPlayArrow,
+    MdPrecisionManufacturing,
+    MdRadioButtonUnchecked,
+    MdRefresh,
+    MdRemove,
+    MdSearch,
+    MdSend,
+    MdSettings,
+    MdShoppingCart,
+    MdStop,
+    MdTableChart,
+    MdUndo,
+    MdVideoFile,
+    MdViewInAr,
+    MdWarning,
+    MdWork,
+    MdZoomIn,
+    MdZoomOut,
+} from 'react-icons/md';
 
-// Material Design icons (the same set as public/icons) as MUI icons: they take fontSize, color and sx
-const icon = (path) => {
-    const Icon = (props) => (
-        <SvgIcon {...props}>
-            <path d={path} />
-        </SvgIcon>
-    );
+// Every icon in the app comes from react-icons (Material Design set). They are wrapped in MUI's SvgIcon, so they
+// take fontSize, color and sx like any MUI icon and follow the theme.
+const icon = (ReactIcon) => {
+    const Icon = (props) => <SvgIcon component={ReactIcon} inheritViewBox {...props} />;
+    Icon.displayName = ReactIcon.name;
     return Icon;
 };
 
-export const AccountIcon = icon(
-    'M12,19.2C9.5,19.2 7.29,17.92 6,16C6.03,14 10,12.9 12,12.9C14,12.9 17.97,14 18,16C16.71,17.92 14.5,19.2 12,19.2M12,5A3,3 0 0,1 15,8A3,3 0 0,1 12,11A3,3 0 0,1 9,8A3,3 0 0,1 12,5M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12C22,6.47 17.5,2 12,2Z',
-);
-export const ChevronDownIcon = icon('M7.41,8.58L12,13.17L16.59,8.58L18,10L12,16L6,10L7.41,8.58Z');
-export const SunIcon = icon(
-    'M12,8A4,4 0 0,0 8,12A4,4 0 0,0 12,16A4,4 0 0,0 16,12A4,4 0 0,0 12,8M12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6A6,6 0 0,1 18,12A6,6 0 0,1 12,18M20,8.69V4H15.31L12,0.69L8.69,4H4V8.69L0.69,12L4,15.31V20H8.69L12,23.31L15.31,20H20V15.31L23.31,12L20,8.69Z',
-);
-export const MoonIcon = icon(
-    'M17.75,4.09L15.22,6.03L16.13,9.09L13.5,7.28L10.87,9.09L11.78,6.03L9.25,4.09L12.44,4L13.5,1L14.56,4L17.75,4.09M21.25,11L19.61,12.25L20.2,14.23L18.5,13.06L16.8,14.23L17.39,12.25L15.75,11L17.81,10.95L18.5,9L19.19,10.95L21.25,11M18.97,15.95C19.8,15.87 20.69,17.05 20.16,17.8C19.84,18.25 19.5,18.67 19.08,19.07C15.17,23 8.84,23 4.94,19.07C1.03,15.17 1.03,8.83 4.94,4.93C5.34,4.53 5.76,4.17 6.21,3.85C6.96,3.32 8.14,4.21 8.06,5.04C7.79,7.9 8.75,10.87 10.95,13.06C13.14,15.26 16.1,16.22 18.97,15.95M17.33,17.97C14.5,17.81 11.7,16.64 9.53,14.5C7.36,12.31 6.2,9.5 6.04,6.68C3.23,9.82 3.34,14.64 6.35,17.66C9.37,20.67 14.19,20.78 17.33,17.97Z',
-);
-export const MonitorIcon = icon('M21,16H3V4H21M21,2H3C1.89,2 1,2.89 1,4V16A2,2 0 0,0 3,18H10V20H8V22H16V20H14V18H21A2,2 0 0,0 23,16V4C23,2.89 22.1,2 21,2Z');
-export const CogIcon = icon(
-    'M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.21,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.21,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.67 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z',
-);
-export const LogoutIcon = icon(
-    'M16,17V14H9V10H16V7L21,12L16,17M14,2A2,2 0 0,1 16,4V6H14V4H5V20H14V18H16V20A2,2 0 0,1 14,22H5A2,2 0 0,1 3,20V4A2,2 0 0,1 5,2H14Z',
-);
-export const ChevronRightIcon = icon('M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z');
-export const CheckCircleIcon = icon(
-    'M12,2C6.5,2 2,6.5 2,12C2,17.5 6.5,22 12,22C17.5,22 22,17.5 22,12C22,6.5 17.5,2 12,2M10,17L5,12L6.41,10.59L10,14.17L17.59,6.58L19,8L10,17Z',
-);
-export const ClockOutlineIcon = icon(
-    'M12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22C6.47,22 2,17.5 2,12A10,10 0 0,1 12,2M12.5,7V12.25L17,14.92L16.25,16.15L11,13V7H12.5Z',
-);
-export const LockIcon = icon(
-    'M12,17A2,2 0 0,0 14,15C14,13.89 13.1,13 12,13A2,2 0 0,0 10,15A2,2 0 0,0 12,17M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V10C4,8.89 4.9,8 6,8H7V6A5,5 0 0,1 12,1A5,5 0 0,1 17,6V8H18M12,3A3,3 0 0,0 9,6V8H15V6A3,3 0 0,0 12,3Z',
-);
-export const CircleOutlineIcon = icon(
-    'M12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z',
-);
-export const TimerIcon = icon(
-    'M12,20A7,7 0 0,1 5,13A7,7 0 0,1 12,6A7,7 0 0,1 19,13A7,7 0 0,1 12,20M19.03,7.39L20.45,5.97C20,5.46 19.55,5 19.04,4.56L17.62,6C16.07,4.74 14.12,4 12,4A9,9 0 0,0 3,13A9,9 0 0,0 12,22C17,22 21,17.97 21,13C21,10.88 20.26,8.93 19.03,7.39M11,14H13V8H11M15,1H9V3H15V1Z',
-);
-export const AccountCancelIcon = icon(
-    'M10 4A4 4 0 0 0 6 8A4 4 0 0 0 10 12A4 4 0 0 0 14 8A4 4 0 0 0 10 4M17.5 13C15 13 13 15 13 17.5C13 20 15 22 17.5 22C20 22 22 20 22 17.5C22 15 20 13 17.5 13M10 14C5.58 14 2 15.79 2 18V20H11.5A6.5 6.5 0 0 1 11 17.5A6.5 6.5 0 0 1 11.95 14.14C11.32 14.06 10.68 14 10 14M17.5 14.5C19.16 14.5 20.5 15.84 20.5 17.5C20.5 18.06 20.35 18.58 20.08 19L16 14.92C16.42 14.65 16.94 14.5 17.5 14.5M14.92 16L19 20.08C18.58 20.35 18.06 20.5 17.5 20.5C15.84 20.5 14.5 19.16 14.5 17.5C14.5 16.94 14.65 16.42 14.92 16Z',
-);
-export const PencilIcon = icon(
-    'M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z',
-);
-export const CheckIcon = icon('M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z');
-export const UndoIcon = icon(
-    'M12.5,8C9.85,8 7.45,9 5.6,10.6L2,7V16H11L7.38,12.38C8.77,11.22 10.54,10.5 12.5,10.5C16.04,10.5 19.05,12.81 20.1,16L22.47,15.22C21.08,11.03 17.15,8 12.5,8Z',
-);
-export const TrashIcon = icon('M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z');
-export const CalendarIcon = icon(
-    'M19,19H5V8H19M16,1V3H8V1H6V3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3H18V1M17,12H12V17H17V12Z',
-);
-export const BriefcaseIcon = icon(
-    'M10,2H14A2,2 0 0,1 16,4V6H20A2,2 0 0,1 22,8V19A2,2 0 0,1 20,21H4C2.89,21 2,20.1 2,19V8C2,6.89 2.89,6 4,6H8V4C8,2.89 8.89,2 10,2M14,6V4H10V6H14Z',
-);
-export const ArrowLeftIcon = icon('M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z');
-export const ArrowRightIcon = icon('M4,11V13H16L10.5,18.5L11.92,19.92L19.84,12L11.92,4.08L10.5,5.5L16,11H4Z');
-export const CloudUploadIcon = icon(
-    'M14,13V17H10V13H7L12,8L17,13M19.35,10.03C18.67,6.59 15.64,4 12,4C9.11,4 6.6,5.64 5.35,8.03C2.34,8.36 0,10.9 0,14A6,6 0 0,0 6,20H19A5,5 0 0,0 24,15C24,12.36 21.95,10.22 19.35,10.03Z',
-);
-export const FileIcon = icon('M13,9V3.5L18.5,9M6,2C4.89,2 4,2.89 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2H6Z');
-export const CloseIcon = icon('M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z');
-export const DownloadIcon = icon('M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z');
-export const ImageIcon = icon('M8.5,13.5L11,16.5L14.5,12L19,18H5M21,19V5C21,3.89 20.1,3 19,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19Z');
-export const FilePdfIcon = icon(
-    'M19,3A2,2 0 0,1 21,5V19A2,2 0 0,1 19,21H5C3.89,21 3,20.1 3,19V5C3,3.89 3.89,3 5,3H19M10.59,10.08C10.57,10.13 10.3,11.84 8.5,14.77C8.5,14.77 5,16.58 5.83,17.94C6.5,19 8.15,17.9 9.57,15.27C9.57,15.27 11.39,14.63 13.82,14.45C13.82,14.45 17.69,16.19 18.21,14.36C18.73,12.53 15.15,12.92 14.5,13.12C14.5,13.12 12.5,11.77 12.03,9.91C12.03,9.91 13.1,6.14 11.45,6.19C9.8,6.24 10.42,9.21 10.59,10.08M11.4,11.19C11.43,11.2 11.86,12.37 13.27,13.62C13.27,13.62 10.96,14.11 9.91,14.55C9.91,14.55 10.91,12.81 11.4,11.19M15.32,13.91C15.9,13.76 17.64,14.05 17.58,14.38C17.5,14.71 15.32,13.91 15.32,13.91M7.58,15.97C7.05,17.21 6.15,17.97 5.92,17.94C5.69,17.91 6.67,16.86 7.58,15.97M11.4,7.08C11.4,7 11.86,6.93 11.86,8.07C11.86,9.21 11.67,9.55 11.66,9.55C11.38,8.76 11.4,7.16 11.4,7.08Z',
-);
-export const FileWordIcon = icon(
-    'M15.2,20H13.8L12,13.2L10.2,20H8.8L6.6,11H8.1L9.5,17.8L11.3,11H12.6L14.4,17.8L15.8,11H17.3L15.2,20M13,9V3.5L18.5,9H13M6,2C4.89,2 4,2.89 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2H6Z',
-);
-export const FileExcelIcon = icon(
-    'M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M15.8,20H14L12,16.6L10,20H8.2L11.1,15.5L8.2,11H10L12,14.4L14,11H15.8L12.9,15.5L15.8,20M13,9V3.5L18.5,9H13Z',
-);
-export const CubeIcon = icon(
-    'M21,16.5C21,16.88 20.79,17.21 20.47,17.38L12.57,21.82C12.41,21.94 12.21,22 12,22C11.79,22 11.59,21.94 11.43,21.82L3.53,17.38C3.21,17.21 3,16.88 3,16.5V7.5C3,7.12 3.21,6.79 3.53,6.62L11.43,2.18C11.59,2.06 11.79,2 12,2C12.21,2 12.41,2.06 12.57,2.18L20.47,6.62C20.79,6.79 21,7.12 21,7.5V16.5M12,4.15L6.04,7.5L12,10.85L17.96,7.5L12,4.15M5,15.91L11,19.29V12.58L5,9.21V15.91M19,15.91V9.21L13,12.58V19.29L19,15.91Z',
-);
-export const FileTextIcon = icon(
-    'M13,9H18.5L13,3.5V9M6,2H14L20,8V20A2,2 0 0,1 18,22H6C4.89,22 4,21.1 4,20V4C4,2.89 4.89,2 6,2M15,18V16H6V18H15M18,14V12H6V14H18Z',
-);
-export const FileVideoIcon = icon(
-    'M13,9H18.5L13,3.5V9M6,2H14L20,8V20A2,2 0 0,1 18,22H6C4.89,22 4,21.1 4,20V4C4,2.89 4.89,2 6,2M17,19V13L14,15.2V13H7V19H14V16.8L17,19Z',
-);
-export const ChatIcon = icon(
-    'M9,22A1,1 0 0,1 8,21V18H4A2,2 0 0,1 2,16V4C2,2.89 2.9,2 4,2H20A2,2 0 0,1 22,4V16A2,2 0 0,1 20,18H13.9L10.2,21.71C10,21.9 9.75,22 9.5,22V22H9M10,16V19.08L13.08,16H20V4H4V16H10M6,7H18V9H6V7M6,11H15V13H6V11Z',
-);
-export const SendIcon = icon('M2,21L23,12L2,3V10L17,12L2,14V21Z');
-export const AccountGroupIcon = icon(
-    'M12,5.5A3.5,3.5 0 0,1 15.5,9A3.5,3.5 0 0,1 12,12.5A3.5,3.5 0 0,1 8.5,9A3.5,3.5 0 0,1 12,5.5M5,8C5.56,8 6.08,8.15 6.53,8.42C6.38,9.85 6.8,11.27 7.66,12.38C7.16,13.34 6.16,14 5,14A3,3 0 0,1 2,11A3,3 0 0,1 5,8M19,8A3,3 0 0,1 22,11A3,3 0 0,1 19,14C17.84,14 16.84,13.34 16.34,12.38C17.2,11.27 17.62,9.85 17.47,8.42C17.92,8.15 18.44,8 19,8M5.5,18.25C5.5,16.18 8.41,14.5 12,14.5C15.59,14.5 18.5,16.18 18.5,18.25V20H5.5V18.25M0,20V18.5C0,17.11 1.89,15.94 4.45,15.6C3.86,16.28 3.5,17.22 3.5,18.25V20H0M24,20H20.5V18.25C20.5,17.22 20.14,16.28 19.55,15.6C22.11,15.94 24,17.11 24,18.5V20Z',
-);
-export const RefreshIcon = icon(
-    'M17.65,6.35C16.2,4.9 14.21,4 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20C15.73,20 18.84,17.45 19.73,14H17.65C16.83,16.33 14.61,18 12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6C13.66,6 15.14,6.69 16.22,7.78L13,11H20V4L17.65,6.35Z',
-);
-export const LinkOffIcon = icon(
-    'M17,7H13V8.9H17C18.71,8.9 20.1,10.29 20.1,12C20.1,13.43 19.12,14.63 17.79,15L19.25,16.44C20.88,15.61 22,13.95 22,12A5,5 0 0,0 17,7M16,11H13.81L15.81,13H16V11M2,4.27L5.11,7.38C3.29,8.12 2,9.91 2,12A5,5 0 0,0 7,17H11V15.1H7C5.29,15.1 3.9,13.71 3.9,12C3.9,10.41 5.11,9.1 6.66,8.93L8.73,11H8V13H10.73L13,15.27V17H14.73L18.74,21L20,19.74L3.27,3L2,4.27Z',
-);
+export const AccountIcon = icon(MdAccountCircle);
+export const ChevronDownIcon = icon(MdExpandMore);
+export const SunIcon = icon(MdLightMode);
+export const MoonIcon = icon(MdDarkMode);
+export const MonitorIcon = icon(MdMonitor);
+export const CogIcon = icon(MdSettings);
+export const LogoutIcon = icon(MdLogout);
+export const ChevronRightIcon = icon(MdChevronRight);
+export const CheckCircleIcon = icon(MdCheckCircle);
+export const ClockOutlineIcon = icon(MdOutlineAccessTime);
+export const LockIcon = icon(MdLock);
+export const CircleOutlineIcon = icon(MdRadioButtonUnchecked);
+export const TimerIcon = icon(MdOutlineTimer);
+export const AccountCancelIcon = icon(MdPersonOff);
+export const PencilIcon = icon(MdEdit);
+export const PlayIcon = icon(MdPlayArrow);
+export const StopIcon = icon(MdStop);
+export const CheckIcon = icon(MdCheck);
+export const UndoIcon = icon(MdUndo);
+export const TrashIcon = icon(MdDelete);
+export const CalendarIcon = icon(MdCalendarToday);
+export const BriefcaseIcon = icon(MdWork);
+export const ArrowLeftIcon = icon(MdArrowBack);
+export const ArrowRightIcon = icon(MdArrowForward);
+export const CloudUploadIcon = icon(MdCloudUpload);
+export const FileIcon = icon(MdInsertDriveFile);
+export const CloseIcon = icon(MdClose);
+export const DownloadIcon = icon(MdDownload);
+export const ImageIcon = icon(MdImage);
+export const FilePdfIcon = icon(MdPictureAsPdf);
+export const FileWordIcon = icon(MdDescription);
+export const FileExcelIcon = icon(MdTableChart);
+export const CubeIcon = icon(MdViewInAr);
+export const FileTextIcon = icon(MdArticle);
+export const FileVideoIcon = icon(MdVideoFile);
+export const ChatIcon = icon(MdOutlineChat);
+export const SendIcon = icon(MdSend);
+export const AccountGroupIcon = icon(MdGroups);
+export const RefreshIcon = icon(MdRefresh);
+export const LinkOffIcon = icon(MdLinkOff);
+export const SearchIcon = icon(MdSearch);
+export const PlusIcon = icon(MdAdd);
+export const MinusIcon = icon(MdRemove);
+export const ReserveIcon = icon(MdBookmarkAdd);
+export const CartIcon = icon(MdShoppingCart);
+export const HistoryIcon = icon(MdHistory);
+export const WarningIcon = icon(MdWarning);
+// the left menu
+export const HomeIcon = icon(MdHome);
+export const ProjectsIcon = icon(MdFolderCopy);
+export const InventoryIcon = icon(MdInventory2);
+export const MachinesIcon = icon(MdPrecisionManufacturing);
+export const StatsIcon = icon(MdBarChart);
+export const PeopleIcon = icon(MdPeople);
+// the task graph's controls
+export const FullscreenIcon = icon(MdFullscreen);
+export const FullscreenExitIcon = icon(MdFullscreenExit);
+export const ZoomInIcon = icon(MdZoomIn);
+export const ZoomOutIcon = icon(MdZoomOut);
+export const ZoomResetIcon = icon(MdCenterFocusStrong);

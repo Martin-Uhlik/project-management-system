@@ -1,12 +1,7 @@
 import React from 'react';
 import { useLocation, useOutletContext, useParams } from 'react-router';
-import { useAtom, useSetAtom } from 'jotai';
-import { dialogAtom, notificationsAtom, tickAtom } from '../../../state/atoms';
-import axios from 'axios';
-import { getBackendAddress } from '../../../config';
-import { getAuthHeader } from '../../../Auth';
-import dayjs from '../../../dayjs';
-import { handleAxiosError } from '../../../errorHandler';
+import { useSetAtom } from 'jotai';
+import { dialogAtom } from '../../../state/atoms';
 import { MaterialTable } from '../../utils/tables/MaterialTable';
 import { MaterialRequirementTable } from '../../utils/tables/MaterialRequirementTable';
 import { TaskMaterialTable } from '../../utils/tables/TaskMaterialTable';
@@ -23,36 +18,11 @@ export const TaskMaterial = () => {
 
     const taskID = useParams().task;
 
-    const setTick = useSetAtom(tickAtom);
-    const [notifications, setNotifications] = useAtom(notificationsAtom);
-
-    const addMaterialRequirement = (props) => {
-        axios
-            .post(
-                getBackendAddress(`/auth/materialRequirements`),
-                {
-                    Name: props.name,
-                    Description: props.description,
-                    Count: +props.count,
-                    Price: +props.price,
-                    NeededDate: props.date,
-                    TargetTaskID: +taskID,
-                },
-                getAuthHeader(),
-            )
-            .then(() => {
-                setTick(dayjs());
-            })
-            .catch((error) => {
-                handleAxiosError(error, [notifications, setNotifications]);
-            });
-    };
-
     const handleAddMaterialRequirement = () => {
         setDialog({
             type: 'AddMaterialRequirement',
             data: {
-                handleSubmit: addMaterialRequirement,
+                taskID,
                 handleCancel: () => {},
             },
         });

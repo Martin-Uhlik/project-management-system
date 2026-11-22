@@ -6,6 +6,7 @@ export const NavigationItem = (props) => {
     const setShowNav = useSetAtom(showNavAtom);
     const selectedTab = useAtomValue(selectedTabAtom);
     const isActive = props.text === selectedTab;
+    const Icon = props.icon;
     return (
         <Link
             to={props.to}
@@ -13,7 +14,7 @@ export const NavigationItem = (props) => {
             aria-current={isActive ? 'page' : undefined}
             onClick={() => setShowNav(false)}
         >
-            <img className='menu-icon' src={props.icon} alt={props.text} />
+            <Icon className='menu-icon' titleAccess={props.text} />
         </Link>
     );
 };

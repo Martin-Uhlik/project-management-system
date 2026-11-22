@@ -57,13 +57,14 @@ export const ProjectFiles = ({ files }) => {
                             const key = fileKey(file);
                             return (
                                 <StyledTableRow key={key} selected={key === selectedKey} onClick={() => selectFile(file)}>
-                                    <StyledTableCell>
-                                        <Box component='span' sx={{ display: 'inline-flex', alignItems: 'center', gap: 1, wordBreak: 'break-word' }}>
+                                    {/* a long name wraps by words, so the column keeps room for it */}
+                                    <StyledTableCell sx={{ minWidth: '12rem' }}>
+                                        <Box component='span' sx={{ display: 'inline-flex', alignItems: 'center', gap: 1, overflowWrap: 'anywhere' }}>
                                             <Icon fontSize='small' sx={{ color: 'text.secondary', flexShrink: 0 }} />
                                             {file.file}
                                         </Box>
                                     </StyledTableCell>
-                                    <StyledTableCell>
+                                    <StyledTableCell sx={{ whiteSpace: 'nowrap' }}>
                                         <StyledChip label={kindLabels[file.Kind]} color={file.Kind === 'input' ? 'info' : 'success'} variant='outlined' />
                                     </StyledTableCell>
                                     <StyledTableCell>

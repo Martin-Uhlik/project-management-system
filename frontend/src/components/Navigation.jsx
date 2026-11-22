@@ -2,20 +2,18 @@ import React from 'react';
 import { NavigationItem } from './utils/NavigationItem';
 import { useAtom, useAtomValue } from 'jotai';
 import { showNavAtom, userAtom } from '../state/atoms';
+import { HomeIcon, InventoryIcon, MachinesIcon, PeopleIcon, ProjectsIcon, StatsIcon } from './ui';
 
 function Navigation() {
     const user = useAtomValue(userAtom);
     const menuItems = [
-        { key: 0, to: '/auth/overview', icon: '/icons/home.svg', text: 'Přehled' },
-        { key: 2, to: '/auth/projects', icon: '/icons/folder-multiple.svg', text: 'Projekty' },
-        { key: 3, to: '/auth/inventory', icon: '/icons/package-variant.svg', text: 'Sklad' },
-        { key: 4, to: '/auth/machines', icon: '/icons/robot-industrial.svg', text: 'Stroje' },
-        { key: 7, to: '/auth/stats', icon: '/icons/chart-box.svg', text: 'Statistiky' },
-    ];
-    // at the bottom: managing the workers' accounts (admins only) and the user's own settings
-    const bottomItems = [
-        ...(user?.UserType === 'ADMIN' ? [{ key: 5, to: '/auth/users', icon: '/icons/account-multiple.svg', text: 'Pracovníci' }] : []),
-        { key: 6, to: '/auth/settings', icon: '/icons/cog.svg', text: 'Nastavení' },
+        { key: 0, to: '/auth/overview', icon: HomeIcon, text: 'Přehled' },
+        { key: 2, to: '/auth/projects', icon: ProjectsIcon, text: 'Projekty' },
+        { key: 3, to: '/auth/inventory', icon: InventoryIcon, text: 'Sklad' },
+        { key: 4, to: '/auth/machines', icon: MachinesIcon, text: 'Stroje' },
+        { key: 7, to: '/auth/stats', icon: StatsIcon, text: 'Statistiky' },
+        // managing the workers' accounts: admins only (the user's own settings are in the user menu at the top)
+        ...(user?.UserType === 'ADMIN' ? [{ key: 5, to: '/auth/users', icon: PeopleIcon, text: 'Pracovníci' }] : []),
     ];
     const createItem = (item) => {
         return (
@@ -55,7 +53,6 @@ function Navigation() {
                     <NavigationItem key={menuItems[0].key} to={menuItems[0].to} icon={menuItems[0].icon} text={menuItems[0].text} />
                     {menuItems.slice(1).map(createItem)}
                 </div>
-                {bottomItems.map(createItem)}
             </nav>
         </>
     );

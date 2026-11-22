@@ -145,6 +145,8 @@ export const createApp = (options: AppOptions = {}) => {
 
     // material management
     app.get('/auth/material', material.getMaterials);
+    app.get('/auth/material/reservations', material.getReservations);
+    app.get('/auth/material/:materialID', material.getMaterial);
     app.post('/auth/material', MANAGER, MATERIAL, material.createMaterial);
     app.patch('/auth/material/:materialID', MANAGER, MATERIAL, material.updateMaterial);
     app.post('/auth/material/:materialID/event', MATERIAL, material.eventMaterial);
@@ -156,6 +158,7 @@ export const createApp = (options: AppOptions = {}) => {
     app.post('/auth/materialRequirements', MANAGER, MATERIAL, materialRequirements.createMaterialRequirement);
     app.patch('/auth/materialRequirements/:materialRequirementID', MATERIAL, materialRequirements.updateMaterialRequirement);
     app.delete('/auth/materialRequirements/:materialRequirementID', MATERIAL, materialRequirements.removeMaterialRequirement);
+    app.post('/auth/materialRequirements/:materialRequirementID/stock', MANAGER, MATERIAL, materialRequirements.stockMaterialRequirement);
 
     // machines management
     app.get('/auth/machines', machines.getMachines);
@@ -167,6 +170,7 @@ export const createApp = (options: AppOptions = {}) => {
     app.post('/auth/machines/:machineID/services', MACHINES, machines.createService);
     app.patch('/auth/machines/:machineID/services/:serviceID', MACHINES, machines.updateService);
     app.delete('/auth/machines/:machineID/services/:serviceID', MACHINES, machines.removeService);
+    app.get('/auth/machines/:machineID/work', machines.getMachineWork);
     app.get('/auth/machines/:machineID/files', machines.getMachineFiles);
     app.post('/auth/machines/:machineID/files', MACHINES, machines.uploadMachineFile);
     app.get('/auth/machines/:machineID/files/:fileName', machines.downloadMachineFile);
